@@ -16,7 +16,7 @@ import { fileURLToPath } from 'url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const opt = (n, d) => { const i = args.indexOf(n); return i > -1 ? args[i + 1] : d; };
-const lib = path.resolve(args[0] && !args[0].startsWith('--') ? args[0] : path.join(here, 'sfx.js'));
+const lib = path.resolve(args[0] && !args[0].startsWith('--') ? args[0] : path.join(here, '../../client/src/audio/vendor/sfx.js'));
 const out = path.resolve(opt('--out', 'sfx-check'));
 const only = opt('--only', '');
 fs.mkdirSync(out, { recursive: true });

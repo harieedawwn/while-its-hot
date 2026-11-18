@@ -8,7 +8,7 @@ Model = recommendation for the user (they switch it before pasting the prompt).
 
 ---
 
-### Phase 00 — Scaffold and harness · `TODO` · Sonnet 5.5 · medium
+### Phase 00 — Scaffold and harness · `DONE` · Sonnet 5.5 · medium
 Read: CLAUDE.md, TECH §1–3, §9.
 - npm workspaces `client/ server/ shared/`, TypeScript strict, Vite, three + three-mesh-bvh (pinned), vitest.
 - Move `kit/procgeo.js` → `client/src/render/geo/procgeo.ts` (typed, three-mesh-bvh not needed there),
@@ -214,3 +214,6 @@ Done when the sim results are in the log and the APK release is current.
 
 ## Phase log
 (newest last)
+- Phase 00: workspaces client/server/shared, Vite 8 + three 0.187 + three-mesh-bvh 0.9.18 (pinned), vitest 4.0.18 (4.1.x breaks npm's resolver here). `kit/` removed: procgeo is typed TS, sfx engine is the untyped vendor `client/src/audio/vendor/sfx.js`, audio tools in `tools/audio/`.
+- Scenes: add a line to `client/src/dev/scenes.ts` + a `scene-<name>.ts` default-exporting a SceneFactory; loop in `main.ts` sets `__ready`/`__stats`, honours `t` (frozen), `seed`, `cam`. Fixed 60 Hz sim step (`FEEL.simStep`), canvas pixel ratio 1.
+- Not installed locally: playwright (shot.mjs uses the preinstalled global one). Rotation gate + fullscreen/landscape lock done; Capacitor pause hook comes in phase 04. Branch needed `git branch --set-upstream-to` for pull.

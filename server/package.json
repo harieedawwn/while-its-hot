@@ -1,0 +1,2 @@
+{ "name": "@wih/server", "private": true, "version": "0.0.0", "type": "module",
+  "scripts": { "typecheck": "tsc -p .", "dev": "echo \"server arrives in phase 16\"" } }

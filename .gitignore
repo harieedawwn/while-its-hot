@@ -1,0 +1,11 @@
+node_modules
+dist
+shots
+audio-src
+sfx-check
+*.keystore
+*.jks
+.env
+.env.*
+.dev.vars
+*.tsbuildinfo

@@ -32,7 +32,11 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 12. Do not install a dependency for something that takes < 60 lines to write. Pin versions.
 
 ## Code map (update this when you add/move modules — keep it to one line each)
-- (empty until phase 00)
+- `client/src/main.ts` boot, renderer, fixed-step loop, `__ready/__stats` · `app/gate.ts` rotation gate
+- `client/src/core/{events,feel}.ts` typed bus, feel tuning · `shared/src/balance.ts` rules tuning
+- `client/src/dev/{params,scenes,scene-empty}.ts` URL params, scene registry, test cube scene
+- `client/src/render/geo/procgeo.ts` procedural geometry + bake · `client/src/audio/vendor/sfx.js` sfx engine
+- `client/src/ui/strings.vi.ts` all Vietnamese text · `tools/shot.mjs` screenshots · `tools/audio/*` audio checks
 
 ## Conventions
 - TypeScript strict, ES modules, npm workspaces: `client/`, `server/`, `shared/`.
