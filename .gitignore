@@ -9,3 +9,4 @@ sfx-check
 .env.*
 .dev.vars
 *.tsbuildinfo
+tex-src

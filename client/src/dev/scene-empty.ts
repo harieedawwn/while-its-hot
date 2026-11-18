@@ -3,7 +3,7 @@ import { FEEL } from '../core/feel';
 import type { SceneFactory } from './scenes';
 
 /** Spinning test cube on a grid: proves the render loop, the shot tool and the fit on every device. */
-const make: SceneFactory = ({ renderer, params, width, height }) => {
+const make: SceneFactory = ({ pipeline, params, width, height }) => {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#14110f');
   const camera = new THREE.PerspectiveCamera(FEEL.fov, width / height, 0.1, 100);
@@ -23,7 +23,7 @@ const make: SceneFactory = ({ renderer, params, width, height }) => {
   return {
     ready: true,
     update(_dt, time) { cube.rotation.y = time * 0.9 + params.seed; cube.rotation.x = 0.4; },
-    render() { renderer.render(scene, camera); },
+    render() { pipeline.render(scene, camera); },
     resize(w, h) { camera.aspect = w / h; camera.updateProjectionMatrix(); },
     dispose() { scene.traverse((o) => { if (o instanceof THREE.Mesh) { o.geometry.dispose(); (o.material as THREE.Material).dispose(); } }); },
   };

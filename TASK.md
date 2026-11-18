@@ -22,7 +22,7 @@ Read: CLAUDE.md, TECH §1–3, §9.
 - Scripts: dev, build, typecheck, test, shot. `.gitignore` (node_modules, dist, shots, audio-src, keystore, .env).
 Shots: `empty`. Done when: build + typecheck + test pass, contact sheet shows the cube on all devices.
 
-### Phase 01 — The look: render pipeline, PSX material, textures · `TODO` · Opus 5.5 · high
+### Phase 01 — The look: render pipeline, PSX material, textures · `DONE` · Opus 5.5 · high
 Read: LOOK §1, §2, §5. TECH §8.
 - Low-res render target + nearest upscale, resolution setting, adaptive quality.
 - `psx.ts` vertex-lit material (hemi + dir + 4 point lights per object, vertex colors, fog, emissive heat,
@@ -217,3 +217,7 @@ Done when the sim results are in the log and the APK release is current.
 - Phase 00: workspaces client/server/shared, Vite 8 + three 0.187 + three-mesh-bvh 0.9.18 (pinned), vitest 4.0.18 (4.1.x breaks npm's resolver here). `kit/` removed: procgeo is typed TS, sfx engine is the untyped vendor `client/src/audio/vendor/sfx.js`, audio tools in `tools/audio/`.
 - Scenes: add a line to `client/src/dev/scenes.ts` + a `scene-<name>.ts` default-exporting a SceneFactory; loop in `main.ts` sets `__ready`/`__stats`, honours `t` (frozen), `seed`, `cam`. Fixed 60 Hz sim step (`FEEL.simStep`), canvas pixel ratio 1.
 - Not installed locally: playwright (shot.mjs uses the preinstalled global one). Rotation gate + fullscreen/landscape lock done; Capacitor pause hook comes in phase 04. Branch needed `git branch --set-upstream-to` for pull.
+- Phase 01: `render/pipeline.ts` renders the world into an sRGB target at the internal height (URL `res=360|450|540|720|native`, `quant=off|light|strong`, `snap=1`, `adaptive=0` until settings exist); the canvas backbuffer IS the low-res size and CSS `pixelated` upscales (no native-res fill). Post (dither+quantize) runs after sRGB encode, not before gamma as LOOK §1.4 reads — darks keep their steps. Shots: `lookdev&t=3` and `lookdev&t=3&view=1` → 13 calls, 19k tris, 2 programs.
+- PSX: ONE program for everything (`psxMaterial`): untextured surfaces bind a 1×1 white map, heat is a per-object `userData.heat` (0..1) × optional `heatMask` vertex attribute; nearest 4 point lights picked per object in `onBeforeRender` from a `LightRig`. A StaticBatch mesh spans its whole area, so later arenas must batch per region if they have > 4 lights.
+- World surfaces = `MaterialLib` keys (`render/materials/library.ts`: tex, tile meters, footstep tag). Textured parts want vertex colors near white (≥ #c0) — texture × dark vertex color goes black. Static geometry: `StaticBatch` (world box UVs) → `bakeAO()` (BVH rays, ~0.3 s). `tools/texbake.mjs` (sharp 0.34.5, own median-cut: sharp's palette writer caps at 16 colors) bakes 10 Poly Haven CC0 textures; `--try id,id` previews sources; grate is drawn procedurally over rust.
+- Lookdev has a 3rd low warm light (off-screen furnace) besides brazier + window: backlit-only left the anvil a silhouette. Judge the dither/pixel crunch on the phone at 450p; headless shots are 360 css px tall.

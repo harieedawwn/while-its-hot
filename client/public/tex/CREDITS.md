@@ -1,0 +1,12 @@
+# Texture sources (all CC0, polyhaven.com)
+
+- `brick.png` ← [red_brick_03](https://polyhaven.com/a/red_brick_03)
+- `grate.png` ← [rusty_metal_04](https://polyhaven.com/a/rusty_metal_04)
+- `steel.png` ← [metal_plate_02](https://polyhaven.com/a/metal_plate_02)
+- `rust.png` ← [rusty_metal_04](https://polyhaven.com/a/rusty_metal_04)
+- `concrete.png` ← [dirty_concrete](https://polyhaven.com/a/dirty_concrete)
+- `wood.png` ← [brown_planks_03](https://polyhaven.com/a/brown_planks_03)
+- `leather.png` ← [fabric_leather_02](https://polyhaven.com/a/fabric_leather_02)
+- `cloth.png` ← [denim_fabric](https://polyhaven.com/a/denim_fabric)
+- `slag.png` ← [dry_ground_rocks](https://polyhaven.com/a/dry_ground_rocks)
+- `coal.png` ← [gray_rocks](https://polyhaven.com/a/gray_rocks)

@@ -13,6 +13,7 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 ## Commands (fill in as they become real)
 - `npm run dev` — client dev server (Vite) · `npm run build` · `npm run typecheck` · `npm test`
 - `node tools/shot.mjs <scene> [--devices phones|all] [--q "k=v&k=v"]` — screenshots for self-check
+- `node tools/texbake.mjs [name…] [--sheet] [--try id,id]` — rebake world textures into `client/public/tex/`
 - `npm run dev:server` — local Worker + Durable Object (wrangler dev)
 
 ## Hard rules
@@ -36,6 +37,12 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/core/{events,feel}.ts` typed bus, feel tuning · `shared/src/balance.ts` rules tuning
 - `client/src/dev/{params,scenes,scene-empty}.ts` URL params, scene registry, test cube scene
 - `client/src/render/geo/procgeo.ts` procedural geometry + bake · `client/src/audio/vendor/sfx.js` sfx engine
+- `client/src/render/pipeline.ts` low-res target, resolution, adaptive quality · `render/post.ts` dither/quantize/fade pass
+- `client/src/render/materials/{psx,psx-glsl,library}.ts` the one PSX program, surface → material library
+- `client/src/render/{lights,heat,textures}.ts` LightRig (hemi/dir/fog/point pick), heat ramp, texture loader
+- `client/src/render/geo/{uv,static-batch,ao}.ts` box UVs, merge-per-material batch, baked vertex AO
+- `client/src/render/models/{kit,anvil,brazier,props}.ts` model helpers + anvil, brazier, crate/tub/tools/chain/ingot
+- `client/src/dev/{scene-lookdev,lookdev-room}.ts` lookdev foundry corner · `tools/texbake.mjs` CC0 → crunchy PNGs
 - `client/src/ui/strings.vi.ts` all Vietnamese text · `tools/shot.mjs` screenshots · `tools/audio/*` audio checks
 
 ## Conventions
