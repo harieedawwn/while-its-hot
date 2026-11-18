@@ -1,6 +1,8 @@
 /** Tiny typed event bus. Gameplay emits; audio and VFX subscribe. Add event types to GameEvents as phases need them. */
 export interface GameEvents {
   'app:pause': { paused: boolean };
+  /** Android back button (Capacitor). Phase 14 opens the pause menu on it. */
+  'app:back': Record<string, never>;
   /** Local player movement (player/player.ts). Positions/dirs are world space. */
   'move:jump': { kind: 'jump' | 'bounce' | 'dashjump' | 'slidejump' | 'walljump' };
   'move:land': { speed: number };

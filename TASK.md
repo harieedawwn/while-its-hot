@@ -58,7 +58,7 @@ Read: TECH §5, §6. LOOK §8 (touch buttons only).
 Shots: `movement&touch=1` on all devices + layout editor open. Done when nothing overlaps on 16:9 or 21:9
 and every control is ≥ 48 px.
 
-### Phase 04 — Android APK pipeline · `TODO` · Sonnet 5.5 · medium
+### Phase 04 — Android APK pipeline · `PARTIAL` · Sonnet 5.5 · medium
 Read: TECH §6, §7.
 - Capacitor Android project, manifest/orientation/immersive/cutout/keep-awake/back button per TECH §6,
   cutout CSS variable injection, splash until first frame.
@@ -227,3 +227,6 @@ Done when the sim results are in the log and the APK release is current.
 
 - Phase 03: `input/bind-input.ts` wires every source (touch, KB+mouse, gamepad, gyro) to the one `Actions` layer; `touch=1` swaps KB+mouse for `TouchControls` (a mouse acts as a finger on desktop), `editor=1` opens the layout editor. One capture layer owns all pointers (stick: floating = left half / fixed = ring zone; look = any other finger; a finger that starts on a button holds it and looks once it slides off 1.25× radius). Layouts are anchored design-px (360 px tall safe rect, scaled ≤1.6× on tablets), min 48 px real, 3 slots per device in localStorage (`wih.touch.layout.v1`), factory slots = right-hand / mirrored / compact; unit tests assert no overlap and ≥48 px on 640/736/780/800/840×360 and 1024×768. Settings in `input/controls-settings.ts` (`Controls.v`, persisted; sens X/Y, invert, dead zone, fixed stick, gyro + sens, aimAssist, haptics, holdParry — the last two only stored; phase 08 reads aimAssist/holdParry, phase 14 builds the ledger UI). Defaults/ranges/feel numbers: `FEEL.input`.
 - Gyro uses `devicemotion` rotationRate with the landscape axis mapping derived on paper (`gyroLook`, unit-tested for symmetry only) — signs need a real phone. Gamepad: standard mapping, A jump, B/LS slide, X forge, Y swap, LB anvil, RB dash, LT parry, RT attack, Select/Start. Forge/anvil buttons are contextual (`touch.setContext`); the movement scene shows them always. `openLayoutEditor(touch)` returns a promise: phase 14 settings calls it. Editor panel text lives in `STR.layout`.
+
+- Phase 04 (PARTIAL): Capacitor 8.6.2 project in `android/` (sensorLandscape, immersive sticky, shortEdges cutout -> `--cut-l/r/t/b` injected from `MainActivity`, keep-screen-on, black splash hidden by `app/native.ts` on first `__ready` frame, back button -> bus `app:back`, app state -> `app:pause`). In the APK `nativeSearch()` defaults to `scene=movement&touch=1&nogate=1`. `.github/workflows/apk.yml` (push to main, rolling release `latest`, asset `while-its-hot.apk`) falls back to a debug-signed APK when keystore secrets are missing.
+- NOT done here: this sandbox's proxy blocks `gh secret set`/Actions, there is no Android SDK, and work is on a feature branch, so the workflow has not run and no APK exists yet. Remaining: run `gh auth login` then `tools/android-keystore.sh` locally (sets the 4 secrets), merge to `main`, check Actions, confirm release `latest` has the APK. Secrets must exist before the first real build, or friends must uninstall once when the signed key arrives.

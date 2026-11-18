@@ -1,0 +1,8 @@
+{
+  "appId": "vn.whileitshot.game",
+  "appName": "While It's Hot",
+  "webDir": "client/dist",
+  "backgroundColor": "#000000",
+  "android": { "allowMixedContent": false },
+  "plugins": { "SplashScreen": { "launchAutoHide": false, "backgroundColor": "#000000", "showSpinner": false, "androidScaleType": "CENTER_CROP" } }
+}

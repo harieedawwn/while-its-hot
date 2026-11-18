@@ -1,0 +1,46 @@
+name: apk
+on:
+  push:
+    branches: [main]
+    paths: [client/**, shared/**, android/**, capacitor.config.json, package.json, package-lock.json, .github/workflows/apk.yml]
+  workflow_dispatch:
+concurrency: { group: apk, cancel-in-progress: true }
+permissions: { contents: write }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      VERSION_CODE: ${{ github.run_number }}
+      VERSION_NAME: 0.${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+      - name: Keystore (fixed key = updates install over old versions)
+        env: { KS_B64: "${{ secrets.ANDROID_KEYSTORE_B64 }}" }
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/wih.keystore"
+            echo "KEYSTORE_FILE=$RUNNER_TEMP/wih.keystore" >> "$GITHUB_ENV"
+            echo "KEYSTORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
+            echo "KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}" >> "$GITHUB_ENV"
+            echo "KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}" >> "$GITHUB_ENV"
+          else
+            echo "::warning::No keystore secrets: APK is debug-signed, a later signed build needs an uninstall first."
+          fi
+      - run: ./gradlew assembleRelease --no-daemon
+        working-directory: android
+      - name: Publish rolling release
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          APK=$(ls android/app/build/outputs/apk/release/*.apk | head -1)
+          cp "$APK" while-its-hot.apk
+          gh release view latest >/dev/null 2>&1 || gh release create latest --title "latest" --notes "Rolling build" --prerelease
+          gh release upload latest while-its-hot.apk --clobber
+          gh release edit latest --notes "Build ${{ github.run_number }} · ${{ github.sha }}"

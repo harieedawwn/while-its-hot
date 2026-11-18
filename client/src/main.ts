@@ -4,6 +4,7 @@ import { FEEL } from './core/feel';
 import { installGate } from './app/gate';
 import { readParams } from './dev/params';
 import { DEFAULT_SCENE, SCENES, type Scene } from './dev/scenes';
+import { installNative, nativeSearch } from './app/native';
 import { Pipeline } from './render/pipeline';
 
 declare global {
@@ -14,7 +15,8 @@ declare global {
 }
 
 async function boot(): Promise<void> {
-  const params = readParams();
+  const native = installNative();
+  const params = readParams(nativeSearch());
   installGate(document.getElementById('gate')!, params.nogate);
 
   const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
@@ -40,6 +42,7 @@ async function boot(): Promise<void> {
   });
 
   let paused = document.hidden;
+  bus.on('app:pause', (e) => { paused = e.paused; });
   document.addEventListener('visibilitychange', () => { paused = document.hidden; bus.emit('app:pause', { paused }); });
 
   let time = params.t ?? 0, acc = 0, last = performance.now();
@@ -59,7 +62,7 @@ async function boot(): Promise<void> {
     scene.render(frozen ? 1 : acc / FEEL.simStep);
     const info = renderer.info;
     window.__stats = { calls: info.render.calls, tris: info.render.triangles, programs: info.programs?.length ?? 0, frameMs: performance.now() - t0 };
-    if (scene.ready && !window.__ready) window.__ready = true;
+    if (scene.ready && !window.__ready) { window.__ready = true; native.firstFrame(); }
   };
   requestAnimationFrame(step);
 }
