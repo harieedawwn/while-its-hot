@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<script>window.zaloJSV2=window.zaloJSV2||{zalo_h5_event_handler:function(){},getCookieFallback:function(){return""}};addEventListener("error",function(e){if(/zalo|ZaloJavaScriptInterface/i.test(e.message||""))e.preventDefault()},true);</script><!-- in-app browser guard; full version: web-ui-multidevice boot.js -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nghe thử âm thanh — sfx.js</title>
+<style>
+  :root { --bg:#12151a; --s:#1a1e25; --s2:#222731; --line:#2f3643; --t:#e9ebef; --dim:#a3aab7; --acc:#f0a63a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--t); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: max(16px, env(safe-area-inset-top)) 16px 32px; }
+  h1 { font-size: 20px; margin: 0 0 4px; } p { color: var(--dim); margin: 0 0 16px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; padding: 12px; background: var(--s); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 18px; }
+  label { display: flex; align-items: center; gap: 8px; color: var(--dim); font-size: 14px; }
+  input[type=range] { width: 140px; height: 40px; accent-color: var(--acc); } select { background: var(--s2); color: var(--t); border: 1px solid var(--line); border-radius: 8px; min-height: 44px; padding: 0 8px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); margin: 18px 0 8px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  button { min-height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--s2); color: var(--t); font: 600 14px system-ui, sans-serif; cursor: pointer; touch-action: manipulation; transition: transform .12s, background .12s; }
+  button:active { transform: scale(.97); } @media (hover:hover) { button:hover { background: #2a303c; } }
+  button.rapid { border-style: dashed; }
+</style>
+</head>
+<body>
+<h1>Nghe thử âm thanh</h1>
+<p>Bấm để nghe. Mỗi lần bấm nghe hơi khác nhau (cố ý, để không bị lặp). Nút viền đứt phát liên tiếp. Đây là âm tổng hợp; muốn chân thật tuyệt đối thì nạp file thu thật CC0 (xem SKILL.md).</p>
+<div class="bar">
+  <label>Âm lượng <input type="range" id="vol" min="0" max="100" value="80"></label>
+  <label>Khoảng cách <input type="range" id="dist" min="0" max="90" value="0"></label>
+  <label>Trái / phải <input type="range" id="pan" min="-100" max="100" value="0"></label>
+  <label>Mặt đất <select id="surface"><option>stone</option><option>grass</option><option>wood</option><option>gravel</option><option>metal</option></select></label>
+</div>
+<div id="groups"></div>
+<script src="sfx.js"></script>
+<script>
+  var sfx = new SFX(); sfx.autoUnlock();
+  var groups = {
+    'Súng': ['gun_pistol', 'gun_rifle', 'gun_shotgun', 'gun_reload', 'gun_empty'],
+    'Kiếm': ['sword_slash', 'sword_slash_heavy', 'sword_draw', 'sword_cut', 'sword_clash', 'sword_hit', 'sword_swing'],
+    'Đòn đánh': ['hit_body', 'hit_heavy'],
+    'Va chạm': ['impact_wood', 'impact_stone', 'impact_metal', 'arrow_hit', 'explosion'],
+    'Di chuyển': ['footstep', 'jump', 'land', 'door_open', 'bow_release'],
+    'Vật phẩm': ['pickup', 'reward'],
+    'Giao diện (UI)': ['ui_click', 'ui_hover', 'ui_toggle_on', 'ui_toggle_off', 'ui_open', 'ui_close', 'ui_success', 'ui_error', 'ui_notify']
+  };
+  var $ = function (id) { return document.getElementById(id); };
+  $('vol').value = Math.round(sfx.volume * 100);
+  $('vol').oninput = function () { sfx.setVolume(this.value / 100); };
+  function opts() { return { dist: $('dist').value / 100, pan: $('pan').value / 100, surface: $('surface').value }; }
+  var root = $('groups');
+  Object.keys(groups).forEach(function (g) {
+    var h = document.createElement('h2'); h.textContent = g; root.appendChild(h);
+    var grid = document.createElement('div'); grid.className = 'grid'; root.appendChild(grid);
+    groups[g].forEach(function (n) {
+      var b = document.createElement('button'); b.textContent = n; grid.appendChild(b);
+      b.onclick = function () { sfx.unlock(); sfx.play(n, opts()); };
+      if (n === 'sword_slash') {
+        var c = document.createElement('button'); c.textContent = 'combo ×3'; c.className = 'rapid'; grid.appendChild(c);
+        c.onclick = function () { sfx.unlock(); ['sword_slash', 'sword_slash', 'sword_slash_heavy'].forEach(function (k, i) { setTimeout(function () { sfx.play(k, opts()); }, [0, 330, 700][i]); setTimeout(function () { sfx.play('sword_cut', opts()); }, [0, 330, 700][i] + 140); }); };
+      }
+      if (/gun_(pistol|rifle)/.test(n)) {
+        var r = document.createElement('button'); r.textContent = n + ' ×5'; r.className = 'rapid'; grid.appendChild(r);
+        r.onclick = function () { sfx.unlock(); for (var i = 0; i < 5; i++) setTimeout(function () { sfx.play(n, opts()); }, i * (n === 'gun_rifle' ? 95 : 160)); };
+      }
+      if (n === 'footstep') {
+        var w = document.createElement('button'); w.textContent = 'đi bộ ×6'; w.className = 'rapid'; grid.appendChild(w);
+        w.onclick = function () { sfx.unlock(); for (var i = 0; i < 6; i++) setTimeout(function (k) { var o = opts(); o.pan = (k % 2 ? 0.08 : -0.08); sfx.play('footstep', o); }, i * 420, i); };
+      }
+    });
+  });
+</script>
+</body>
+</html>
