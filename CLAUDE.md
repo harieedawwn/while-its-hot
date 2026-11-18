@@ -48,6 +48,9 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/player/{player,camera,viewmodel,feel-bind}.ts` local player → bus, FP camera feel, viewmodel, bus → feel
 - `client/src/input/{actions,keyboard-mouse}.ts` action layer, dev KB+mouse · `core/{spring,noise}.ts` spring, 1-D noise
 - `client/src/dev/{scene-movement,movement-course,move-hud}.ts` movement course scene, its geometry, dev stamina pips
+- `client/src/input/{bind-input,controls-settings,layout-store}.ts` wire all sources, control settings, 3 saved layout slots · `core/store.ts` safe localStorage
+- `client/src/input/{touch,touch-view,touch-math,touch-layout,pictograms}.ts` touch controller, DOM layer, pure math, layout model, SVG pictograms
+- `client/src/input/{layout-editor,gyro,gamepad}.ts` layout editor, gyro aim, gamepad mapping · `input/input.test.ts`
 - `client/src/ui/strings.vi.ts` all Vietnamese text · `tools/shot.mjs` screenshots · `tools/audio/*` audio checks
 
 ## Conventions

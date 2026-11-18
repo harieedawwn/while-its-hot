@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { BALANCE } from '@wih/shared';
 import { bus } from '../core/events';
 import { FEEL } from '../core/feel';
-import { Actions } from '../input/actions';
-import { bindKeyboardMouse } from '../input/keyboard-mouse';
+import { bindInput } from '../input/bind-input';
+import { openLayoutEditor } from '../input/layout-editor';
 import { CollisionWorld } from '../physics/world';
 import { FirstPersonCamera } from '../player/camera';
 import { bindFeel } from '../player/feel-bind';
@@ -21,7 +21,7 @@ import { num } from './params';
 import type { SceneFactory } from './scenes';
 
 /**
- * Movement test course (phase 02). Keyboard + mouse (click to lock). Dev keys: R respawn, H hit-stop + shake.
+ * Movement test course (phase 02). Keyboard + mouse (click to lock), or `touch=1` for the on-screen controls (`editor=1` opens the layout editor). Dev keys: R respawn, H hit-stop + shake.
  * Params: fov=75..110, bob=0, shake=0..1, and with `t` a scripted run (demo=slide|dash|slam) is replayed
  * to time t and frozen, e.g. `t=0.9` = mid-slide.
  */
@@ -69,8 +69,13 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   const vm = new Viewmodel(tool, width / height);
   const unbindFeel = bindFeel(cam, vm);
 
-  const actions = new Actions();
-  const unbindInput = bindKeyboardMouse(actions, renderer.domElement);
+  const input = bindInput(document.getElementById('app')!, renderer.domElement, { touch: params.touch });
+  const actions = input.actions;
+  if (input.touch) {
+    input.touch.setContext('forge', true);
+    input.touch.setContext('anvil', true);
+    if (params.get('editor') === '1') void openLayoutEditor(input.touch);
+  }
   const hud = createMoveHud(document.getElementById('app')!, BALANCE.move.stamina.pips);
   const respawn = () => { player = new Player(world, [...COURSE.spawn], 0); };
   const dev = (e: KeyboardEvent) => {
@@ -106,6 +111,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
       const now = performance.now();
       const fdt = frozen ? 0 : Math.min(0.1, (now - last) / 1000);
       last = now;
+      input.poll(fdt);
       const look = actions.takeLook();
       if (!frozen) player.look(look.dx, look.dy);
       const v = player.viewState(alpha);
@@ -116,7 +122,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     },
     resize(w, h) { cam.resize(w / h); vm.resize(w / h); },
     dispose() {
-      unbindFeel(); unbindInput(); hud.dispose(); removeEventListener('keydown', dev);
+      unbindFeel(); input.dispose(); hud.dispose(); removeEventListener('keydown', dev);
       scene.traverse((o) => { if (o instanceof THREE.Mesh) o.geometry.dispose(); });
     },
   };

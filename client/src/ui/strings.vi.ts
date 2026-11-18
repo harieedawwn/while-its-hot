@@ -7,4 +7,9 @@ export const STR = {
     quantize: 'Nén màu', quantOff: 'Tắt', quantLight: 'Nhẹ', quantStrong: 'Mạnh',
     snap: 'Rung đỉnh',
   },
+  /** Touch layout editor (Điều khiển → Chỉnh bố cục). Game buttons carry pictograms only, never text. */
+  layout: {
+    done: 'Xong', reset: 'Đặt lại', grid: 'Lưới', size: 'Cỡ', opacity: 'Độ mờ',
+    slot: (n: number) => `Bố cục ${n}`,
+  },
 } as const;

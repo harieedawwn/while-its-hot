@@ -65,6 +65,38 @@ export const FEEL = {
     slideTilt: 0.22,
   },
 
-  /** Keyboard + mouse dev controls. Mouse sensitivity in radians per pixel. */
-  input: { mouseSens: 0.0022 },
+  /** Input feel (TECH §5). Radians per CSS pixel for mouse/touch; sizes are "design px" at a 360 px tall safe rect. */
+  input: {
+    mouseSens: 0.0022,
+    touch: {
+      /** Radians per CSS pixel of finger drag at sensitivity 1. */
+      lookSens: 0.0038,
+      /** Fixed stick answers only inside this multiple of its radius; floating takes the left half. */
+      fixedZone: 1.4, floatingZone: 0.5,
+      /** Extra px around a button that still counts as a hit. */
+      hitSlop: 8,
+      /** A finger that began on a button starts looking once it is this far (× radius) from the center. */
+      slideOff: 1.25,
+      /** Pressed fill stays at least this long (ms). */
+      flashMs: 80, hapticMs: 10,
+      /** Layout design height and the scale range applied to design px (tablets scale up). */
+      refHeight: 360, scaleMin: 1, scaleMax: 1.6,
+      minButton: 48, maxButton: 128, minStick: 96, maxStick: 180,
+      minOpacity: 0.25, maxOpacity: 1,
+      /** Layout editor snap grid, design px. */
+      grid: 8,
+    },
+    gyro: {
+      /** Degrees of turn per degree of device rotation at sensitivity 1. */
+      gain: 1, maxRate: 360,
+    },
+    pad: { deadzone: 0.15, curve: 1.6, lookRate: 3.4, triggerAt: 0.35 },
+    /** Player-facing defaults and ranges of the control settings (Điều khiển). */
+    controls: {
+      sens: { def: 1, min: 0.3, max: 3 },
+      gyroSens: { def: 1, min: 0.3, max: 3 },
+      deadzone: { def: 0.12, min: 0, max: 0.4 },
+      stickFixed: false, invertY: false, gyro: false, aimAssist: true, haptics: true, holdParry: true,
+    },
+  },
 } as const;
