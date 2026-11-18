@@ -43,6 +43,11 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/render/geo/{uv,static-batch,ao}.ts` box UVs, merge-per-material batch, baked vertex AO
 - `client/src/render/models/{kit,anvil,brazier,props}.ts` model helpers + anvil, brazier, crate/tub/tools/chain/ingot
 - `client/src/dev/{scene-lookdev,lookdev-room}.ts` lookdev foundry corner · `tools/texbake.mjs` CC0 → crunchy PNGs
+- `client/src/physics/world.ts` CollisionWorld: merged BVH, capsule resolve/probe/overlaps, raycast
+- `client/src/player/{move-state,motor,kinematics}.ts` movement state + pure tick rules + collide-and-slide/step/snap
+- `client/src/player/{player,camera,viewmodel,feel-bind}.ts` local player → bus, FP camera feel, viewmodel, bus → feel
+- `client/src/input/{actions,keyboard-mouse}.ts` action layer, dev KB+mouse · `core/{spring,noise}.ts` spring, 1-D noise
+- `client/src/dev/{scene-movement,movement-course,move-hud}.ts` movement course scene, its geometry, dev stamina pips
 - `client/src/ui/strings.vi.ts` all Vietnamese text · `tools/shot.mjs` screenshots · `tools/audio/*` audio checks
 
 ## Conventions

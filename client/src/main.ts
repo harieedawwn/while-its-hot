@@ -56,7 +56,7 @@ async function boot(): Promise<void> {
       while (acc >= FEEL.simStep) { time += FEEL.simStep; scene.update(FEEL.simStep, time); acc -= FEEL.simStep; }
     } else scene.update(0, time);
     renderer.info.reset();
-    scene.render();
+    scene.render(frozen ? 1 : acc / FEEL.simStep);
     const info = renderer.info;
     window.__stats = { calls: info.render.calls, tris: info.render.triangles, programs: info.programs?.length ?? 0, frameMs: performance.now() - t0 };
     if (scene.ready && !window.__ready) window.__ready = true;

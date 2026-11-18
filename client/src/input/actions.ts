@@ -1,0 +1,32 @@
+/** One action layer for every input source (TECH §5). Sources write; gameplay reads once per sim tick. */
+export type Button = 'attack' | 'parry' | 'jump' | 'dash' | 'slide' | 'forge' | 'anvil' | 'swap' | 'pause' | 'scoreboard';
+
+export class Actions {
+  /** Movement stick, x = right, y = forward, length ≤ 1. Sources set it each frame. */
+  readonly move = { x: 0, y: 0 };
+  private lookX = 0;
+  private lookY = 0;
+  private held = new Set<Button>();
+  private pressed = new Set<Button>();
+
+  /** Look delta in radians (yaw right +, pitch up +), accumulated until taken. */
+  look(dx: number, dy: number): void { this.lookX += dx; this.lookY += dy; }
+  takeLook(): { dx: number; dy: number } {
+    const r = { dx: this.lookX, dy: this.lookY };
+    this.lookX = this.lookY = 0;
+    return r;
+  }
+  setMove(x: number, y: number): void {
+    const l = Math.hypot(x, y);
+    this.move.x = l > 1 ? x / l : x;
+    this.move.y = l > 1 ? y / l : y;
+  }
+
+  down(b: Button): void { if (!this.held.has(b)) this.pressed.add(b); this.held.add(b); }
+  up(b: Button): void { this.held.delete(b); }
+  isHeld(b: Button): boolean { return this.held.has(b); }
+  /** True once per press: the edge is latched until the next sim tick reads it (no lost taps at low fps). */
+  take(b: Button): boolean { const p = this.pressed.has(b); this.pressed.delete(b); return p; }
+  /** Drop everything (focus loss, pause). */
+  clear(): void { this.held.clear(); this.pressed.clear(); this.setMove(0, 0); this.takeLook(); }
+}

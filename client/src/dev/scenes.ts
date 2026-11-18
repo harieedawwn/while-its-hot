@@ -7,7 +7,8 @@ export interface SceneCtx { renderer: THREE.WebGLRenderer; pipeline: Pipeline; p
 export interface Scene {
   /** Advance by dt seconds (already frozen/scaled when `t` is set). */
   update(dt: number, time: number): void;
-  render(): void;
+  /** alpha = fraction of a sim step since the last update (render interpolation). */
+  render(alpha: number): void;
   resize(w: number, h: number): void;
   /** Call once the frame is final; the loop sets window.__ready. */
   ready?: boolean;
@@ -19,5 +20,6 @@ export type SceneFactory = (ctx: SceneCtx) => Scene | Promise<Scene>;
 export const SCENES: Record<string, () => Promise<{ default: SceneFactory }>> = {
   empty: () => import('./scene-empty'),
   lookdev: () => import('./scene-lookdev'),
+  movement: () => import('./scene-movement'),
 };
 export const DEFAULT_SCENE = 'empty';

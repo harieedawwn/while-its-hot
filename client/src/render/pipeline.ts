@@ -73,10 +73,18 @@ export class Pipeline {
     for (const r of this.rigs) r.shared.uSnap.value.set(this.width * k * 0.5, this.height * k * 0.5);
   }
 
-  render(scene: THREE.Scene, camera: THREE.Camera): void {
-    this.renderer.setRenderTarget(this.rt);
-    this.renderer.render(scene, camera);
-    this.post.render(this.renderer, this.rt.texture);
+  /** World, then an optional overlay (viewmodel) over a cleared depth buffer, then post. */
+  render(scene: THREE.Scene, camera: THREE.Camera, overlay?: { scene: THREE.Scene; camera: THREE.Camera }): void {
+    const r = this.renderer;
+    r.setRenderTarget(this.rt);
+    r.render(scene, camera);
+    if (overlay) {
+      r.autoClear = false;
+      r.clearDepth();
+      r.render(overlay.scene, overlay.camera);
+      r.autoClear = true;
+    }
+    this.post.render(r, this.rt.texture);
   }
 
   /**

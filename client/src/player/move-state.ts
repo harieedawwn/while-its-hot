@@ -1,0 +1,72 @@
+import * as THREE from 'three';
+import { BALANCE } from '@wih/shared';
+
+/** One sim tick of intent. mx = strafe right, my = forward (stick or WASD, length ≤ 1). Edges are per tick. */
+export interface MoveInput {
+  mx: number; my: number; yaw: number;
+  jumpPressed: boolean; dashPressed: boolean; slidePressed: boolean; slideHeld: boolean;
+}
+export const NO_INPUT: MoveInput = { mx: 0, my: 0, yaw: 0, jumpPressed: false, dashPressed: false, slidePressed: false, slideHeld: false };
+
+export type JumpKind = 'jump' | 'bounce' | 'dashjump' | 'slidejump' | 'walljump';
+/** What happened this tick; the controller turns these into bus events (camera, audio, VFX listen). */
+export type MoveEvent =
+  | { k: 'jump'; kind: JumpKind }
+  | { k: 'land'; speed: number }
+  | { k: 'dash'; dir: THREE.Vector3 }
+  | { k: 'slide'; on: boolean }
+  | { k: 'slamstart' }
+  | { k: 'slam'; pos: THREE.Vector3 };
+
+/** Full movement state of one player. `pos` is the feet (bottom of the capsule). */
+export interface MoveState {
+  pos: THREE.Vector3; vel: THREE.Vector3;
+  grounded: boolean; groundN: THREE.Vector3;
+  /** Seconds left in which a ground jump still works after leaving the ground. */
+  coyote: number;
+  /** Seconds left on a buffered jump press. */
+  jumpBuf: number;
+  /** Stamina in pips (fractional while regenerating). */
+  stamina: number;
+  dashT: number; dashDir: THREE.Vector3; dashGround: boolean;
+  /** Seconds of i-frames left (combat reads `iframe > 0`). */
+  iframe: number;
+  sliding: boolean; slideT: number; slideDir: THREE.Vector3;
+  slamming: boolean;
+  /** Seconds since the last slam landing (bounce window). */
+  sinceSlam: number;
+  wallJumps: number;
+  /** Seconds since a wall was in reach; wallN = its horizontal normal (away from the wall). */
+  sinceWall: number; wallN: THREE.Vector3;
+  clinging: boolean;
+  /** Low capsule (sliding, or no room to stand up). */
+  low: boolean;
+  events: MoveEvent[];
+}
+
+export function createMoveState(pos: THREE.Vector3Tuple = [0, 0, 0]): MoveState {
+  return {
+    pos: new THREE.Vector3(...pos), vel: new THREE.Vector3(),
+    grounded: false, groundN: new THREE.Vector3(0, 1, 0),
+    coyote: 0, jumpBuf: 0, stamina: BALANCE.move.stamina.pips,
+    dashT: 0, dashDir: new THREE.Vector3(0, 0, -1), dashGround: false, iframe: 0,
+    sliding: false, slideT: 0, slideDir: new THREE.Vector3(0, 0, -1),
+    slamming: false, sinceSlam: 1e3,
+    wallJumps: 0, sinceWall: 1e3, wallN: new THREE.Vector3(),
+    clinging: false, low: false, events: [],
+  };
+}
+
+/** Capsule height for the current posture. */
+export function bodyHeight(s: MoveState): number {
+  return s.low ? BALANCE.move.body.lowHeight : BALANCE.move.body.height;
+}
+
+/** Camera-relative horizontal wish direction (length ≤ 1). Yaw 0 looks down −Z. */
+export function wishDir(mx: number, my: number, yaw: number, out: THREE.Vector3): THREE.Vector3 {
+  const len = Math.hypot(mx, my);
+  const k = len > 1 ? 1 / len : 1;
+  const s = Math.sin(yaw), c = Math.cos(yaw);
+  // forward = (−sin, 0, −cos), right = (cos, 0, −sin)
+  return out.set((mx * c - my * s) * k, 0, (-mx * s - my * c) * k);
+}
