@@ -33,7 +33,7 @@ export const FEEL = {
   camera: {
     /** Horizontal FOV at 16:9 (setting 75–110). Hor+ on wider screens, capped at the 21:9 width. */
     hfov: 90, hfovMin: 75, hfovMax: 110, maxAspect: 21 / 9,
-    near: 0.05, far: 60,
+    near: 0.05, far: 110,
     eye: 1.62, lowEye: 0.9,
     /** Eye height follows the body at this rate (1/s): 0.12 s to settle when dropping into a slide. */
     eyeRate: 25,

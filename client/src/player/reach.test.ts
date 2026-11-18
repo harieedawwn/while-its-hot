@@ -67,4 +67,18 @@ describe('course reach', () => {
     expect(plain).toBeLessThan(3);
     expect(top).toBeGreaterThan(3.3);
   });
+
+  it('a running body steps up a 0.3 m curb head-on and a stair flight (0.25 m risers), but not a 0.4 m wall', () => {
+    const run = (boxes: number[][], z0 = 3) => {
+      const s = createMoveState([0, 0, z0]);
+      const kin = world(boxes);
+      let top = 0;
+      for (let i = 0; i < 150; i++) { stepMove(s, { ...NO_INPUT, my: 1 }, DT, kin); top = Math.max(top, s.pos.y); }
+      return top;
+    };
+    expect(run([[6, 0.3, 4, 0, 0.15, -2]])).toBeGreaterThan(0.29);
+    expect(run([[6, 0.4, 4, 0, 0.2, -2]])).toBeLessThan(0.05);
+    const stairs = Array.from({ length: 12 }, (_, i) => [3, (i + 1) * 0.25, 0.45, 0, ((i + 1) * 0.25) / 2, -0.45 * (i + 0.5)]);
+    expect(run(stairs)).toBeGreaterThan(2.9);
+  });
 });

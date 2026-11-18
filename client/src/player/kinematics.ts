@@ -95,9 +95,13 @@ export class Kinematics {
     const y0 = p.y;
     p.y += B.stepUp;
     if (!this.fits(p, h)) return false;
-    const vy = vel.y; vel.y = 0;
+    // Advance at least ~0.9 r while lifted: one tick of a clipped (near-zero) speed would leave the body
+    // hanging on the ledge's edge, where it slides back off (curbs above ~0.2 m would block).
+    const vy = vel.y, vx = vel.x, vz = vel.z, sp = Math.hypot(vx, vz);
+    const k = sp > 1e-6 ? Math.max(1, (B.radius * 0.9) / (sp * dt)) : 1;
+    vel.y = 0; vel.x *= k; vel.z *= k;
     this.slide(p, vel, dt, h, null);
-    vel.y = vy;
+    vel.set(vx, vy, vz);
     resetContacts(this.c);
     if (!this.drop(p, vel, h, B.stepUp + DROP_INC)) return false;
     return p.y - y0 <= B.stepUp + 0.01;

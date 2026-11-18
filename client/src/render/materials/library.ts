@@ -41,6 +41,7 @@ export class MaterialLib {
       m = psxMaterial(this.rig, { map: s.tex ? this.tex[s.tex] ?? null : null, unlit: s.unlit ?? 0 });
       m.name = name;
       m.userData.tile = SURFACES[name].tile;
+      m.userData.foot = SURFACES[name].foot;
       this.mats.set(name, m);
     }
     return m;

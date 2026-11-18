@@ -21,5 +21,6 @@ export const SCENES: Record<string, () => Promise<{ default: SceneFactory }>> = 
   empty: () => import('./scene-empty'),
   lookdev: () => import('./scene-lookdev'),
   movement: () => import('./scene-movement'),
+  arena: () => import('./scene-arena'),
 };
 export const DEFAULT_SCENE = 'empty';
