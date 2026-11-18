@@ -58,7 +58,7 @@ Read: TECH §5, §6. LOOK §8 (touch buttons only).
 Shots: `movement&touch=1` on all devices + layout editor open. Done when nothing overlaps on 16:9 or 21:9
 and every control is ≥ 48 px.
 
-### Phase 04 — Android APK pipeline · `PARTIAL` · Sonnet 5.5 · medium
+### Phase 04 — Android APK pipeline · `DONE` · Sonnet 5.5 · medium
 Read: TECH §6, §7.
 - Capacitor Android project, manifest/orientation/immersive/cutout/keep-awake/back button per TECH §6,
   cutout CSS variable injection, splash until first frame.
@@ -232,3 +232,4 @@ Done when the sim results are in the log and the APK release is current.
 - NOT done here: this sandbox's proxy blocks `gh secret set`/Actions, there is no Android SDK, and work is on a feature branch, so the workflow has not run and no APK exists yet. Remaining: run `gh auth login` then `tools/android-keystore.sh` locally (sets the 4 secrets), merge to `main`, check Actions, confirm release `latest` has the APK. Secrets must exist before the first real build, or friends must uninstall once when the signed key arrives.
 - Phase 04 follow-up: the first CI run on `main` failed at `android-actions/setup-android@v3` (sdkmanager "Failed to find package 'tools'"). The step is replaced by a license-accept on the SDK preinstalled on `ubuntu-latest`. Not verified (no Actions access from the sandbox): merge to `main`, check the run, and confirm release `latest` has `while-its-hot.apk`. If Gradle then fails on a missing platform/build-tools, add `sdkmanager "platforms;android-36" "build-tools;36.0.0"` (match `android/variables.gradle`).
 - Phase 04 follow-up 2: CI run 2 passed the SDK/npm/build/cap steps and failed in Gradle: `versionCode (expr).toInteger()` parses as `versionCode(expr).toInteger()` -> "Value is null". Fixed with explicit parens. Gradle config can only be verified by CI here (no Android SDK in the sandbox).
+- Phase 04 DONE: CI run 3 on `main` (commit c2aa70a) succeeded with the 4 keystore secrets present (signed release build, no debug-signing warning path); release `latest` (prerelease, so `releases/latest` API 404s — use the tag URL) holds `while-its-hot.apk` (3.4 MB). Download: `https://github.com/harieedawwn/while-its-hot/releases/download/latest/while-its-hot.apk`. Not yet tested on a phone: user should install it and check the movement scene (immersive, landscape, cutout, back button, touch controls, gyro signs). Later phases only need to push to `main` for a new build.
