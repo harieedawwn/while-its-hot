@@ -1,0 +1,59 @@
+/* HUD (LOOK §8): only what is needed, anchored to the safe rect; flat fills, hard edges, no glow. */
+.h-root { position: fixed; inset: 0; pointer-events: none; z-index: 3; font-family: var(--f-text); color: var(--bone); font-variant-numeric: tabular-nums;
+  left: var(--sl); right: var(--sr); top: var(--st); bottom: var(--sb); }
+.h-root * { box-sizing: border-box; }
+.h-root[hidden] { display: none; }
+
+/* HP: segmented bar, bottom-left above the stick zone; stamina chevrons beside it */
+.h-vit { position: absolute; left: 12px; bottom: min(192px, 52vh); display: flex; align-items: flex-end; gap: 10px; }
+.h-hp { display: flex; gap: 3px; padding: 3px; background: var(--soot); box-shadow: 0 0 0 2px var(--ash); }
+.h-seg { width: clamp(9px, 2.4vmin, 14px); height: clamp(14px, 3.8vmin, 20px); background: var(--ash); }
+.h-seg.is-on { background: var(--bone); }
+.h-hp.is-low .h-seg.is-on { background: var(--oxide); }
+.h-sta { display: flex; gap: 3px; }
+.h-chev { width: clamp(14px, 3.6vmin, 20px); height: clamp(14px, 3.6vmin, 20px); background: var(--ash); clip-path: polygon(0 0, 55% 0, 100% 50%, 55% 100%, 0 100%, 45% 50%); }
+.h-chev.is-on { background: var(--steel); }
+.h-pips { position: absolute; left: 12px; bottom: calc(min(192px, 52vh) + 36px); display: flex; gap: 5px; }
+.h-pip { width: 12px; height: 12px; background: var(--iron-hot); transform: rotate(45deg); }
+.h-pip.is-off { background: var(--ash); }
+
+/* weapon level: a large stamped +N with the form silhouette, under the swap/pause buttons, right edge */
+.h-lvl { position: absolute; right: 12px; top: clamp(58px, 17vh, 78px); display: flex; align-items: center; gap: 8px; }
+.h-lvl svg { width: clamp(22px, 6vmin, 34px); height: clamp(22px, 6vmin, 34px); color: var(--bone); }
+.h-lvl .h-n { font: 900 var(--t-l)/1.1 var(--f-display); padding: 0 0.18em; border: 3px solid var(--bone); background: var(--soot); letter-spacing: 0.02em; }
+
+/* round timer + fire-ring countdown, top center */
+.h-top { position: absolute; left: 50%; top: 6px; transform: translateX(-50%); display: flex; align-items: stretch; gap: 6px; }
+.h-box { background: var(--soot); box-shadow: 0 0 0 2px var(--ash); padding: 1px 12px 0; font: 900 var(--t-m)/1.32 var(--f-display); letter-spacing: 0.04em; min-width: 3.6em; text-align: center; }
+.h-box.is-ring { color: var(--iron-hot); }
+.h-box.is-ring.is-soon { background: var(--iron-hot); color: var(--soot); }
+
+/* kill feed, top-right, clear of the swap/pause buttons */
+.h-feed { position: absolute; right: 124px; top: 6px; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.h-kill { display: flex; align-items: center; gap: 7px; background: var(--soot); padding: 1px 10px 0 8px; font: 800 var(--t-s)/1.32 var(--f-display);
+  text-transform: uppercase; letter-spacing: 0.04em; box-shadow: 0 0 0 2px var(--ash); animation: h-in 110ms steps(2, end) both; }
+.h-kill svg { width: 17px; height: 17px; color: var(--steel); }
+.h-kill .h-me { color: var(--iron-hot); }
+.h-kill.is-out { opacity: 0; transition: opacity 160ms steps(2, end); }
+@keyframes h-in { from { transform: translateX(30px); } to { transform: none; } }
+.k-reduce .h-kill { animation: none; }
+
+/* scoreboard overlay (hold the scoreboard button / Tab) */
+.h-score { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, 80vw); max-height: 86%; overflow: hidden; padding: 12px 16px 14px; }
+.h-score .k-head { margin-bottom: 4px; }
+.h-score .k-title { font: 900 var(--t-m)/1.32 var(--f-display); text-transform: uppercase; }
+.h-tab { width: 100%; border-collapse: collapse; font: 600 var(--t-s)/1.4 var(--f-text); }
+.h-tab th { font: 800 var(--t-xs)/1.5 var(--f-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--steel); text-align: left; padding: 2px 6px; border-bottom: var(--rule) solid var(--ash); }
+.h-tab td { padding: 3px 6px; border-bottom: 2px solid var(--ash); }
+.h-tab .n { text-align: right; font: 800 var(--t-s)/1.4 var(--f-display); letter-spacing: 0.04em; }
+.h-tab th.n { text-align: right; }
+.h-tab tr.is-me td { color: var(--iron-hot); }
+.h-tab .sw { width: 12px; height: 12px; display: inline-block; margin-right: 8px; vertical-align: -1px; }
+.h-tab svg { width: 16px; height: 16px; vertical-align: -3px; color: var(--steel); margin-right: 6px; }
+
+/* pause: a shutter in the middle, three stamped buttons */
+.p-dim { position: fixed; inset: 0; background: var(--soot); opacity: 0.7; pointer-events: auto; z-index: 5; }
+.p-pause { z-index: 6; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(380px, 80vw); display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
+.p-pause.k-in { animation: p-drop var(--t-drop) var(--drop) both; }
+@keyframes p-drop { from { transform: translate(-50%, -150vh); } to { transform: translate(-50%, -50%); } }
+.p-pause .k-btn { width: 100%; text-align: left; }

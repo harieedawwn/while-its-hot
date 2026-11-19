@@ -1,3 +1,4 @@
+import { game } from '../core/game-settings';
 import * as THREE from 'three';
 import { BALANCE } from '@wih/shared';
 import { FEEL } from '../core/feel';
@@ -29,9 +30,16 @@ export function verticalFov(hfov16x9: number, aspect: number): number {
 export class FirstPersonCamera {
   readonly camera: THREE.PerspectiveCamera;
   /** Settings ("FOV", "lắc đầu khi chạy", "rung màn hình"). */
-  hfov: number = C.hfov;
-  bobOn = true;
-  shakeScale = 1;
+  /** A scene/URL override wins over the saved setting; otherwise the camera follows `game` live. */
+  private hfovSet: number | null = null;
+  get hfov(): number { return this.hfovSet ?? game.hfov; }
+  set hfov(v: number) { this.hfovSet = v; }
+  private bobSet: boolean | null = null;
+  get bobOn(): boolean { return this.bobSet ?? game.bob; }
+  set bobOn(v: boolean) { this.bobSet = v; }
+  private shakeSet: number | null = null;
+  get shakeScale(): number { return this.shakeSet ?? game.shake; }
+  set shakeScale(v: number) { this.shakeSet = v; }
   /** Seconds of animation time (stops during hit-stop). The viewmodel reads this and bobPhase. */
   animT = 0;
   bobPhase = 0;

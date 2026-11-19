@@ -1,3 +1,4 @@
+import { bus } from '../core/events';
 import { Actions } from './actions';
 import { Controls } from './controls-settings';
 import { bindGamepad } from './gamepad';
@@ -26,7 +27,7 @@ export function bindInput(host: HTMLElement, canvas: HTMLElement, opts: { touch:
   const pad = bindGamepad(actions, controls);
   return {
     actions, controls, touch,
-    poll: (dt) => pad.poll(dt),
+    poll: (dt) => { pad.poll(dt); if (actions.take('pause')) bus.emit('app:back', {}); },
     dispose() { unKm(); unGyro(); pad.dispose(); touch?.dispose(); },
   };
 }

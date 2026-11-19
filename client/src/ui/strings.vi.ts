@@ -13,17 +13,55 @@ export const STR = {
   settings: {
     tabs: { gfx: 'Hình ảnh', audio: 'Âm thanh', controls: 'Điều khiển', view: 'Góc nhìn', profile: 'Hồ sơ' },
     reduceMotion: 'Giảm chuyển động', on: 'Bật', off: 'Tắt',
+    fixed: 'Cố định', floating: 'Nổi', thirdPerson: 'Góc thứ ba', firstPerson: 'Góc thứ nhất',
+    tapParry: 'Chạm để đỡ', holdParry: 'Giữ để đỡ',
+  },
+  /** Controls tab rows (TECH §5). */
+  controls: {
+    layout: 'Chỉnh bố cục', open: 'Mở', stick: 'Cần điều khiển', stickSize: 'Cỡ cần', deadzone: 'Vùng chết',
+    sensX: 'Độ nhạy ngang', sensY: 'Độ nhạy dọc', invertY: 'Đảo trục dọc', gyro: 'Con quay hồi chuyển',
+    gyroSens: 'Độ nhạy quay', aimAssist: 'Hỗ trợ ngắm', parry: 'Đỡ đòn',
+  },
+  /** View tab rows. */
+  view: { fov: 'Góc nhìn ngang', mode: 'Chế độ nhìn', bob: 'Lắc đầu khi chạy', shake: 'Rung màn hình' },
+  /** Profile tab rows. */
+  profile: {
+    name: 'Tên', color: 'Màu', clear: 'Xóa dữ liệu', clearDo: 'Xóa', clearSure: 'Chạm lần nữa để xóa',
+    cleared: 'Đã xóa', defaultName: 'Thợ rèn', colorName: (i: number) => `Màu ${i + 1}`,
   },
   /** Graphics settings (LOOK §1); the ledger UI arrives in phase 14. */
   gfx: {
     resolution: 'Độ phân giải điểm ảnh', native: 'Gốc',
     quantize: 'Nén màu', quantOff: 'Tắt', quantLight: 'Nhẹ', quantStrong: 'Mạnh',
-    snap: 'Rung đỉnh',
+    snap: 'Rung đỉnh', fpsCap: 'Giới hạn FPS', showFps: 'Hiện FPS', uncapped: 'Tối đa',
     /** VFX setting (phase 10): hit puffs and floor marks; off = sparks only. */
     blood: 'Máu',
   },
   /** Audio settings (AUDIO §1.5); the ledger UI arrives in phase 14. */
   audio: { master: 'Âm lượng', sfx: 'Hiệu ứng', world: 'Môi trường', ui: 'Giao diện', output: 'Đầu ra', phone: 'Loa điện thoại', headphones: 'Tai nghe', haptics: 'Rung phản hồi' },
+  /** Armory (LOOK §8): rails by family; one line for what a form's passive does. */
+  armory: {
+    level: (n: number) => `+${n}`, locked: 'Khóa', base: 'Phôi',
+    passive: {
+      combo3_bonus: 'Đòn thứ ba trong chuỗi nặng hơn',
+      parry_window_plus: 'Khung đỡ đòn rộng hơn',
+      thrust_pierce: 'Mũi đâm xuyên giáp',
+      burn_on_hit: 'Đòn trúng gây bỏng',
+      light_break_block: 'Đòn nhẹ phá thế đỡ',
+      stagger_plus: 'Làm choáng lâu hơn',
+      slam_aoe: 'Đập đất gây sát thương vòng',
+      heavy_launch: 'Đòn nặng hất tung đối thủ',
+      max_reach_bonus: 'Tầm đâm xa hơn',
+      sweep_wide: 'Quét rộng hơn',
+      dash_lunge_plus: 'Lướt rồi đâm xa hơn',
+      heavy_pull: 'Đòn nặng kéo đối thủ lại',
+      none: 'Không có nội tại',
+    } as Record<string, string>,
+  },
+  /** In-game HUD, pause and scoreboard (LOOK §8): labels only where a player truly needs one. */
+  hud: { fps: 'FPS', lives: 'Mạng', ring: 'Vòng lửa', kills: 'Hạ', deaths: 'Gục', level: 'Cấp', you: 'Bạn' },
+  pause: { title: 'Tạm dừng', resume: 'Tiếp tục', settings: 'Cài đặt', leave: 'Về menu' },
+  score: { title: 'Bảng điểm', player: 'Người chơi', weapon: 'Vũ khí' },
   /** Touch layout editor (Điều khiển → Chỉnh bố cục). Game buttons carry pictograms only, never text. */
   layout: {
     done: 'Xong', reset: 'Đặt lại', grid: 'Lưới', size: 'Cỡ', opacity: 'Độ mờ',

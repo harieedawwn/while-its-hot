@@ -29,3 +29,11 @@
   .m-set .k-shutter, .m-set { padding: 10px 14px 12px; }
   .m-set .k-row { min-height: 48px; padding: 3px 4px; }
 }
+.m-set .k-row > .k-btn { width: max-content; justify-self: start; }
+.m-rows { scrollbar-width: thin; scrollbar-color: var(--bone-dim) var(--ash); }
+/* narrow panels (old 16:9): the control drops under its label instead of clipping */
+@media (max-width: 700px) {
+  .m-set .k-row { grid-template-columns: 2em 1fr; row-gap: 2px; }
+  .m-set .k-row > :last-child { grid-column: 2; }
+  .m-set .k-seg button { min-width: 48px; padding: 4px 10px; }
+}

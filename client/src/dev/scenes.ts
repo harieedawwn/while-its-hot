@@ -31,6 +31,9 @@ export const SCENES: Record<string, () => Promise<{ default: SceneFactory }>> = 
   fx: () => import('./scene-fx'),
   audition: () => import('./scene-audition'),
   'ui-menu': () => import('./scene-menu'),
+  'ui-settings': () => import('./scene-ui-settings'),
+  'ui-armory': () => import('./scene-ui-armory'),
+  hud: () => import('./scene-hud'),
   transition: () => import('./scene-transition'),
 };
 /** No `scene=`: the app starts at the title / main menu. */

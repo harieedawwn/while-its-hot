@@ -79,7 +79,10 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/app/{director,screens}.ts` running scene + transitions between scenes, screen state machine · `core/clock.ts` time scale
 - `client/src/ui/kit/{dom,controls,panels}.ts` UI kit (button, ledger, notched slider, segmented, tag strip, shutter, toast) · `ui/styles/{fonts,tokens,components,menu}.css` · `ui/ui-settings.ts`
 - `client/src/ui/{transition,transition-gl}.ts` quench/stamp/fade overlay, round-end + death grade · `ui/menu/{menu-screens,settings-screen}.ts` title, menu, settings ledger
-- `client/src/world/smithy.ts` night smithy set + helve strike · `render/models/helve.ts` · `dev/{scene-menu,scene-transition}.ts` (`ui-menu`, `transition`)
+- `client/src/world/smithy.ts` night smithy set + helve strike · `render/models/helve.ts` · `dev/{scene-menu,scene-transition}.ts` (`ui-menu`, `transition`, `ui-settings`, `ui-armory`, `hud`)
+- `client/src/core/{game-settings,profile}.ts` saved gfx/view settings (live), offline profile · `ui/fps-badge.ts` · `ui/kit/fields.ts` range slider, text field, swatches
+- `client/src/ui/menu/{settings-screen,settings-rows,armory-screen}.ts` settings shell + 5 tab row builders, armory rails · `world/turntable.ts` · `ui/styles/armory.css`
+- `client/src/ui/hud/{hud,overlays,silhouettes}.ts`+`hud.css` HUD, scoreboard, pause menu, family silhouettes · `app/pause.ts` in-game pause · `dev/{scene-hud,scene-ui-settings,scene-ui-armory}.ts`
 - `client/src/ui/strings.vi.ts` all Vietnamese text · `tools/shot.mjs` screenshots · `tools/audio/*` audio checks
 
 ## Conventions

@@ -1,3 +1,5 @@
+import { game, onGameSettings } from './core/game-settings';
+import { FpsBadge } from './ui/fps-badge';
 import * as THREE from 'three';
 import { bus } from './core/events';
 import { FEEL } from './core/feel';
@@ -26,10 +28,16 @@ async function boot(): Promise<void> {
   const host = document.getElementById('app')!;
   host.appendChild(renderer.domElement);
   const pipeline = new Pipeline(renderer, {
-    resolution: params.res ?? undefined, quantize: params.quant ?? undefined, snap: params.snap,
+    resolution: params.res ?? game.resolution, quantize: params.quant ?? game.quantize, snap: params.snap || game.snap,
     adaptive: params.adaptive && !params.shot && params.t === null,
   });
 
+  onGameSettings((g) => {
+    if (params.res === null) pipeline.setResolution(g.resolution);
+    if (params.quant === null) pipeline.setQuantize(g.quantize);
+    if (!params.snap) pipeline.setSnap(g.snap);
+  });
+  const fps = new FpsBadge();
   const app = new Director(renderer, pipeline, host, nativeSearch());
   const wipe = getTransition();
   addEventListener('resize', () => {
@@ -48,7 +56,10 @@ async function boot(): Promise<void> {
     requestAnimationFrame(step);
     const raw = now - last;
     const dt = Math.min(0.1, raw / 1000);
+    const cap = game.fpsCap;
+    if (cap > 0 && raw < 1000 / cap - 2) return;
     last = now;
+    fps.tick(raw);
     const scene = app.scene;
     if (paused || !scene) return;
     const frozen = app.params.t !== null;

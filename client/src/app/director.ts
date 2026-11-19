@@ -1,4 +1,5 @@
 import type * as THREE from 'three';
+import { GamePause, PLAY_SCENES } from './pause';
 import { bus } from '../core/events';
 import { readParams, type Params } from '../dev/params';
 import { DEFAULT_SCENE, SCENES, type Scene } from '../dev/scenes';
@@ -21,10 +22,15 @@ export class Director {
   private loading = false;
 
   private cameFromMenu = false;
+  private pause: GamePause;
 
   constructor(private renderer: THREE.WebGLRenderer, private pipeline: Pipeline, private host: HTMLElement, private search: string) {
-    // until the pause menu (phase 14): back from a scene entered through the menu returns to the menu
-    bus.on('app:back', () => { if (this.name !== MENU_SCENE && this.cameFromMenu && !this.loading) void this.go(MENU_SCENE, 'quench', { screen: 'menu' }); });
+    this.pause = new GamePause(host, () => void this.go(MENU_SCENE, 'quench', { screen: 'menu' }));
+    bus.on('app:back', () => {
+      if (this.loading || this.name === MENU_SCENE) return;
+      if (PLAY_SCENES.has(this.name)) this.pause.back();
+      else if (this.cameFromMenu) void this.go(MENU_SCENE, 'quench', { screen: 'menu' });
+    });
   }
 
   /** Load `name` with the carried flags plus `extra` params. Resolves once its first final frame is on screen. */

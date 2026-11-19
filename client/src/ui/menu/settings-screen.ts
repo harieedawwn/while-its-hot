@@ -1,34 +1,27 @@
 import type { Screen } from '../../app/screens';
-import { getAudio } from '../../audio/engine';
-import { audioSettings } from '../../audio/settings';
-import { fxSettings, setFxSettings } from '../../fx/fx-settings';
-import { ledger, notchedSlider, segmented } from '../kit/controls';
 import { el, onPress, sfx, stampNo } from '../kit/dom';
 import { shutter, type Shutter } from '../kit/panels';
 import { STR } from '../strings.vi';
-import { setUiSettings, uiSettings } from '../ui-settings';
-import type { MenuCtx } from './menu-screens';
+import { buildRows, TABS, type Tab } from './settings-rows';
 
 /**
  * Settings (LOOK §8 two-pane ledger), first cut: stamped tabs on the left, live rows on the right.
- * Phase 13 wires Hình ảnh (Máu, Giảm chuyển động) and Âm thanh (volume, output, haptics); phase 14 adds the rest.
+ * Five tabs (settings-rows.ts): Hình ảnh, Âm thanh, Điều khiển, Góc nhìn, Hồ sơ.
  */
-type Tab = 'gfx' | 'audio';
-const onOff = [{ id: 'on', label: STR.settings.on }, { id: 'off', label: STR.settings.off }] as const;
-const bool = (v: boolean) => (v ? 'on' : 'off');
 
 export class SettingsScreen implements Screen {
   private sh: Shutter | null = null;
   private rows: HTMLDivElement | null = null;
   private tabs: HTMLButtonElement[] = [];
   private esc = (e: KeyboardEvent) => { if (e.key === 'Escape') this.back(); };
-  constructor(private c: MenuCtx, private tab: Tab = 'gfx') {}
+  /** `layer` hosts the panel; `onBack` leaves it (menu: quench back to the menu; in game: close and show the pause menu). */
+  constructor(private layer: HTMLElement, private onBack: () => void, private tab: Tab = 'gfx') {}
 
   enter(): void {
-    const sh = shutter(this.c.layer, STR.menu.settings, STR.menu.back, () => this.back(), 'm-set');
+    const sh = shutter(this.layer, STR.menu.settings, STR.menu.back, () => this.back(), 'm-set');
     const tabs = el('div', 'm-tabs');
     tabs.setAttribute('role', 'tablist');
-    const ids: Tab[] = ['gfx', 'audio'];
+    const ids = TABS;
     this.tabs = ids.map((id, i) => {
       const b = el('button', 'm-tab k-plate');
       b.type = 'button';
@@ -47,21 +40,11 @@ export class SettingsScreen implements Screen {
 
   private show(tab: Tab): void {
     this.tab = tab;
-    this.tabs.forEach((b, i) => b.setAttribute('aria-selected', String(['gfx', 'audio'][i] === tab)));
-    const L = ledger();
-    if (tab === 'gfx') {
-      L.row(STR.gfx.blood, segmented(STR.gfx.blood, onOff, bool(fxSettings.blood), (v) => setFxSettings({ blood: v === 'on' })).root);
-      L.row(STR.settings.reduceMotion, segmented(STR.settings.reduceMotion, onOff, bool(uiSettings.reduceMotion), (v) => setUiSettings({ reduceMotion: v === 'on' })).root);
-    } else {
-      const a = getAudio();
-      L.row(STR.audio.master, notchedSlider(STR.audio.master, 10, Math.round(audioSettings.master * 10), (v) => a.setSettings({ master: v / 10 }), (v) => String(v * 10)).root);
-      L.row(STR.audio.output, segmented(STR.audio.output, [{ id: 'phone', label: STR.audio.phone }, { id: 'headphones', label: STR.audio.headphones }] as const,
-        audioSettings.output, (v) => a.setSettings({ output: v })).root);
-      L.row(STR.audio.haptics, segmented(STR.audio.haptics, onOff, bool(audioSettings.haptics), (v) => a.setSettings({ haptics: v === 'on' })).root);
-    }
-    this.rows!.replaceChildren(L.root);
+    this.tabs.forEach((b, i) => b.setAttribute('aria-selected', String(TABS[i] === tab)));
+    this.rows!.replaceChildren(buildRows(tab, { layer: this.layer, host: this.layer.parentElement ?? document.body, hide: (on) => { if (this.sh) this.sh.root.style.display = on ? 'none' : ''; } }));
+    this.rows!.scrollTop = 0;
   }
 
   exit(): void { removeEventListener('keydown', this.esc); this.sh?.root.remove(); this.sh = null; }
-  back(): boolean { void this.c.machine.go('menu', 'quench'); return true; }
+  back(): boolean { this.onBack(); return true; }
 }

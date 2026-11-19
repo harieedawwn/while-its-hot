@@ -90,3 +90,11 @@
 /* death: one big stamped respawn numeral (LOOK §9) */
 .k-death { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -54%); z-index: 5; pointer-events: none;
   font-size: clamp(90px, 34vmin, 200px); line-height: 1.1; color: var(--bone); padding: 0 0.22em; border: 6px solid var(--bone); }
+
+/* text field + swatches (settings → Hồ sơ) */
+.k-field { appearance: none; border: 0; border-radius: 0; margin: 0; width: 100%; min-height: 44px; padding: 6px 12px; background: var(--soot);
+  color: var(--bone); font: 600 var(--t-s)/1.4 var(--f-text); box-shadow: inset 0 0 0 var(--rule) var(--ash); pointer-events: auto; }
+.k-field:focus { outline: none; box-shadow: inset 0 0 0 var(--rule) var(--iron-hot); }
+.k-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.k-sw { appearance: none; border: 0; margin: 0; width: 44px; height: 44px; cursor: pointer; box-shadow: inset 0 0 0 3px var(--soot); }
+.k-sw[aria-checked=true] { box-shadow: inset 0 0 0 3px var(--soot), 0 0 0 3px var(--bone); }
