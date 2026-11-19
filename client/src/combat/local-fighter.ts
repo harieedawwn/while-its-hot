@@ -85,5 +85,5 @@ export class LocalFighter {
 
   get armTris(): number { return this.arms.tris; }
 
-  dispose(): void { this.offs.forEach((o) => o()); }
+  dispose(): void { this.offs.forEach((o) => o()); this.vm.dispose(); }
 }

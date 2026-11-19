@@ -10,6 +10,7 @@ import { fontsReady, uiRoot } from '../ui/kit/dom';
 import { MenuScreen, TitleScreen, wordmark } from '../ui/menu/menu-screens';
 import { TABS } from '../ui/menu/settings-rows';
 import { SettingsScreen } from '../ui/menu/settings-screen';
+import { preloadAO } from '../render/geo/ao-cache';
 import { Smithy } from '../world/smithy';
 import { Turntable } from '../world/turntable';
 import { LobbyScreen } from '../ui/menu/lobby-screen';
@@ -33,6 +34,7 @@ const make: SceneFactory = async ({ pipeline, params, width, height, app }) => {
   const rig = new LightRig();
   pipeline.bindRig(rig);
   const lib = await MaterialLib.load(rig, ['brick', 'grate', 'steel', 'rust', 'concrete', 'wood', 'slag', 'coal']);
+  await preloadAO('smithy');
   const smithy = new Smithy(lib, rig, params.seed);
   scene.add(smithy.root);
   scene.background = rig.fogColor;

@@ -12,6 +12,7 @@ import { Player } from '../player/player';
 import type { MaterialLib } from '../render/materials/library';
 import { InterpBuffer, type SampleMode } from './interp';
 import { emptyState } from './pack';
+import { disposeTree } from '../render/dispose';
 
 /**
  * Another player as this client sees them: an interpolated body (TECH §4), a mirrored Fighter (so blade
@@ -94,7 +95,7 @@ export class RemotePlayer {
     const t = ++this.token;
     void this.load(def.id).then((m) => {
       if (t !== this.token) return;
-      this.model?.removeFromParent();
+      if (this.model) { this.model.removeFromParent(); disposeTree(this.model); }
       this.model = gripInHand(m);
       this.ch.hold.hand_r.add(m);
     });

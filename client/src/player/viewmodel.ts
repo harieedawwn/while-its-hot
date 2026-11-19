@@ -3,6 +3,7 @@ import { BALANCE } from '@wih/shared';
 import { FEEL } from '../core/feel';
 import { approach, Spring, unitPeak } from '../core/spring';
 import type { FirstPersonCamera, ViewState } from './camera';
+import { disposeTree } from '../render/dispose';
 
 const V = FEEL.viewmodel;
 
@@ -46,7 +47,10 @@ export class Viewmodel {
   }
 
   /** Swap the held model (weapon change). */
-  setModel(model: THREE.Object3D): void { this.model.removeFromParent(); this.model = model; this.hand.add(model); }
+  /** The viewmodel lives in its own overlay scene, so the host scene's dispose never reaches it. */
+  dispose(): void { disposeTree(this.eye); }
+
+  setModel(model: THREE.Object3D): void { this.model.removeFromParent(); disposeTree(this.model); this.model = model; this.hand.add(model); }
   /** The held weapon model (trails read its markers). */
   get weapon(): THREE.Object3D { return this.model; }
   /** Add something that lives in view space next to the hand (arms). */

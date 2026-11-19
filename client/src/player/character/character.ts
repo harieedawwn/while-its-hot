@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { disposeTree } from '../../render/dispose';
 import type { ModuleId } from '@wih/shared';
 import type { MaterialLib } from '../../render/materials/library';
 import { type AnimInput, Animator } from './animator';
@@ -69,5 +70,5 @@ export class Character {
     return { calls: all.length, tris: all.reduce((n, m) => n + m.geo.getAttribute('position').count / 3, 0) };
   }
 
-  dispose(): void { this.body.dispose(); this.armor.forEach((a) => a.dispose()); }
+  dispose(): void { this.body.dispose(); this.armor.forEach((a) => a.dispose()); disposeTree(this.root); }
 }

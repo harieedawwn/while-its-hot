@@ -12,6 +12,8 @@ export const FEEL = {
     defaultResolution: 450,
     /** Adaptive quality: a frame slower than this (ms) counts as slow… */
     adaptiveSlowMs: 18,
+    /** A frame longer than this is a hitch (load, tab switch), not sustained slowness: ignored, restarts the grace. */
+    adaptiveHitchMs: 250,
     /** …and this many seconds of slow frames in a row steps resolution down one notch. */
     adaptiveHoldS: 2,
     /** Never step below this height. */

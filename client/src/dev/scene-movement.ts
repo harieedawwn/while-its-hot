@@ -163,7 +163,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     },
     resize(w, h) { cam.resize(w / h); vm.resize(w / h); },
     dispose() {
-      sa?.dispose(); arena?.dispose(); unbindFeel(); unbindBody(); body?.dispose(); input.dispose(); hud.dispose(); removeEventListener('keydown', dev);
+      sa?.dispose(); arena?.dispose(); unbindFeel(); unbindBody(); body?.dispose(); vm.dispose(); input.dispose(); hud.dispose(); removeEventListener('keydown', dev);
       scene.traverse((o) => { if (o instanceof THREE.Mesh) o.geometry.dispose(); });
     },
   };

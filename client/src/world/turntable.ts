@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { disposeTree } from '../render/dispose';
 import { loadWeapon } from '../weapons/weapon';
 import type { MaterialLib } from '../render/materials/library';
 import type { LightRig } from '../render/lights';
@@ -22,8 +23,8 @@ export class Turntable {
   async show(id: string, locked: boolean): Promise<void> {
     const my = ++this.token;
     const w = await loadWeapon(id, { lib: this.lib });
-    if (my !== this.token) return;
-    this.pivot.clear();
+    if (my !== this.token) { disposeTree(w); return; }
+    disposeTree(this.pivot); this.pivot.clear();
     if (locked) w.traverse((o) => { if (o instanceof THREE.Mesh) o.material = LOCKED; });
     // stand the weapon upright (blade +Y), centered on its own box
     const holder = new THREE.Group();
@@ -41,7 +42,7 @@ export class Turntable {
     this.pivot.add(wrap);
     this.root.visible = true;
   }
-  hide(): void { this.token++; this.root.visible = false; this.pivot.clear(); }
+  hide(): void { this.token++; this.root.visible = false; disposeTree(this.pivot); this.pivot.clear(); }
   /** `t` pins the angle for frozen shots. */
   update(dt: number, t: number | null): void {
     if (t !== null) this.pivot.rotation.y = 0.9 + t * this.spin;

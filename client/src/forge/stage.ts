@@ -9,6 +9,7 @@ import { flat, mesh } from '../render/models/kit';
 import { hammer } from '../render/models/props';
 import { marker, setHeat } from '../weapons/weapon';
 import { BRAZIER_X } from './anvil';
+import { disposeTree } from '../render/dispose';
 
 const S = FEEL.forge, H = S.hammer, D2R = Math.PI / 180;
 const ease = (t: number) => t * t * (3 - 2 * t);
@@ -62,7 +63,7 @@ export class ForgeStage {
 
   /** Lay a blade model on the anvil (grip at origin, +Y, edge +Z). Replaces the previous one. */
   setBlade(model: THREE.Object3D): void {
-    this.blade?.removeFromParent();
+    if (this.blade) { this.blade.removeFromParent(); disposeTree(this.blade); }
     this.blade = model;
     const tip = marker(model, 'tip')?.position, base = marker(model, 'base')?.position;
     const len = tip && base ? tip.distanceTo(base) : 1, from = base ?? new THREE.Vector3();

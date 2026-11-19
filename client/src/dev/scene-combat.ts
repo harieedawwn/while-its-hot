@@ -27,6 +27,7 @@ import { DEMOS, LINEUP, SETTLE_S } from './combat-demo';
 import { createMoveHud } from './move-hud';
 import { num } from './params';
 import type { SceneFactory } from './scenes';
+import { disposeTree } from '../render/dispose';
 
 /**
  * Melee test (phase 08): a corner of Arena 1 with training dummies (idle, block, parry, counter, move).
@@ -113,7 +114,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     formIdx = (formIdx + 1) % WEAPON_IDS.length;
     const def = weaponById(WEAPON_IDS[formIdx]);
     lf.setWeapon(def, await loadWeapon(def.id, ctx));
-    if (body && bodyWeapon) { bodyWeapon.removeFromParent(); bodyWeapon = gripInHand(await loadWeapon(def.id, ctx)); body.hold.hand_r.add(bodyWeapon); }
+    if (body && bodyWeapon) { bodyWeapon.removeFromParent(); disposeTree(bodyWeapon); bodyWeapon = gripInHand(await loadWeapon(def.id, ctx)); body.hold.hand_r.add(bodyWeapon); }
   };
   const reset = () => {
     player.s.pos.copy(ORIGIN); player.s.vel.set(0, 0, 0); player.yaw = YAW; player.pitch = 0; lf.c.revive();

@@ -14,7 +14,10 @@ import { Pipeline } from './render/pipeline';
 declare global {
   interface Window {
     __ready?: boolean;
-    __stats?: { calls: number; tris: number; programs: number; frameMs: number };
+    __stats?: { calls: number; tris: number; programs: number; frameMs: number; geos: number; textures: number };
+    __app?: Director;
+    __progNames?: () => string;
+    __THREE?: typeof THREE; // set with ?shot=1 so tools/leak.mjs can trace resource creation
   }
 }
 
@@ -39,6 +42,8 @@ async function boot(): Promise<void> {
   });
   const fps = new FpsBadge();
   const app = new Director(renderer, pipeline, host, nativeSearch());
+  window.__app = app;
+  if (params.shot) { window.__THREE = THREE; window.__progNames = () => (renderer.info.programs ?? []).map((p) => p.name).join(','); }
   const wipe = getTransition();
   addEventListener('resize', () => {
     const w = host.clientWidth, h = host.clientHeight;
@@ -64,7 +69,7 @@ async function boot(): Promise<void> {
     if (paused || !scene) return;
     const frozen = app.params.t !== null;
     if (scene !== lastScene) { lastScene = scene; time = app.params.t ?? 0; acc = 0; }
-    pipeline.frame(raw);
+    pipeline.frame(raw, cap > 0 ? 1000 / cap : 0);
     const t0 = performance.now();
     if (!frozen) {
       acc += dt * clock.timeScale;
@@ -73,7 +78,7 @@ async function boot(): Promise<void> {
     renderer.info.reset();
     scene.render(frozen ? 1 : acc / FEEL.simStep);
     const info = renderer.info;
-    window.__stats = { calls: info.render.calls, tris: info.render.triangles, programs: info.programs?.length ?? 0, frameMs: performance.now() - t0 };
+    window.__stats = { calls: info.render.calls, tris: info.render.triangles, programs: info.programs?.length ?? 0, frameMs: performance.now() - t0, geos: info.memory.geometries, textures: info.memory.textures };
     wipe.afterRender(renderer.domElement);
     if (scene.ready && !window.__ready) { window.__ready = true; native.firstFrame(); app.markReady(); }
   };

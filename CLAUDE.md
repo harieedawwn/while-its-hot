@@ -17,6 +17,8 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `node tools/weapon-atlas.mjs [--sheet]` — rebuild the weapon texture atlas `client/public/tex/weapon.png`
 - `node tools/audio/fetch.mjs` then `python3 tools/audio/design.py [event…]` then `python3 tools/audio/check.py` — sources → `client/public/sfx/` → verify (`pip install numpy scipy soundfile pedalboard pyyaml pyloudnorm matplotlib py7zr`)
 - `npm run dev:server` — local Worker + Durable Object (wrangler dev)
+- `node tools/sweep.mjs [--devices all|a,b] [--only substr]` — every scene x device: stats, errors, DOM fit check → `shots/sweep.json`
+- `node tools/leak.mjs [--cycles 4] [--scenes a,b]` — scene-cycling leak check (GPU counts, heap, DOM) · `node tools/aobake.mjs` — rebake `client/public/ao/*.bin` after changing static foundry/smithy geometry
 
 ## Hard rules
 1. Mobile first. Target: mid-range Android 2021+, 60 fps, landscape only. Desktop only needs to work for dev.
@@ -93,6 +95,7 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/net/{remote,remotes,interp,pack,link-sim,loopback,net-debug}.ts` remote player, roster, snapshot interp, local State, lag sim, in-process room, dev overlay · `dev/scene-net.ts` (`net`)
 - `shared/src/match/{flow,rules}.ts` RoundFlow (cage/fight/result/end, lives, ring burn, draft, scoring) + pure rules · `shared/src/data/relics.ts` 14 relics + `foldRelics` · `shared/src/unlocks.ts` match-end unlocks · `match/{flow,bots}.test.ts`
 - `client/src/net/net-flow.ts` round machine presentation (HUD, doors, ring, draft, result, end) · `ui/hud/{draft,match-end}.ts` + `styles/match.css` draft cards, banner, end screen · `dev/net-preview.ts`
+- `client/src/render/{dispose,geo/ao-cache}.ts` `disposeTree` (geometry-only; call it on any model you replace/drop), pre-baked vertex AO files `public/ao/*.bin` · `tools/{sweep,leak,aobake}.mjs`
 
 ## Conventions
 - TypeScript strict, ES modules, npm workspaces: `client/`, `server/`, `shared/`.

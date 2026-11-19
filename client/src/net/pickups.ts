@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { disposeTree } from '../render/dispose';
 import { BALANCE, type PickupNet, WEAPONS } from '@wih/shared';
 
 /**
@@ -28,7 +29,7 @@ export class NetPickups {
     }
   }
 
-  del(id: number): void { const e = this.items.get(id); e?.obj?.removeFromParent(); this.items.delete(id); }
+  del(id: number): void { const e = this.items.get(id); if (e?.obj) { e.obj.removeFromParent(); disposeTree(e.obj); } this.items.delete(id); }
 
   /** The blank within reach of feet position p, or null. */
   nearest(p: THREE.Vector3): number | null {
@@ -41,5 +42,5 @@ export class NetPickups {
   }
 
   get count(): number { return this.items.size; }
-  dispose(): void { this.token++; this.root.removeFromParent(); this.items.clear(); }
+  dispose(): void { this.token++; disposeTree(this.root); this.root.removeFromParent(); this.items.clear(); }
 }
