@@ -1,3 +1,8 @@
+import type { AttackKind, Family, Zone } from '@wih/shared';
+
+/** Hit results the bus carries (parries have their own event). */
+export type HitKind = 'hit' | 'blocked' | 'guardbreak' | 'pierced';
+
 /** Tiny typed event bus. Gameplay emits; audio and VFX subscribe. Add event types to GameEvents as phases need them. */
 export interface GameEvents {
   'app:pause': { paused: boolean };
@@ -10,6 +15,21 @@ export interface GameEvents {
   'move:slide': { on: boolean };
   'move:slamstart': Record<string, never>;
   'move:slam': { x: number; y: number; z: number };
+  /** Melee (combat/*). ids are combatant ids; points are world space. */
+  'combat:swing': { id: number; kind: AttackKind; combo: number; family: Family; x: number; y: number; z: number };
+  'combat:charge': { id: number };
+  'combat:guard': { id: number; act: 'parry' | 'block_on' | 'block_off' | 'feint' };
+  'combat:hit': { attacker: number; target: number; dmg: number; zone: Zone; kind: AttackKind; result: HitKind; x: number; y: number; z: number };
+  'combat:parry': { parrier: number; attacker: number; x: number; y: number; z: number };
+  'combat:kill': { target: number; by: number };
+  /** Forging (forge/*). act: place/placed/lift = anvil; owner = combatant id. */
+  'forge:anvil': { act: 'place' | 'placed' | 'lift'; x: number; y: number; z: number; owner: number };
+  'forge:stance': { on: boolean; owner: number };
+  /** One strike: outcome, the level after it, and the world point of the anvil face. heat = 0..1 at the blow. */
+  'forge:strike': { outcome: 'tuyet' | 'dat' | 'giu' | 'hong'; perfect: boolean; auto: boolean; target: 'blade' | 'armor'; level: number; refused: boolean; broke: boolean; heat: number; x: number; y: number; z: number };
+  'forge:evolve': { form: string; family: Family };
+  'forge:frenzy': { on: boolean };
+  'forge:heating': { on: boolean };
   /** Requests from gameplay to the local camera (combat emits these on hits/parries). */
   'cam:trauma': { amount: number };
   'cam:hitstop': { ms: number };

@@ -65,6 +65,7 @@ export class StaticBatch {
       merged.computeBoundingBox();
       const mesh = new THREE.Mesh(merged, mat);
       mesh.name = `static:${mat.name}`;
+      mesh.userData.foot = mat.userData.foot;
       mesh.matrixAutoUpdate = false;
       out.push(mesh);
       list.forEach((g) => g.dispose());

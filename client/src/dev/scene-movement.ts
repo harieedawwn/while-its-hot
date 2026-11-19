@@ -8,13 +8,19 @@ import { CollisionWorld } from '../physics/world';
 import { FirstPersonCamera } from '../player/camera';
 import { bindFeel } from '../player/feel-bind';
 import { NO_INPUT, type MoveInput } from '../player/move-state';
+import { animInputFromMove, bindCharacterEvents } from '../player/character/drive';
+import { Character } from '../player/character/character';
+import { IDLE_INPUT } from '../player/character/animator';
 import { Player } from '../player/player';
+import { ThirdPersonCamera } from '../player/third-person';
 import { Viewmodel } from '../player/viewmodel';
 import { bakeAO } from '../render/geo/ao';
 import { StaticBatch } from '../render/geo/static-batch';
 import { LightRig } from '../render/lights';
 import { MaterialLib } from '../render/materials/library';
 import { hammer } from '../render/models/props';
+import { SPAWN_POINTS } from '@wih/shared';
+import { applyFoundryLook, createFoundry, type FoundryView } from '../world/foundry';
 import { createMoveHud } from './move-hud';
 import { buildCourse, COURSE } from './movement-course';
 import { num } from './params';
@@ -23,7 +29,7 @@ import type { SceneFactory } from './scenes';
 /**
  * Movement test course (phase 02). Keyboard + mouse (click to lock), or `touch=1` for the on-screen controls (`editor=1` opens the layout editor). Dev keys: R respawn, H hit-stop + shake.
  * Params: fov=75..110, bob=0, shake=0..1, and with `t` a scripted run (demo=slide|dash|slam) is replayed
- * to time t and frozen, e.g. `t=0.9` = mid-slide.
+ * to time t and frozen, e.g. `t=0.9` = mid-slide. `tp=1` = third person (body + over-the-shoulder camera, `armor=0..10`). `arena=1` runs the same controller in Arena 1 (Xưởng Đúc), spawn `sp=0..5`.
  */
 type Script = (t: number) => Partial<MoveInput>;
 /** Each demo: input over time, and the view yaw it runs with. */
@@ -37,24 +43,40 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   const scene = new THREE.Scene();
   const rig = new LightRig();
   pipeline.bindRig(rig);
-  rig.setHemi('#6e6258', '#4a3020', 1.0);
-  rig.setDir([0.45, 0.75, 0.3], '#8a9aaa', 0.75);
-  rig.setFog('#241a14', 18, 62);
+  let arena: FoundryView | null = null;
+  let world: CollisionWorld;
+  let ctx: { lib: MaterialLib; seed: number };
+  let spawnPos: THREE.Vector3Tuple = [...COURSE.spawn];
+  let spawnYaw = 0;
+  if (params.get('arena') === '1') {
+    applyFoundryLook(rig);
+    arena = await createFoundry(rig, params.seed);
+    arena.setDoors(1);
+    scene.add(arena.root);
+    world = arena.world;
+    ctx = { lib: await MaterialLib.load(rig, ['steel', 'rust', 'wood', 'cloth']), seed: params.seed };
+    const sp = SPAWN_POINTS[Math.max(0, Math.min(5, Math.round(num(params, 'sp', 0))))];
+    spawnPos = [sp.pos[0], sp.pos[1], sp.pos[2]];
+    spawnYaw = sp.yaw;
+  } else {
+    rig.setHemi('#6e6258', '#4a3020', 1.0);
+    rig.setDir([0.45, 0.75, 0.3], '#8a9aaa', 0.75);
+    rig.setFog('#241a14', 18, 62);
+    COURSE.lights.forEach((p, i) => rig.add(p, i % 2 ? '#ffa060' : '#ff8a44', 3.2, 16));
+    const lib = await MaterialLib.load(rig, ['brick', 'grate', 'steel', 'rust', 'concrete', 'wood', 'slag', 'cloth']);
+    ctx = { lib, seed: params.seed };
+    const batch = new StaticBatch();
+    buildCourse(batch, lib, ctx);
+    const statics = batch.build();
+    bakeAO(statics, { rays: 10, dist: 1.6, strength: 0.7 });
+    statics.forEach((m) => scene.add(m));
+    world = CollisionWorld.fromMeshes(statics);
+  }
   scene.background = rig.fogColor;
-  COURSE.lights.forEach((p, i) => rig.add(p, i % 2 ? '#ffa060' : '#ff8a44', 3.2, 16));
-
-  const lib = await MaterialLib.load(rig, ['brick', 'grate', 'steel', 'rust', 'concrete', 'wood', 'slag']);
-  const ctx = { lib, seed: params.seed };
-  const batch = new StaticBatch();
-  buildCourse(batch, lib, ctx);
-  const statics = batch.build();
-  bakeAO(statics, { rays: 10, dist: 1.6, strength: 0.7 });
-  statics.forEach((m) => scene.add(m));
-  const world = CollisionWorld.fromMeshes(statics);
 
   const c = params.cam;
-  const spawn: THREE.Vector3Tuple = c ? [c[0], c[1] - FEEL.camera.eye, c[2]] : [...COURSE.spawn];
-  const yaw0 = c && c.length >= 4 ? c[3] : 0;
+  const spawn: THREE.Vector3Tuple = c ? [c[0], c[1] - FEEL.camera.eye, c[2]] : [...spawnPos];
+  const yaw0 = c && c.length >= 4 ? c[3] : spawnYaw;
   let player = new Player(world, spawn, yaw0);
   if (c && c.length >= 5) player.pitch = c[4];
 
@@ -68,6 +90,18 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   tool.rotation.set(-0.7, 0.35, 0.35, 'XZY');
   const vm = new Viewmodel(tool, width / height);
   const unbindFeel = bindFeel(cam, vm);
+  const tp = params.get('tp') === '1';
+  const body = tp ? new Character(ctx.lib, { armor: num(params, 'armor', 0) }) : null;
+  const tpCam = new ThirdPersonCamera();
+  const animIn = { ...IDLE_INPUT };
+  const unbindBody = body ? bindCharacterEvents(body) : () => {};
+  if (body) scene.add(body.root);
+  const poseBody = (dt: number, v: ReturnType<Player['viewState']>) => {
+    if (!body) return;
+    tpCam.apply(cam.camera, v, dt, world);
+    body.root.position.copy(v.pos); body.root.rotation.y = v.yaw;
+    body.update(dt, animInputFromMove(player.s, v.yaw, animIn));
+  };
 
   const input = bindInput(document.getElementById('app')!, renderer.domElement, { touch: params.touch });
   const actions = input.actions;
@@ -77,7 +111,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     if (params.get('editor') === '1') void openLayoutEditor(input.touch);
   }
   const hud = createMoveHud(document.getElementById('app')!, BALANCE.move.stamina.pips);
-  const respawn = () => { player = new Player(world, [...COURSE.spawn], 0); };
+  const respawn = () => { player = new Player(world, [...spawnPos], spawnYaw); };
   const dev = (e: KeyboardEvent) => {
     if (e.code === 'KeyR') respawn();
     if (e.code === 'KeyH') { bus.emit('cam:hitstop', { ms: 70 }); bus.emit('cam:trauma', { amount: 0.45 }); vm.kick(1); }
@@ -96,13 +130,15 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
       const v = player.viewState(1);
       cam.update(step, v);
       vm.update(step, cam, v);
+      poseBody(step, v);
     }
   }
 
   let last = performance.now();
   return {
     ready: true,
-    update(dt) {
+    update(dt, time) {
+      arena?.update(dt, time);
       if (frozen) return;
       player.tick(dt, actions);
       if (player.s.pos.y < -20) respawn();
@@ -117,12 +153,13 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
       const v = player.viewState(alpha);
       cam.update(fdt, v);
       vm.update(fdt, cam, v);
+      poseBody(fdt, v);
       hud.update(player.s.stamina);
-      pipeline.render(scene, cam.camera, vm);
+      pipeline.render(scene, cam.camera, tp ? undefined : vm);
     },
     resize(w, h) { cam.resize(w / h); vm.resize(w / h); },
     dispose() {
-      unbindFeel(); input.dispose(); hud.dispose(); removeEventListener('keydown', dev);
+      arena?.dispose(); unbindFeel(); unbindBody(); body?.dispose(); input.dispose(); hud.dispose(); removeEventListener('keydown', dev);
       scene.traverse((o) => { if (o instanceof THREE.Mesh) o.geometry.dispose(); });
     },
   };

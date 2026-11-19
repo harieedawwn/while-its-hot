@@ -73,6 +73,9 @@ export class Pipeline {
     for (const r of this.rigs) r.shared.uSnap.value.set(this.width * k * 0.5, this.height * k * 0.5);
   }
 
+  /** Fire-ring tint 0..1 (LOOK §7: inside the wall the world tints toward the heat ramp). */
+  setHeatTint(k: number): void { this.post.uniforms.uHeatTint.value = Math.max(0, Math.min(1, k)); }
+
   /** World, then an optional overlay (viewmodel) over a cleared depth buffer, then post. */
   render(scene: THREE.Scene, camera: THREE.Camera, overlay?: { scene: THREE.Scene; camera: THREE.Camera }): void {
     const r = this.renderer;

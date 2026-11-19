@@ -1,10 +1,10 @@
 import { FEEL } from '../core/feel';
 import type { Actions, Button } from './actions';
 
-/** Dev keyboard + mouse (LOOK §6). C is a second slide key: Ctrl+W closes the browser tab. */
+/** Dev keyboard + mouse (LOOK §6). C is a second slide key: Ctrl+W closes the browser tab. V / X = Đánh / Đỡ without pointer lock (headless checks). */
 const KEYS: Record<string, Button> = {
   Space: 'jump', ShiftLeft: 'dash', ShiftRight: 'dash', ControlLeft: 'slide', ControlRight: 'slide', KeyC: 'slide',
-  KeyE: 'forge', KeyF: 'anvil', KeyQ: 'swap', Tab: 'scoreboard', Escape: 'pause',
+  KeyE: 'forge', KeyF: 'anvil', KeyQ: 'swap', KeyV: 'attack', KeyX: 'parry', Tab: 'scoreboard', Escape: 'pause',
 };
 const MOVE = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD']);
 

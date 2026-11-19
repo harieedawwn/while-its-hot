@@ -15,7 +15,13 @@ export class Viewmodel {
   readonly scene = new THREE.Scene();
   readonly camera: THREE.PerspectiveCamera;
   private eye = new THREE.Group();
-  private hand = new THREE.Group();
+  /** The weapon hand (grip at origin, blade +Y), in the eye group's space. */
+  readonly hand = new THREE.Group();
+  /** Combat animation pose (view space). null = the rest pose from FEEL.viewmodel.rest. */
+  pose: { pos: THREE.Vector3; quat: THREE.Quaternion } | null = null;
+  private model: THREE.Object3D;
+  private qLag = new THREE.Quaternion();
+  private eLag = new THREE.Euler(0, 0, 0, 'YXZ');
   private lagY = new Spring(V.lag.k, V.lag.c);
   private lagP = new Spring(V.lag.k, V.lag.c);
   private sx = new Spring(V.sway.k, V.sway.c);
@@ -33,10 +39,18 @@ export class Viewmodel {
   constructor(model: THREE.Object3D, aspect: number) {
     this.camera = new THREE.PerspectiveCamera(V.vfov, aspect, V.near, 10);
     this.camera.rotation.order = 'YXZ';
+    this.model = model;
     this.hand.add(model);
     this.eye.add(this.hand);
     this.scene.add(this.eye);
   }
+
+  /** Swap the held model (weapon change). */
+  setModel(model: THREE.Object3D): void { this.model.removeFromParent(); this.model = model; this.hand.add(model); }
+  /** The held weapon model (trails read its markers). */
+  get weapon(): THREE.Object3D { return this.model; }
+  /** Add something that lives in view space next to the hand (arms). */
+  attach(o: THREE.Object3D): void { this.eye.add(o); }
 
   resize(aspect: number): void { this.camera.aspect = aspect; this.camera.updateProjectionMatrix(); }
 
@@ -72,9 +86,12 @@ export class Viewmodel {
     const rz = this.recZ.step(0, adt), rp = this.recP.step(0, adt);
     this.tilt = approach(this.tilt, v.sliding ? V.slideTilt : 0, 14, adt);
 
-    const [x0, y0, z0] = V.rest;
+    const pp = this.pose?.pos, x0 = pp ? pp.x : V.rest[0], y0 = pp ? pp.y : V.rest[1], z0 = pp ? pp.z : V.rest[2];
     this.hand.position.set(x0 + sx + bx + ly * 0.25, y0 + sy + by + breath + dip - this.tilt * 0.12 - lp * 0.15, z0 + sz + rz * 0.1);
-    this.hand.rotation.set(lp + rp * 0.1, ly, this.tilt, 'YXZ');
+    if (this.pose) {
+      this.qLag.setFromEuler(this.eLag.set(lp + rp * 0.1, ly, this.tilt, 'YXZ'));
+      this.hand.quaternion.multiplyQuaternions(this.qLag, this.pose.quat);
+    } else this.hand.rotation.set(lp + rp * 0.1, ly, this.tilt, 'YXZ');
 
     // follow the world camera's pose (incl. shake) with the viewmodel's own projection
     const w = cam.camera;

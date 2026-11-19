@@ -1,8 +1,9 @@
 import * as THREE from 'three';
+import { HEAT_LINEAR } from './heat';
 
 /**
  * The one fullscreen pass (LOOK §1.4): reads the low-res linear target, encodes to sRGB, 4×4 ordered
- * dither, quantizes per channel, then the transition hooks (desaturate, fade to color). Nothing else.
+ * dither, quantizes per channel, then the transition hooks (desaturate, fade to color) and the fire-ring heat tint. Nothing else.
  * Dither + quantize run in display (sRGB) space so dark foundry tones keep their steps.
  */
 const VERT = /* glsl */ `
@@ -16,6 +17,8 @@ uniform float uDither;   // amplitude in quantize steps
 uniform float uDesat;    // 0..1 transition/death hook
 uniform vec3 uFadeColor; // sRGB
 uniform float uFade;     // 0..1
+uniform float uHeatTint; // 0..1: inside the fire ring the world leans toward the heat ramp
+uniform vec3 uHeatRamp[9];
 varying vec2 vUv;
 
 float bayer4(vec2 p) {
@@ -33,6 +36,7 @@ void main() {
   vec3 c = texture2D(tScene, vUv).rgb;
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
   c = mix(c, vec3(l), uDesat);
+  if (uHeatTint > 0.0) c = mix(c, uHeatRamp[int(clamp(sqrt(l) * 9.0, 0.0, 8.0))], uHeatTint);
   c = toSRGB(c);
   if (uLevels > 1.0) {
     float s = uLevels - 1.0;
@@ -52,6 +56,8 @@ export class PostPass {
     uDesat: { value: 0 },
     uFadeColor: { value: new THREE.Color(0, 0, 0) },
     uFade: { value: 0 },
+    uHeatTint: { value: 0 },
+    uHeatRamp: { value: HEAT_LINEAR },
   };
   private scene = new THREE.Scene();
   private camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);

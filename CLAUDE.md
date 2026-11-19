@@ -14,6 +14,7 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `npm run dev` — client dev server (Vite) · `npm run build` · `npm run typecheck` · `npm test`
 - `node tools/shot.mjs <scene> [--devices phones|all] [--q "k=v&k=v"]` — screenshots for self-check
 - `node tools/texbake.mjs [name…] [--sheet] [--try id,id]` — rebake world textures into `client/public/tex/`
+- `node tools/weapon-atlas.mjs [--sheet]` — rebuild the weapon texture atlas `client/public/tex/weapon.png`
 - `npm run dev:server` — local Worker + Durable Object (wrangler dev)
 
 ## Hard rules
@@ -52,6 +53,25 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/input/{touch,touch-view,touch-math,touch-layout,pictograms}.ts` touch controller, DOM layer, pure math, layout model, SVG pictograms
 - `client/src/input/{layout-editor,gyro,gamepad}.ts` layout editor, gyro aim, gamepad mapping · `input/input.test.ts`
 - `client/src/app/native.ts` Capacitor glue (back, pause, splash, APK default scene) · `android/` Capacitor project, `tools/android-keystore.sh`, `.github/workflows/apk.yml`
+- `shared/src/world/arenas/foundry.ts` Arena 1 layout data (cages, racks, pedestal, ring centers, respawns, helpers) · `client/src/world/region-batch.ts` per-light-region StaticBatch
+- `client/src/world/foundry/{index,ctx,floor,shell,furnace,catwalks,crane,landmarks}.ts` arena builders · `foundry/{molten,cages,ring}.ts` animated molten sheet, cage doors, fire ring · `dev/scene-arena.ts`
+- `client/src/player/character/{skeleton,skin-batch,body,character}.ts` rigid skeleton + sockets, CPU-skinned batch, base body, assembled Character · `armor-{kit,soft,plate}.ts`, `armor.ts`, `modules.ts` armor tiers + 6 modules
+- `client/src/player/character/{pose,animator,drive}.ts` clip sampling/blend, base+action animator, MoveState → anim · `clips/*.ts` clip data + attack slots · `player/third-person.ts` TP camera · `render/geo/cbox.ts` 44-tri box
+- `shared/src/data/{armor,modules,colors}.ts` armor tiers, module defs, player colors · `dev/scene-character.ts` lineup / `clip=` player
+- `shared/src/data/weapons.ts` 16 forms, formFor/passivesOf · `shared/src/passives.ts` passive hook registry + folds
+- `client/src/weapons/{wkit,shapes,palette,tassel,weapon}.ts` one-mesh builder + atlas UVs/heatMask, blade loft/profile/wrap, colors, tassel, build/load(GLB)/setHeat · `weapons/models/*.ts` 16 builders + index
+- `client/src/dev/scene-weapons.ts` rack / `?weapon=&heat=` close-up · `tools/weapon-atlas.mjs` → `public/tex/weapon.png`
+- `shared/src/combat/{frames,fighter,damage,sweep}.ts` frame data + attack shapes, melee state machine, hit/defense rules, blade sweep vs hit capsules
+- `client/src/combat/{combatant,combat-world,resolver}.ts` body+fighter+hp, per-tick sweeps/events/lunges, HitClaim + LocalResolver + passive effects
+- `client/src/combat/{local-fighter,aim-assist,combat-feel,fighter-anim,dummy}.ts` local player melee kit, touch aim assist, hit-stop/trauma, fighter → TP clips, training dummy AI
+- `client/src/combat/vm/{vm-pose,vm-clips,vm-driver,vm-arms}.ts` FP pose keys, per-family FP attack sets from the sweep arcs, fighter → viewmodel, FP forearms
+- `client/src/player/character/clips/attacks.ts` TP attack clips · `dev/{scene-combat,combat-demo}.ts` combat scene + scripted demos
+- `shared/src/forge/{odds,session,anvil-rule}.ts` forge odds + shifts, ForgeSession (blades/armor/heat/ring/frenzy/pick), anvil timers · `forge/forge.test.ts` · `BALANCE.forge`
+- `client/src/forge/{anvil,stage,stance-cam,controller}.ts` placed anvil+brazier (solid, lit), blade/hammer on the anvil, stance camera blend, local forge loop (replaces lf.tick+player.tick) · `physics/blockers.ts` dynamic cylinders in CollisionWorld
+- `client/src/ui/{forge-hud,forge-hud-css}.ts` strike ring, heat meter, frenzy pips, result word, +3 family pick · `dev/scene-forge.ts` forge scene (presets in its header)
+- `client/src/fx/{sparks,puffs,decals,shards,trail}.ts` spark pool (embers/star), dithered puffs, ground decals/rings, Gãy shards, weapon ribbon · `fx/glsl.ts` Bayer clip + heat ramp + fog
+- `client/src/fx/{fx-world,fx-bind,fx-layer,fx-settings}.ts` pools + recipes, bus → effects + ring embers/tint, per-scene FX bundle with trails, Máu setting · `dev/{scene-fx,fx-demo}.ts` fx bench
+- `client/src/world/foundry/flame-atlas.ts` 4-frame flame atlas for the fire ring cards (`ring.ts`)
 - `client/src/ui/strings.vi.ts` all Vietnamese text · `tools/shot.mjs` screenshots · `tools/audio/*` audio checks
 
 ## Conventions

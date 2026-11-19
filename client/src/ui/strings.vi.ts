@@ -6,10 +6,33 @@ export const STR = {
     resolution: 'Độ phân giải điểm ảnh', native: 'Gốc',
     quantize: 'Nén màu', quantOff: 'Tắt', quantLight: 'Nhẹ', quantStrong: 'Mạnh',
     snap: 'Rung đỉnh',
+    /** VFX setting (phase 10): hit puffs and floor marks; off = sparks only. */
+    blood: 'Máu',
   },
   /** Touch layout editor (Điều khiển → Chỉnh bố cục). Game buttons carry pictograms only, never text. */
   layout: {
     done: 'Xong', reset: 'Đặt lại', grid: 'Lưới', size: 'Cỡ', opacity: 'Độ mờ',
     slot: (n: number) => `Bố cục ${n}`,
+  },
+  /** Armor tiers (GDD §7) and modules; ids come from shared/src/data. */
+  armorTier: { tap_de: 'Tạp dề', da: 'Giáp da', da_dinh: 'Giáp da đinh', giap_nua: 'Giáp nửa', giap_toan_than: 'Giáp toàn thân' },
+  module: {
+    phan_luc: 'Bộ phản lực', sung_may_vai: 'Súng máy vai', no_vai: 'Nỏ vai',
+    banh_lan: 'Bánh lăn gót', khien_tay: 'Khiên tay', binh_no: 'Bình nổ',
+  },
+  /** Weapon families and forms (GDD §5–6); ids come from shared/src/data/weapons.ts. */
+  family: { kiem: 'Kiếm', bua: 'Búa', thuong: 'Thương' },
+  weapon: {
+    phoi: 'Phôi thép',
+    kiem_tho: 'Kiếm thô', kiem_thep: 'Kiếm thép', kiem_ban_rong: 'Kiếm bản rộng', truong_kiem: 'Trường kiếm', kiem_toi_lua: 'Kiếm tôi lửa',
+    bua_ren: 'Búa rèn', bua_ta: 'Búa tạ', chuy_gai: 'Chùy gai', bua_chien: 'Búa chiến', bua_de: 'Búa đe',
+    giao_sat: 'Giáo sắt', thuong_thep: 'Thương thép', kich: 'Kích', dai_dao: 'Đại đao', tram_ma_dao: 'Trảm mã đao',
+  },
+  /** Forge stance HUD (GDD §6). Only result words and what a player truly needs to read. */
+  forge: {
+    outcome: { tuyet: 'Tuyệt', dat: 'Đạt', giu: 'Giữ', hong: 'Hỏng' },
+    broke: 'Gãy', refused: 'Chạm trần',
+    target: { blade: 'Vũ khí', armor: 'Giáp' },
+    frenzy: 'Nhập thần',
   },
 } as const;
