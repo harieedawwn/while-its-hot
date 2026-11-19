@@ -172,7 +172,7 @@ Read: GDD §9, §10.
 - APK now opens to the title/menu.
 Shots: `training` (2 cams). Done when the yard is complete offline in the APK.
 
-### Phase 16 — Server: rooms, protocol, clock, deploy · `PARTIAL` · Sonnet 5.5 · medium
+### Phase 16 — Server: rooms, protocol, clock, deploy · `DONE` · Sonnet 5.5 · medium
 Read: TECH §1, §4 (rooms, protocol, clock), §7 (deploy).
 - Worker routes + Room DO (SQLite-backed class, `locationHint: "apac"`), create/join by code, host
   handling, reconnect tokens, lobby hibernation, match tick, empty-room alarm.
@@ -285,3 +285,4 @@ Done when the sim results are in the log and the APK release is current.
 - Test on the phone: Luyện tập → walk to the board row north of the dummies, tap Rèn at rack/armor/lever; hit dummies and read the chalkboard; place the anvil (Đe) and strike past +3 — it must refuse; the APK already opens to the menu.
 - Phase 16 (PARTIAL): `shared/src/net/{protocol,codec,clock}.ts` (+test): JSON lobby msgs, binary 33-byte State / Snapshot, ClockSync (5 lowest-RTT median), `BALANCE.net`. `server/src/{worker,room,lobby}.ts` + `wrangler.jsonc`: POST /room -> code, /room/CODE/ws, /exists; Room DO (SQLite class, hibernating lobby, 30 s reconnect token, host handoff, 5 min empty alarm, 20 Hz snapshot relay once a match starts); `Lobby` is pure and unit-tested. Verified locally with `wrangler dev` + `tools/netbot.mjs` (3 bots, match start, snapshots, ping ~2 ms).
 - Client: `net/{config,client}.ts` (RoomClient, `room.current` shared with the match), `ui/menu/lobby-screen.ts` + `lobby.css` (menu -> Chơi mạng: Tạo phòng / code field / roster / Sẵn sàng / host truce 0-30-60 / Bắt đầu; scene `ui-menu&screen=online&code=XXXX&server=URL`). `start` message is received but no match scene yet (phase 17/18). `.github/workflows/deploy.yml` skips deploy until the token secret exists. Dev: `npm run dev:server` + `?server=http://127.0.0.1:8787`.
+- Phase 16 done: deployed at https://while-its-hot.nguyenlehaidang2k10.workers.dev (DEPLOY_URL set); 3 netbots + match start + snapshots verified on production (ping ~160 ms from the sandbox). Test: open the APK -> Chơi mạng -> Tạo phòng, join from a second phone.

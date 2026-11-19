@@ -26,13 +26,13 @@ function bot(k) {
     if (m.t === 'pong') st.rtt.push(Date.now() - m.c);
     else if (m.t === 'welcome') { st.id = m.id; ws.send(JSON.stringify({ t: 'ready', v: true })); }
     else if (m.t === 'lobby') st.players = m.players.length;
-    else if (m.t === 'err') st.err = m.code;
+    else if (m.t === 'err') { if (m.code !== 'host') st.err = m.code; }
   });
   ws.on('error', (e) => { st.err = e.message; });
   stats.push(st); return ws;
 }
 const socks = Array.from({ length: n }, (_, i) => bot(i));
-if (match) setTimeout(() => { /* bot 0 is host: starts once all are ready */ socks[0].send(JSON.stringify({ t: 'start' })); }, 3000);
+if (match) setTimeout(() => { /* bot 0 is host: starts once all are ready */ socks.forEach((w) => w.send(JSON.stringify({ t: 'start' }))); }, 3000);
 setTimeout(() => {
   for (const s of stats) { const r = s.rtt.sort((x, y) => x - y); console.log(`bot${s.k} id=${s.id} players=${s.players} pings=${r.length} med=${r[r.length >> 1] ?? '-'}ms max=${r.at(-1) ?? '-'}ms snaps=${s.snaps} err=${s.err}`); }
   const ok = stats.every((s) => s.rtt.length >= secs / 2 && !s.err && s.players === n);
