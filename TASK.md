@@ -213,6 +213,58 @@ Done when the sim results are in the log and the APK release is current.
 
 ---
 
+## Round 2 — playtest fixes (cheap: read only what each phase names; shots on `phones` only)
+
+### Phase 21 — Gameplay and flow fixes · `TODO` · Sonnet 5.5 · medium
+Read: GDD §3, §4, §7, §8 (only rows that mention dash). Code map lines for player/, net/, ui/menu, app/.
+- **Remove dash completely** (action, button, stamina use, dash-jump, i-frames, dash attack, dash sounds/fx
+  bindings). Replace dash dependencies: `phan_luc` = double jump + hover; `binh_no` drops its bomb on slide
+  start; `dai_dao` passive = slide attack lunge +50%; `gang_da` stays. Update GDD §4/§5/§7 and strings.
+- **Finite slide:** slide lasts at most 0.8 s (feel.ts), speed eases down to run speed, then the player stands
+  up even if the button is held; 0.35 s cooldown. Slide-jump keeps momentum. Update movement tests.
+- **Cage bars are walk-through:** give cage bars/doors colliders in the CollisionWorld (closed = solid,
+  open = removed), same for any other visual-only blocker found in the arena data. Add a test.
+- **First choice blocked by joystick** (the relic draft in the cage, and the +3 family pick): while any modal
+  choice is open, hide/disable the touch control layer (pointer-events none), put modals above it, make
+  cards large tap targets. Check every overlay screen for the same bug.
+- **Lobby roster:** show each player's name + color swatch, host mark, ready state, and "n/6" count; join/leave
+  updates live; a short join/leave sound via the bus.
+- **Match settings (host):** rounds to win (2/3/5), round time (120/180/240 s), lives (1/3/5), truce
+  (0/30/60), fire ring speed (chậm/vừa/nhanh), max players (2–6). Server-validated in `RoomSettings`,
+  numbers in balance.ts, shown read-only to non-hosts.
+- **Transition hitch:** the cover animation must never freeze. Run the cover on its own time, hold the
+  covered state until the next scene reports ready, build the next scene in slices across frames, and warm
+  shaders with `renderer.compileAsync` while covered; uncover only after 2 good frames. Same for Chơi mạng.
+Shots: `ui-menu`, `lobby`, `net` (draft open with `touch=1`). Done when tests pass and the draft is tappable.
+
+### Phase 22 — Touch controls redesign, full layout freedom, 3–4 finger play · `TODO` · Opus 5.5 · medium
+Read: TECH §5. LOOK §8 ("Touch buttons" and palette only). Code map lines for input/.
+- Redesign every gameplay control (stick, Đánh, Đỡ, Nhảy, Trượt, Rèn, Đặt đe, Đổi, pause, scoreboard) as one
+  coherent set: machined steel discs with a bevel ring, crisp custom SVG pictograms drawn to one grid and
+  stroke weight, clear pressed state (inset + --iron-hot fill 80 ms), cooldown/charge shown on the rim,
+  contextual buttons fade in place instead of popping. Nothing generic, no text labels.
+- Layout editor: move, resize and set opacity of EVERY control individually (stick base too), snap grid,
+  per-control reset, presets **2 ngón / 3 ngón / 4 ngón (claw)**, plus the 3 custom slots.
+- Real multi-touch: any number of simultaneous pointers; a finger can hold Đỡ or charge Đánh while another
+  looks and another moves; any touch not on a control looks; a button press can slide into looking.
+  The claw presets put Nhảy/Trượt/Đánh on index fingers (top corners).
+- Tests for pointer ownership with 4 simultaneous pointers.
+Shots: `movement&touch=1` and the layout editor, `phones`. Done when all presets work and nothing overlaps on 16:9 and 21:9.
+
+### Phase 23 — App icon and splash · `TODO` · Sonnet 5.5 · medium
+Read: LOOK §1, §5. TECH §6 (splash).
+- `?scene=icon`: a cinematic in-engine render built for the icon: the anvil close-up, a blade at forging heat
+  on it, hammer frozen mid-strike with a few sparks, one strong warm key light from the blade/brazier,
+  deep black surroundings, rim light on the hammer. Render at native resolution (not the low-res target) so it
+  stays readable; textures keep nearest filtering. Composition must read at 48 px: one big silhouette, the hot
+  blade as the brightest shape, centered in the adaptive-icon safe circle.
+- Capture 1024×1024 with shot.mjs (add a square `icon` device), check a 48 px downscale side by side.
+- Generate Android adaptive icon (foreground + solid soot background layer, monochrome layer for themed icons)
+  and all mipmaps + splash with a small script (sharp), wired into `android/`. Commit the PNGs.
+Done when the APK built by CI shows the new icon and splash.
+
+---
+
 ## Phase log
 (newest last)
 - Phase 00: workspaces client/server/shared, Vite 8 + three 0.187 + three-mesh-bvh 0.9.18 (pinned), vitest 4.0.18 (4.1.x breaks npm's resolver here). `kit/` removed: procgeo is typed TS, sfx engine is the untyped vendor `client/src/audio/vendor/sfx.js`, audio tools in `tools/audio/`.
