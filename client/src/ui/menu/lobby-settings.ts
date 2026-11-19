@@ -21,7 +21,7 @@ const ROWS: readonly Row[] = [
  * (wrapping); everyone else sees the same cells as plain read-only text.
  */
 export function settingsGrid(cur: RoomSettings, host: boolean, change: (patch: Partial<RoomSettings>) => void, minPlayers: number): HTMLDivElement {
-  const g = el('div', 'm-set');
+  const g = el('div', 'lb-set');
   for (const r of ROWS) {
     const v = cur[r.key];
     const cell = el(host ? 'button' : 'div', `m-cell${host ? ' is-edit' : ''}`);
