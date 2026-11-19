@@ -12,4 +12,10 @@ export const STR = {
     done: 'Xong', reset: 'Đặt lại', grid: 'Lưới', size: 'Cỡ', opacity: 'Độ mờ',
     slot: (n: number) => `Bố cục ${n}`,
   },
+  /** Armor tiers (GDD §7) and modules; ids come from shared/src/data. */
+  armorTier: { tap_de: 'Tạp dề', da: 'Giáp da', da_dinh: 'Giáp da đinh', giap_nua: 'Giáp nửa', giap_toan_than: 'Giáp toàn thân' },
+  module: {
+    phan_luc: 'Bộ phản lực', sung_may_vai: 'Súng máy vai', no_vai: 'Nỏ vai',
+    banh_lan: 'Bánh lăn gót', khien_tay: 'Khiên tay', binh_no: 'Bình nổ',
+  },
 } as const;

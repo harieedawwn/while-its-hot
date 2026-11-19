@@ -65,6 +65,35 @@ export const FEEL = {
     slideTilt: 0.22,
   },
 
+  /** Character animation (LOOK §4). Seconds, meters, m/s. */
+  anim: {
+    /** Meters travelled per full run cycle (two steps). */
+    cycleLen: 3.3,
+    /** Ground speed range over which idle blends into the run cycle. */
+    locoBlend: [0.4, 3.2] as readonly [number, number],
+    /** Ground speed range over which the sprint lean fades in (above run speed). */
+    sprintBlend: [9.6, 14] as readonly [number, number],
+    /** Crossfade seconds into each base state. */
+    fade: { ground: 0.14, jump: 0.05, fall: 0.18, slide: 0.08, dash: 0.04, slam: 0.05, cling: 0.1 },
+    /** Default action fade in/out (block, parry, hit-react, forge loops). */
+    actionIn: 0.07, actionOut: 0.14,
+    /** A landing at least this fast (m/s) plays the land clip; the clip is slowed down for soft landings. */
+    landMin: 5,
+    /** Rising faster than this (m/s) in the air is the jump clip, otherwise fall. */
+    jumpVy: 1.5,
+  },
+
+  /** Third-person camera option (over the shoulder, collision-aware). */
+  thirdPerson: {
+    dist: 2.7, shoulder: 0.42, pivotY: 1.55,
+    /** Keep this far from the wall the camera was pulled in front of. */
+    margin: 0.28, minDist: 0.55,
+    /** Pulled in at once, eased out at this rate (1/s). */
+    outRate: 5,
+    /** Look pitch limits are the first-person ones; this bias lifts the view a touch so the character sits low. */
+    pitchBias: 0.04,
+  },
+
   /** Input feel (TECH §5). Radians per CSS pixel for mouse/touch; sizes are "design px" at a 360 px tall safe rect. */
   input: {
     mouseSens: 0.0022,

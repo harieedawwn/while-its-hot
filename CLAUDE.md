@@ -54,6 +54,9 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/app/native.ts` Capacitor glue (back, pause, splash, APK default scene) · `android/` Capacitor project, `tools/android-keystore.sh`, `.github/workflows/apk.yml`
 - `shared/src/world/arenas/foundry.ts` Arena 1 layout data (cages, racks, pedestal, ring centers, respawns, helpers) · `client/src/world/region-batch.ts` per-light-region StaticBatch
 - `client/src/world/foundry/{index,ctx,floor,shell,furnace,catwalks,crane,landmarks}.ts` arena builders · `foundry/{molten,cages,ring}.ts` animated molten sheet, cage doors, fire ring · `dev/scene-arena.ts`
+- `client/src/player/character/{skeleton,skin-batch,body,character}.ts` rigid skeleton + sockets, CPU-skinned batch, base body, assembled Character · `armor-{kit,soft,plate}.ts`, `armor.ts`, `modules.ts` armor tiers + 6 modules
+- `client/src/player/character/{pose,animator,drive}.ts` clip sampling/blend, base+action animator, MoveState → anim · `clips/*.ts` clip data + attack slots · `player/third-person.ts` TP camera · `render/geo/cbox.ts` 44-tri box
+- `shared/src/data/{armor,modules,colors}.ts` armor tiers, module defs, player colors · `dev/scene-character.ts` lineup / `clip=` player
 - `client/src/ui/strings.vi.ts` all Vietnamese text · `tools/shot.mjs` screenshots · `tools/audio/*` audio checks
 
 ## Conventions

@@ -8,7 +8,11 @@ import { CollisionWorld } from '../physics/world';
 import { FirstPersonCamera } from '../player/camera';
 import { bindFeel } from '../player/feel-bind';
 import { NO_INPUT, type MoveInput } from '../player/move-state';
+import { animInputFromMove, bindCharacterEvents } from '../player/character/drive';
+import { Character } from '../player/character/character';
+import { IDLE_INPUT } from '../player/character/animator';
 import { Player } from '../player/player';
+import { ThirdPersonCamera } from '../player/third-person';
 import { Viewmodel } from '../player/viewmodel';
 import { bakeAO } from '../render/geo/ao';
 import { StaticBatch } from '../render/geo/static-batch';
@@ -25,7 +29,7 @@ import type { SceneFactory } from './scenes';
 /**
  * Movement test course (phase 02). Keyboard + mouse (click to lock), or `touch=1` for the on-screen controls (`editor=1` opens the layout editor). Dev keys: R respawn, H hit-stop + shake.
  * Params: fov=75..110, bob=0, shake=0..1, and with `t` a scripted run (demo=slide|dash|slam) is replayed
- * to time t and frozen, e.g. `t=0.9` = mid-slide. `arena=1` runs the same controller in Arena 1 (Xưởng Đúc), spawn `sp=0..5`.
+ * to time t and frozen, e.g. `t=0.9` = mid-slide. `tp=1` = third person (body + over-the-shoulder camera, `armor=0..10`). `arena=1` runs the same controller in Arena 1 (Xưởng Đúc), spawn `sp=0..5`.
  */
 type Script = (t: number) => Partial<MoveInput>;
 /** Each demo: input over time, and the view yaw it runs with. */
@@ -50,7 +54,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     arena.setDoors(1);
     scene.add(arena.root);
     world = arena.world;
-    ctx = { lib: await MaterialLib.load(rig, ['steel', 'rust', 'wood']), seed: params.seed };
+    ctx = { lib: await MaterialLib.load(rig, ['steel', 'rust', 'wood', 'cloth']), seed: params.seed };
     const sp = SPAWN_POINTS[Math.max(0, Math.min(5, Math.round(num(params, 'sp', 0))))];
     spawnPos = [sp.pos[0], sp.pos[1], sp.pos[2]];
     spawnYaw = sp.yaw;
@@ -59,7 +63,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     rig.setDir([0.45, 0.75, 0.3], '#8a9aaa', 0.75);
     rig.setFog('#241a14', 18, 62);
     COURSE.lights.forEach((p, i) => rig.add(p, i % 2 ? '#ffa060' : '#ff8a44', 3.2, 16));
-    const lib = await MaterialLib.load(rig, ['brick', 'grate', 'steel', 'rust', 'concrete', 'wood', 'slag']);
+    const lib = await MaterialLib.load(rig, ['brick', 'grate', 'steel', 'rust', 'concrete', 'wood', 'slag', 'cloth']);
     ctx = { lib, seed: params.seed };
     const batch = new StaticBatch();
     buildCourse(batch, lib, ctx);
@@ -86,6 +90,18 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   tool.rotation.set(-0.7, 0.35, 0.35, 'XZY');
   const vm = new Viewmodel(tool, width / height);
   const unbindFeel = bindFeel(cam, vm);
+  const tp = params.get('tp') === '1';
+  const body = tp ? new Character(ctx.lib, { armor: num(params, 'armor', 0) }) : null;
+  const tpCam = new ThirdPersonCamera();
+  const animIn = { ...IDLE_INPUT };
+  const unbindBody = body ? bindCharacterEvents(body) : () => {};
+  if (body) scene.add(body.root);
+  const poseBody = (dt: number, v: ReturnType<Player['viewState']>) => {
+    if (!body) return;
+    tpCam.apply(cam.camera, v, dt, world);
+    body.root.position.copy(v.pos); body.root.rotation.y = v.yaw;
+    body.update(dt, animInputFromMove(player.s, v.yaw, animIn));
+  };
 
   const input = bindInput(document.getElementById('app')!, renderer.domElement, { touch: params.touch });
   const actions = input.actions;
@@ -114,6 +130,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
       const v = player.viewState(1);
       cam.update(step, v);
       vm.update(step, cam, v);
+      poseBody(step, v);
     }
   }
 
@@ -136,12 +153,13 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
       const v = player.viewState(alpha);
       cam.update(fdt, v);
       vm.update(fdt, cam, v);
+      poseBody(fdt, v);
       hud.update(player.s.stamina);
-      pipeline.render(scene, cam.camera, vm);
+      pipeline.render(scene, cam.camera, tp ? undefined : vm);
     },
     resize(w, h) { cam.resize(w / h); vm.resize(w / h); },
     dispose() {
-      arena?.dispose(); unbindFeel(); input.dispose(); hud.dispose(); removeEventListener('keydown', dev);
+      arena?.dispose(); unbindFeel(); unbindBody(); body?.dispose(); input.dispose(); hud.dispose(); removeEventListener('keydown', dev);
       scene.traverse((o) => { if (o instanceof THREE.Mesh) o.geometry.dispose(); });
     },
   };
