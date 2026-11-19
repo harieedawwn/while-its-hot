@@ -263,6 +263,21 @@ Read: LOOK §1, §5. TECH §6 (splash).
   and all mipmaps + splash with a small script (sharp), wired into `android/`. Commit the PNGs.
 Done when the APK built by CI shows the new icon and splash.
 
+### Phase 24 — Import community weapons from weapon-lab · `TODO` · Sonnet 5.5 · medium
+Read: `weapon-lab/PROMPT_FREE_CLAUDE.md` (the kit contract), GDD §6 (roster, data shape). Code map lines for weapons/, shared/src/data/weapons.ts, passives.ts.
+Run this phase again every time the user drops new files into `weapon-lab/weapons/*.js`.
+- Once: `client/src/weapons/lab-kit.ts` implements the same `k` API as `weapon-lab/preview.html` on top of the
+  game's one-mesh builder (`wkit`): merges all parts into one geometry, maps slots → weapon atlas palette,
+  metal slots → heatMask, flat normals, keeps `tip`/`base` markers. A loader registers each lab file as a
+  model by `meta.id`.
+- For each new lab file: add a row to `shared/src/data/weapons.ts` (id, Vietnamese name, family,
+  minLevel = meta.level, adjusting levels so forms stay sorted and spaced) and turn `meta.effects` +
+  `meta.power` into passives in `shared/src/passives.ts` (reuse hooks; new hooks only when needed; scale by
+  level: low = small twists, mid = skill-like, +16 and up = absurd but bounded so matches stay playable).
+  Keep the lab file unchanged; put any fix in an override next to it.
+- Unit test: every lab file builds, tris ≤ 1500, markers present, ids unique.
+Shots: `weapons` (rack). Done when the new forms appear in the rack, armory and training.
+
 ---
 
 ## Phase log

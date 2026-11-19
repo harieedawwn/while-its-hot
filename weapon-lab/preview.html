@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="vi">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Weapon Lab — While It's Hot</title>
+<style>
+  :root { --soot:#0d0b0a; --slag:#1c1917; --ash:#3a3430; --bone:#e9e1d3; --hot:#f26a1b; --steel:#7f93a1; }
+  * { box-sizing: border-box; }
+  body { margin:0; height:100vh; display:grid; grid-template-columns: 260px 1fr 300px; background:var(--soot); color:var(--bone);
+    font: 14px/1.4 system-ui, sans-serif; }
+  aside { background:var(--slag); padding:12px; overflow:auto; display:flex; flex-direction:column; gap:8px; }
+  h1 { font-size:15px; letter-spacing:.08em; text-transform:uppercase; margin:0 0 4px; }
+  button, select { background:var(--ash); color:var(--bone); border:0; padding:8px 10px; cursor:pointer; font:inherit; }
+  button.on, button:hover { background:var(--hot); color:#000; }
+  #list button { display:block; width:100%; text-align:left; margin-bottom:4px; }
+  textarea { width:100%; height:140px; background:var(--soot); color:var(--bone); border:1px solid var(--ash); font:12px monospace; }
+  #view { position:relative; }
+  canvas { width:100%; height:100%; display:block; image-rendering:pixelated; }
+  #drop { position:absolute; inset:0; display:none; place-items:center; background:#000a; font-size:20px; }
+  #drop.show { display:grid; }
+  .row { display:flex; gap:6px; flex-wrap:wrap; }
+  .warn { color:var(--hot); }
+  .dim { color:var(--steel); font-size:12px; }
+  label { display:block; font-size:12px; color:var(--steel); }
+  input[type=range] { width:100%; }
+  pre { white-space:pre-wrap; margin:0; font:12px/1.45 monospace; }
+</style>
+<aside>
+  <h1>Weapon Lab</h1>
+  <div class="dim">Kéo thả file .js vào giữa màn hình, hoặc dán code rồi bấm Thêm.</div>
+  <textarea id="paste" placeholder="Dán code vũ khí ở đây"></textarea>
+  <div class="row"><button id="add">Thêm</button><button id="save">Tải .js</button></div>
+  <div id="list"></div>
+</aside>
+<main id="view"><canvas id="c"></canvas><div id="drop">Thả file .js</div></main>
+<aside>
+  <div class="row">
+    <button data-anim="spin" class="on">Xoay</button><button data-anim="swing">Đánh</button><button data-anim="hold">Cầm</button>
+  </div>
+  <label>Nhiệt <input id="heat" type="range" min="0" max="1" step="0.01" value="0"></label>
+  <label>Điểm ảnh <input id="pix" type="range" min="0.2" max="1" step="0.05" value="0.4"></label>
+  <div class="row"><button id="grid" class="on">Thước 1 m</button><button id="markers" class="on">Điểm tip/base</button></div>
+  <pre id="info"></pre>
+</aside>
+
+<script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/" } }</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ---- slots: rough stand-ins for the game palette (the game maps slots to its own atlas) ----
+const SLOTS = { steel:0x9aa3a8, steel_dark:0x4b5257, iron_rough:0x6b625a, brass:0xb8914f, copper:0xa8603a,
+  wood:0x7a5232, wood_dark:0x4a3020, leather:0x5a3a26, cloth_red:0x8e2a1c, cloth_dark:0x2a2624,
+  bone:0xd8cdb4, stone:0x77726b, gem:0x9b1f2a };
+const METAL = new Set(['steel','steel_dark','iron_rough','brass','copper']);
+const HEAT = [0x1a0b08,0x4a140b,0x7d1d0d,0xb32d10,0xe0521a,0xf2862e,0xffc061,0xffe9b8,0xfffaf0].map(c => new THREE.Color(c));
+const mats = {};
+for (const [k, c] of Object.entries(SLOTS)) mats[k] = new THREE.MeshLambertMaterial({ color: c, flatShading: true });
+
+// ---- the kit (same API the game adapter implements) ----
+function mesh(geo, slot) {
+  if (!mats[slot]) { warn(`slot lạ: ${slot}`); slot = 'steel'; }
+  geo.computeVertexNormals();
+  const m = new THREE.Mesh(geo, mats[slot]); m.userData.slot = slot; return m;
+}
+const kit = {
+  group: () => new THREE.Group(),
+  box: (w, h, d, s) => mesh(new THREE.BoxGeometry(w, h, d), s),
+  cyl: (rt, rb, h, n, s) => mesh(new THREE.CylinderGeometry(rt, rb, h, Math.max(3, n | 0)), s),
+  cone: (r, h, n, s) => mesh(new THREE.ConeGeometry(r, h, Math.max(3, n | 0)), s),
+  sphere: (r, d, s) => mesh(new THREE.IcosahedronGeometry(r, Math.min(2, d | 0)), s),
+  lathe: (pts, n, s) => mesh(new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(Math.max(0, r), y)), Math.max(3, n | 0)), s),
+  blade(pts, th, s, bevel = 0.6) {
+    const sh = new THREE.Shape(pts.map(([z, y]) => new THREE.Vector2(z, y)));
+    const g = new THREE.ExtrudeGeometry(sh, { depth: th, bevelEnabled: false });
+    g.rotateY(-Math.PI / 2); g.translate(th / 2, 0, 0);
+    const p = g.attributes.position; let zmin = Infinity, zmax = -Infinity;
+    for (let i = 0; i < p.count; i++) { zmin = Math.min(zmin, p.getZ(i)); zmax = Math.max(zmax, p.getZ(i)); }
+    const mid = (zmin + zmax) / 2;
+    for (let i = 0; i < p.count; i++) {
+      const t = Math.max(0, Math.min(1, (p.getZ(i) - mid) / Math.max(1e-6, zmax - mid)));
+      p.setX(i, p.getX(i) * (1 - bevel * t));
+    }
+    return mesh(g, s);
+  },
+  tube(pts, r, n, s) {
+    const c = new THREE.CatmullRomCurve3(pts.map(p => new THREE.Vector3(...p)));
+    return mesh(new THREE.TubeGeometry(c, Math.max(4, pts.length * 4), r, Math.max(3, n | 0)), s);
+  },
+  marker(g, name, xyz) { const o = new THREE.Object3D(); o.name = name; o.position.set(...xyz); g.add(o); },
+};
+
+// ---- scene ----
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0d0b0a); scene.fog = new THREE.Fog(0x0d0b0a, 4, 12);
+const cam = new THREE.PerspectiveCamera(40, 1, 0.05, 50); cam.position.set(1.6, 1.0, 1.8);
+const ctl = new OrbitControls(cam, canvas); ctl.target.set(0, 0.6, 0); ctl.update();
+scene.add(new THREE.HemisphereLight(0x8899aa, 0x2a1a10, 0.9));
+const key = new THREE.DirectionalLight(0xffc08a, 2.2); key.position.set(2, 3, 2); scene.add(key);
+const rim = new THREE.DirectionalLight(0x7f93a1, 1.0); rim.position.set(-2, 1, -2); scene.add(rim);
+const grid = new THREE.Group();
+grid.add(new THREE.GridHelper(4, 16, 0x3a3430, 0x241f1c));
+const ruler = new THREE.Mesh(new THREE.BoxGeometry(0.01, 1, 0.01), new THREE.MeshBasicMaterial({ color: 0xf26a1b }));
+ruler.position.set(-0.4, 0.5, 0); grid.add(ruler); scene.add(grid);
+const pivot = new THREE.Group(); scene.add(pivot);
+
+let pixel = 0.4;
+function resize() {
+  const r = canvas.parentElement.getBoundingClientRect();
+  renderer.setPixelRatio(pixel); renderer.setSize(r.width, r.height, false);
+  cam.aspect = r.width / r.height; cam.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+
+// ---- weapons ----
+const weapons = []; let current = null, warnings = [];
+function warn(s) { warnings.push(s); }
+async function addSource(src, fname = '') {
+  warnings = [];
+  try {
+    const url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
+    const mod = await import(url); URL.revokeObjectURL(url);
+    const w = mod.default;
+    if (!w || !w.meta || typeof w.build !== 'function') throw new Error('thiếu export default { meta, build }');
+    const i = weapons.findIndex(x => x.meta.id === w.meta.id);
+    const entry = { meta: w.meta, build: w.build, src, fname };
+    if (i >= 0) weapons[i] = entry; else weapons.push(entry);
+    renderList(); show(entry);
+  } catch (e) { info.textContent = 'Lỗi: ' + e.message; }
+}
+function renderList() {
+  const list = document.getElementById('list'); list.innerHTML = '';
+  for (const w of weapons) {
+    const b = document.createElement('button');
+    b.textContent = `${w.meta.name || w.meta.id} · ${w.meta.family} +${w.meta.level}`;
+    b.className = w === current ? 'on' : ''; b.onclick = () => show(w); list.appendChild(b);
+  }
+}
+function show(w) {
+  warnings = []; current = w; pivot.clear();
+  let g;
+  try { g = w.build(kit); } catch (e) { info.textContent = 'Lỗi build: ' + e.message; return; }
+  pivot.add(g);
+  let tris = 0, parts = 0; const box = new THREE.Box3().setFromObject(g);
+  g.traverse(o => { if (o.isMesh) { parts++; const gi = o.geometry; tris += (gi.index ? gi.index.count : gi.attributes.position.count) / 3; } });
+  const tip = g.getObjectByName('tip'), base = g.getObjectByName('base');
+  if (!tip || !base) warn('thiếu marker tip/base');
+  if (tris > 1500) warn(`quá nhiều tam giác: ${tris | 0}`);
+  if (tris < 150) warn('quá ít chi tiết');
+  const size = box.getSize(new THREE.Vector3());
+  if (Math.abs(size.y - (w.meta.lengthM || size.y)) > 0.35) warn(`dài ${size.y.toFixed(2)} m, meta ghi ${w.meta.lengthM}`);
+  if (!['kiem', 'bua', 'thuong'].includes(w.meta.family)) warn('family phải là kiem/bua/thuong');
+  for (const n of ['base', 'tip']) { const o = g.getObjectByName(n); if (o) { const d = new THREE.Mesh(new THREE.SphereGeometry(0.02), new THREE.MeshBasicMaterial({ color: 0xf26a1b })); d.name = 'dot'; o.add(d); } }
+  applyToggles(); setHeat(+heatEl.value);
+  const m = w.meta;
+  info.innerHTML = '';
+  info.textContent = `${m.name}  (${m.id})\n${m.family}  +${m.level}   sức mạnh ${m.power?.score ?? '?'}/10\n` +
+    `${m.power?.note ?? ''}\n\nCảm hứng: ${m.inspiration ?? ''}\nHình dáng: ${m.look ?? ''}\n\nHiệu ứng:\n- ${(m.effects || []).join('\n- ')}\n\n` +
+    `${tris | 0} tam giác · ${parts} khối · cao ${size.y.toFixed(2)} m`;
+  if (warnings.length) { const s = document.createElement('div'); s.className = 'warn'; s.textContent = '\n' + warnings.join('\n'); info.appendChild(s); }
+  ctl.target.set(0, size.y / 2 + box.min.y, 0); renderList();
+}
+
+// ---- controls ----
+const info = document.getElementById('info'), heatEl = document.getElementById('heat');
+function setHeat(h) {
+  const step = HEAT[Math.min(HEAT.length - 1, Math.floor(h * HEAT.length))];
+  pivot.traverse(o => { if (o.isMesh && METAL.has(o.userData.slot)) {
+    if (!o.userData.own) { o.material = o.material.clone(); o.userData.own = true; }
+    o.material.emissive.copy(h < 0.05 ? new THREE.Color(0) : step); o.material.emissiveIntensity = h < 0.05 ? 0 : 0.9;
+  } });
+}
+heatEl.oninput = () => setHeat(+heatEl.value);
+document.getElementById('pix').oninput = (e) => { pixel = +e.target.value; resize(); };
+let showGrid = true, showMarkers = true;
+function applyToggles() { grid.visible = showGrid; pivot.traverse(o => { if (o.name === 'dot') o.visible = showMarkers; }); }
+document.getElementById('grid').onclick = (e) => { showGrid = !showGrid; e.target.classList.toggle('on', showGrid); applyToggles(); };
+document.getElementById('markers').onclick = (e) => { showMarkers = !showMarkers; e.target.classList.toggle('on', showMarkers); applyToggles(); };
+let anim = 'spin';
+document.querySelectorAll('[data-anim]').forEach(b => b.onclick = () => {
+  anim = b.dataset.anim; document.querySelectorAll('[data-anim]').forEach(x => x.classList.toggle('on', x === b));
+  pivot.rotation.set(0, 0, 0); pivot.position.set(0, 0, 0); t0 = performance.now();
+});
+document.getElementById('add').onclick = () => { const s = document.getElementById('paste').value.trim(); if (s) addSource(s); };
+document.getElementById('save').onclick = () => {
+  if (!current) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([current.src], { type: 'text/javascript' }));
+  a.download = `${current.meta.id}.js`; a.click();
+};
+const drop = document.getElementById('drop'), view = document.getElementById('view');
+view.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('show'); });
+view.addEventListener('dragleave', () => drop.classList.remove('show'));
+view.addEventListener('drop', async (e) => {
+  e.preventDefault(); drop.classList.remove('show');
+  for (const f of e.dataTransfer.files) if (f.name.endsWith('.js')) await addSource(await f.text(), f.name);
+});
+
+// ---- simple family swings (preview only; the game has its own attack animations) ----
+let t0 = performance.now();
+const ease = (x) => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+function animate(now) {
+  requestAnimationFrame(animate);
+  const t = (now - t0) / 1000;
+  if (anim === 'spin') { pivot.rotation.set(0, t * 0.8, 0); }
+  else if (anim === 'hold') { pivot.rotation.set(-0.35, 0.6, 0.15); pivot.position.set(0, 0.6, 0); }
+  else if (current) {
+    const fam = current.meta.family, p = (t % 1.6) / 1.6, wind = Math.min(1, p / 0.45), hit = ease(Math.max(0, Math.min(1, (p - 0.45) / 0.2)));
+    pivot.position.set(0, 0.6, 0);
+    if (fam === 'bua') pivot.rotation.set(-0.9 * wind + 2.6 * hit, 0, 0);
+    else if (fam === 'thuong') { pivot.rotation.set(Math.PI / 2, 0, 0); pivot.position.set(0, 0.8, -0.4 * wind + 1.1 * hit); }
+    else pivot.rotation.set(0.2, 0, 1.3 * wind - 2.6 * hit);
+  }
+  renderer.render(scene, cam);
+}
+requestAnimationFrame(animate);
+
+// a tiny sample so the page is never empty
+addSource(`export default { meta: { id: 'mau_kiem', name: 'Kiếm mẫu', family: 'kiem', level: 3, inspiration: 'mẫu kiểm tra',
+  look: 'lưỡi thẳng thô, chuôi bọc da', power: { score: 2, note: 'mẫu' }, effects: ['không'], lengthM: 0.95 },
+  build(k) { const g = k.group();
+    const b = k.blade([[-0.03,0.12],[0.035,0.12],[0.03,0.75],[0,0.82],[-0.025,0.74]], 0.012, 'iron_rough', 0.7); g.add(b);
+    const gd = k.box(0.05, 0.03, 0.2, 'steel_dark'); gd.position.set(0, 0.1, 0); g.add(gd);
+    const gr = k.cyl(0.016, 0.018, 0.2, 6, 'leather'); gr.position.set(0, 0, 0); g.add(gr);
+    const pm = k.sphere(0.03, 0, 'steel_dark'); pm.position.set(0, -0.12, 0); g.add(pm);
+    k.marker(g, 'base', [0, 0.12, 0]); k.marker(g, 'tip', [0, 0.82, 0]); return g; } };`);
+</script>
+</html>
