@@ -1,0 +1,92 @@
+/* UI kit components (LOOK §8). Every one: hard edges, chamfer, flat fills, weighty motion. */
+.k-root { position: fixed; inset: 0; pointer-events: none; font-family: var(--f-text); color: var(--bone);
+  -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; z-index: 4; }
+.k-root * { box-sizing: border-box; }
+.k-root :where(button, [role=slider], [role=radio]) { pointer-events: auto; }
+.k-display { font-family: var(--f-display); font-weight: 900; text-transform: uppercase; letter-spacing: 0.01em; line-height: 1.32; }
+.k-num { font-family: var(--f-display); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
+
+/* chamfered plate with a 2 px outline: the outline is the element, the fill is ::before */
+.k-plate { position: relative; clip-path: var(--chamfer); background: var(--ash); }
+.k-plate::before { content: ''; position: absolute; inset: 2px; clip-path: var(--chamfer); background: var(--slag); z-index: -1; }
+.k-plate { isolation: isolate; }
+.k-rivets::after { content: ''; position: absolute; top: 7px; right: 7px; width: var(--rivet); height: var(--rivet);
+  border-radius: 50%; background: var(--ash); box-shadow: 0 0 0 1px var(--soot); }
+
+/* stamped button */
+.k-btn { appearance: none; border: 0; margin: 0; cursor: pointer; color: var(--bone); min-height: 44px; min-width: 44px;
+  padding: 6px 18px; font: 800 var(--t-m)/1.35 var(--f-display); text-transform: uppercase; letter-spacing: 0.03em; }
+.k-btn:focus-visible, .k-tag:focus-visible, .k-seg button:focus-visible, .k-slider:focus-visible { outline: none; background: var(--iron-hot); }
+.k-btn.is-down, .k-btn:active { background: var(--iron-hot); }
+.k-btn.is-down::before, .k-btn:active::before { background: var(--iron-hot); }
+.k-btn.is-down, .k-btn:active { color: var(--soot); }
+.k-btn[disabled] { color: var(--ash); cursor: default; }
+
+/* vertical tag strip: tags hang off a riveted spine */
+.k-tags { position: absolute; display: flex; flex-direction: column; gap: var(--gap); padding-left: 18px; }
+.k-tags::before { content: ''; position: absolute; left: 4px; top: -14px; bottom: -14px; width: var(--rule); background: var(--ash); }
+.k-tag { appearance: none; border: 0; margin: 0; cursor: pointer; position: relative; display: grid;
+  grid-template-columns: 2.4em auto; align-items: center; column-gap: 10px; text-align: left; color: var(--bone);
+  min-height: 44px; padding: 2px 22px 2px 12px; }
+.k-hang { position: relative; width: max-content; }
+.k-hang::before { content: ''; position: absolute; left: -14px; top: 50%; width: 14px; height: var(--rule); margin-top: -1px; background: var(--ash); }
+.k-hang.is-on::before { background: var(--iron-hot); }
+.k-tag .k-n { font: 800 var(--t-s)/1 var(--f-display); color: var(--steel); letter-spacing: 0.06em; }
+.k-tag .k-w { font: 900 var(--t-l)/1.32 var(--f-display); text-transform: uppercase; letter-spacing: 0.01em; white-space: nowrap; }
+.k-tag.is-on { background: var(--iron-hot); }
+.k-tag.is-on .k-n { color: var(--iron-hot); }
+.k-tag.is-hit, .k-tag.is-hit::before { background: var(--iron-hot); }
+.k-tag.is-hit .k-w, .k-tag.is-hit .k-n { color: var(--soot); }
+.k-tag[aria-disabled=true] .k-w { color: var(--bone-dim); }
+
+/* ledger: numbered rows, thick rules */
+.k-ledger { display: flex; flex-direction: column; }
+.k-row { display: grid; grid-template-columns: 2.2em minmax(7em, 1fr) minmax(0, 1.5fr); align-items: center; column-gap: 12px;
+  min-height: 52px; padding: 6px 4px; border-bottom: var(--rule) solid var(--ash); }
+.k-row .k-n { font: 800 var(--t-xs)/1 var(--f-display); color: var(--steel); letter-spacing: 0.06em; }
+.k-row .k-l { font: 600 var(--t-s)/1.4 var(--f-text); }
+
+/* notched slider: steel bar, notches, square thumb */
+.k-slider { position: relative; height: 44px; cursor: pointer; touch-action: none; display: grid; grid-template-columns: 1fr 3.2em; align-items: center; column-gap: 12px; }
+.k-slider .k-track { position: relative; height: 8px; background: var(--ash); }
+.k-slider .k-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--bone-dim); }
+.k-slider .k-notch { position: absolute; top: -5px; width: 2px; height: 18px; background: var(--ash); transform: translateX(-1px); }
+.k-slider .k-notch.is-pass { background: var(--bone-dim); }
+.k-slider .k-thumb { position: absolute; top: 50%; width: 20px; height: 26px; margin: -13px 0 0 -10px; background: var(--bone); }
+.k-slider .k-thumb::after { content: ''; position: absolute; inset: 9px 7px; background: var(--soot); }
+.k-slider.is-drag .k-thumb, .k-slider:focus-visible .k-thumb { background: var(--iron-hot); }
+.k-slider:focus-visible { background: transparent; }
+.k-slider .k-v { font: 800 var(--t-m)/1 var(--f-display); text-align: right; }
+
+/* segmented toggle */
+.k-seg { display: flex; gap: 3px; background: var(--ash); padding: 3px; clip-path: var(--chamfer); width: max-content; max-width: 100%; }
+.k-seg button { appearance: none; border: 0; margin: 0; cursor: pointer; min-height: 40px; min-width: 56px; padding: 4px 14px;
+  background: var(--slag); color: var(--bone-dim); font: 600 var(--t-s)/1.4 var(--f-text); white-space: nowrap; }
+.k-seg button[aria-checked=true] { background: var(--iron-hot); color: var(--soot); }
+
+/* panel shutter: drops like a steel shutter (fast in, two hard settle steps), lifts on close */
+.k-shutter { position: absolute; padding: 14px 18px 18px; border-top: 6px solid var(--ash); }
+.k-in { animation: k-drop var(--t-drop) var(--drop) both, k-settle 120ms steps(1, end) var(--t-drop) both; }
+.k-out { animation: k-lift 140ms cubic-bezier(0.5, 0, 1, 1) both; }
+@keyframes k-drop { from { transform: translateY(-105vh); } to { transform: translateY(0); } }
+@keyframes k-settle { 0% { transform: translateY(7px); } 50% { transform: translateY(-2px); } 100% { transform: translateY(0); } }
+@keyframes k-lift { from { transform: translateY(0); } to { transform: translateY(-105vh); } }
+.k-shutter .k-head { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+.k-shutter .k-title { font: 900 var(--t-l)/1.32 var(--f-display); text-transform: uppercase; flex: 1; }
+
+/* toast: a stamped tag that drops from the top edge */
+.k-toast { position: absolute; left: 50%; top: calc(var(--st) + 10px); transform: translateX(-50%); padding: 8px 20px;
+  font: 600 var(--t-s)/1.4 var(--f-text); white-space: nowrap; animation: k-drop 120ms var(--drop) both, k-settle 100ms steps(1, end) 120ms both; }
+.k-toast.is-err::before { background: var(--oxide); }
+.k-toast.is-out { animation: k-lift 120ms ease-in both; }
+
+/* stamped wordmark: small, boxed, top-left */
+.k-stamp { position: absolute; font: 900 var(--t-m)/1.1 var(--f-display); text-transform: uppercase; letter-spacing: 0.05em;
+  padding: 4px 8px 3px; border: var(--rule) solid var(--bone); color: var(--bone); }
+
+@media (prefers-reduced-motion: reduce) { .k-in, .k-out, .k-toast { animation-duration: 1ms !important; animation-delay: 0ms !important; } }
+.k-reduce .k-in, .k-reduce .k-out, .k-reduce .k-toast { animation-duration: 1ms !important; animation-delay: 0ms !important; }
+
+/* death: one big stamped respawn numeral (LOOK §9) */
+.k-death { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -54%); z-index: 5; pointer-events: none;
+  font-size: clamp(90px, 34vmin, 200px); line-height: 1.1; color: var(--bone); padding: 0 0.22em; border: 6px solid var(--bone); }

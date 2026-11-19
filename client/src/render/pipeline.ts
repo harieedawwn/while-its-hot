@@ -76,6 +76,17 @@ export class Pipeline {
   /** Fire-ring tint 0..1 (LOOK §7: inside the wall the world tints toward the heat ramp). */
   setHeatTint(k: number): void { this.post.uniforms.uHeatTint.value = Math.max(0, Math.min(1, k)); }
 
+  /** Transition / death grade (LOOK §9): desaturate (optionally keeping heat colors), stepped edge darkening, fade. */
+  setGrade(g: { desat?: number; keepHot?: boolean; edge?: number; steps?: number; fade?: number; fadeColor?: string }): void {
+    const u = this.post.uniforms;
+    if (g.desat !== undefined) u.uDesat.value = g.desat;
+    if (g.keepHot !== undefined) u.uKeepHot.value = g.keepHot ? 1 : 0;
+    if (g.edge !== undefined) u.uEdge.value = g.edge;
+    if (g.steps !== undefined) u.uEdgeSteps.value = g.steps;
+    if (g.fade !== undefined) u.uFade.value = g.fade;
+    if (g.fadeColor !== undefined) u.uFadeColor.value.setHex(parseInt(g.fadeColor.slice(1), 16), THREE.LinearSRGBColorSpace); // raw sRGB values
+  }
+
   /** World, then an optional overlay (viewmodel) over a cleared depth buffer, then post. */
   render(scene: THREE.Scene, camera: THREE.Camera, overlay?: { scene: THREE.Scene; camera: THREE.Camera }): void {
     const r = this.renderer;

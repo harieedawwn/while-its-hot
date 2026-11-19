@@ -1,0 +1,42 @@
+/* Design tokens (LOOK §8 "stamped steel and soot"). Solid flat fills only: no gradients, glow, blur or glass. */
+:root {
+  --soot: #0d0b0a;
+  --slag: #1c1917;
+  --ash: #3a3430;
+  --bone: #e9e1d3;
+  --iron-hot: #f26a1b;
+  --brass: #c9a15a;
+  --steel: #7f93a1;
+  --oxide: #b3261e;
+  /* derived solids (still flat): pressed slag, dim bone for idle text */
+  --slag-hi: #26221f;
+  --bone-dim: #a59c8f;
+
+  --f-display: 'Big Shoulders Display', 'Arial Narrow', 'Roboto Condensed', sans-serif;
+  --f-text: 'Be Vietnam Pro', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  /* chamfer: 8 px 45° cut on the top-left and bottom-right corners */
+  --cut: 8px;
+  --chamfer: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+  --rule: 3px;
+  --rivet: 5px;
+
+  /* safe area: native sets --cut-*; the web falls back to env() */
+  --sl: max(var(--cut-l, 0px), env(safe-area-inset-left, 0px));
+  --sr: max(var(--cut-r, 0px), env(safe-area-inset-right, 0px));
+  --st: max(var(--cut-t, 0px), env(safe-area-inset-top, 0px));
+  --sb: max(var(--cut-b, 0px), env(safe-area-inset-bottom, 0px));
+
+  /* type scale: landscape phones are ~360 px tall; scale on the short side */
+  --t-xs: clamp(11px, 2.6vmin, 14px);
+  --t-s: clamp(13px, 3.4vmin, 17px);
+  --t-m: clamp(16px, 4.4vmin, 22px);
+  --t-l: clamp(26px, 8.6vmin, 46px);
+  --t-xl: clamp(40px, 15vmin, 84px);
+  --gap: clamp(6px, 1.8vmin, 12px);
+
+  /* motion: shutters fall fast and settle in two hard steps */
+  --drop: cubic-bezier(0.55, 0, 0.9, 0.4);
+  --t-drop: 160ms;
+  --t-press: 80ms;
+}

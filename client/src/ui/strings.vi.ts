@@ -1,6 +1,19 @@
 /** The ONLY place for player-facing Vietnamese text. Each phase adds its own keys. */
 export const STR = {
   gate: { rotate: 'Xoay ngang điện thoại' },
+  /** Title + main menu (LOOK §8, §10). Display words are uppercased by CSS; keep sentence case here. */
+  title: { name: "While It's Hot", start: 'Chạm để bắt đầu' },
+  menu: {
+    online: 'Chơi mạng', training: 'Luyện tập', armory: 'Kho vũ khí', settings: 'Cài đặt', quit: 'Thoát',
+    createRoom: 'Tạo phòng', joinRoom: 'Vào phòng', back: 'Quay lại',
+    /** Toast for a door that is not built yet (server arrives in phase 16, armory in 14). */
+    closed: 'Chưa mở',
+  },
+  /** Settings ledger (phase 13 has the first rows; phase 14 fills it). */
+  settings: {
+    tabs: { gfx: 'Hình ảnh', audio: 'Âm thanh', controls: 'Điều khiển', view: 'Góc nhìn', profile: 'Hồ sơ' },
+    reduceMotion: 'Giảm chuyển động', on: 'Bật', off: 'Tắt',
+  },
   /** Graphics settings (LOOK §1); the ledger UI arrives in phase 14. */
   gfx: {
     resolution: 'Độ phân giải điểm ảnh', native: 'Gốc',

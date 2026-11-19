@@ -9,7 +9,7 @@ import { FxWorld } from './fx-world';
 import { WeaponTrail } from './trail';
 
 export interface FxLayerOpts {
-  scene: THREE.Scene; rig: LightRig; pipeline: Pipeline; world: CollisionWorld;
+  scene: THREE.Scene; rig: LightRig; pipeline: Pipeline; world?: CollisionWorld;
   combat?: CombatWorld; stage?: ForgeStage; seed?: number; blood?: boolean;
   ring?: { cx: number; cz: number; radius: number };
 }

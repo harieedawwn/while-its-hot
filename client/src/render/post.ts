@@ -3,7 +3,7 @@ import { HEAT_LINEAR } from './heat';
 
 /**
  * The one fullscreen pass (LOOK §1.4): reads the low-res linear target, encodes to sRGB, 4×4 ordered
- * dither, quantizes per channel, then the transition hooks (desaturate, fade to color) and the fire-ring heat tint. Nothing else.
+ * dither, quantizes per channel, then the transition hooks (desaturate keeping heat colors, stepped edge darkening, fade to color) and the fire-ring heat tint. Nothing else.
  * Dither + quantize run in display (sRGB) space so dark foundry tones keep their steps.
  */
 const VERT = /* glsl */ `
@@ -15,6 +15,9 @@ uniform sampler2D tScene;
 uniform float uLevels;   // 0 = no quantize
 uniform float uDither;   // amplitude in quantize steps
 uniform float uDesat;    // 0..1 transition/death hook
+uniform float uKeepHot;  // 1 = heat colors and oxide survive the desaturation (round end)
+uniform float uEdge;     // 0..1 death: darken toward the edges in uEdgeSteps dithered steps
+uniform float uEdgeSteps;
 uniform vec3 uFadeColor; // sRGB
 uniform float uFade;     // 0..1
 uniform float uHeatTint; // 0..1: inside the fire ring the world leans toward the heat ramp
@@ -35,13 +38,20 @@ vec3 toSRGB(vec3 c) {
 void main() {
   vec3 c = texture2D(tScene, vUv).rgb;
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
-  c = mix(c, vec3(l), uDesat);
+  float hot = step(1.25 * c.g + 0.01, c.r) * step(0.04, c.r - c.b);
+  c = mix(c, vec3(l), uDesat * (1.0 - uKeepHot * hot));
   if (uHeatTint > 0.0) c = mix(c, uHeatRamp[int(clamp(sqrt(l) * 9.0, 0.0, 8.0))], uHeatTint);
   c = toSRGB(c);
   if (uLevels > 1.0) {
     float s = uLevels - 1.0;
     float d = (bayer4(gl_FragCoord.xy) - 0.5) * uDither;
     c = floor(c * s + 0.5 + d) / s;
+  }
+  if (uEdge > 0.0) {
+    vec2 q = (vUv - 0.5) * 2.0;
+    float r = clamp((length(q * vec2(1.0, 0.8)) - 0.35) / 0.95, 0.0, 1.0);
+    float k = floor(r * uEdge * uEdgeSteps + bayer4(gl_FragCoord.xy * 0.5)) / uEdgeSteps;
+    c *= 1.0 - clamp(k, 0.0, 0.92);
   }
   c = mix(c, uFadeColor, uFade);
   gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
@@ -54,6 +64,9 @@ export class PostPass {
     uLevels: { value: 32 },
     uDither: { value: 1 },
     uDesat: { value: 0 },
+    uKeepHot: { value: 0 },
+    uEdge: { value: 0 },
+    uEdgeSteps: { value: 4 },
     uFadeColor: { value: new THREE.Color(0, 0, 0) },
     uFade: { value: 0 },
     uHeatTint: { value: 0 },

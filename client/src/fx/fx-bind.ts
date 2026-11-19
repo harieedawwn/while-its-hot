@@ -70,6 +70,8 @@ export function bindFx(d: FxDeps): () => void {
     }),
     bus.on('combat:parry', (e) => fx.parryStar(new THREE.Vector3(e.x, e.y, e.z))),
     bus.on('move:slam', (e) => fx.slam(new THREE.Vector3(e.x, e.y, e.z))),
+    // menu: the helve hammer lands on the bar
+    bus.on('ui:strike', (e) => fx.forgeStrike(new THREE.Vector3(e.x, e.y, e.z), 'tuyet', e.floor)),
   ];
   return () => offs.forEach((o) => o());
 }

@@ -37,6 +37,10 @@ export interface GameEvents {
   /** Requests from gameplay to the local camera (combat emits these on hits/parries). */
   'cam:trauma': { amount: number };
   'cam:hitstop': { ms: number };
+  /** UI (ui/*): a tactile control sound; the menu's hammer blow on the anvil; a transition starting. */
+  'ui:sound': { id: 'tap' | 'back' | 'toggle' | 'notch' | 'open' | 'close' | 'error' };
+  'ui:strike': { x: number; y: number; z: number; floor: number };
+  'ui:wipe': { kind: 'quench' | 'stamp' | 'fade' };
 }
 type Handler<K extends keyof GameEvents> = (e: GameEvents[K]) => void;
 

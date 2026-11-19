@@ -1,9 +1,11 @@
 import type * as THREE from 'three';
 import type { Params } from './params';
 import type { Pipeline } from '../render/pipeline';
+import type { Director } from '../app/director';
 
 /** width/height are CSS pixels (aspect); the pipeline owns the internal low-res size. */
-export interface SceneCtx { renderer: THREE.WebGLRenderer; pipeline: Pipeline; params: Params; width: number; height: number; }
+/** `app` changes scene through a transition (menu → training etc.). */
+export interface SceneCtx { renderer: THREE.WebGLRenderer; pipeline: Pipeline; params: Params; width: number; height: number; app: Director; }
 export interface Scene {
   /** Advance by dt seconds (already frozen/scaled when `t` is set). */
   update(dt: number, time: number): void;
@@ -28,5 +30,8 @@ export const SCENES: Record<string, () => Promise<{ default: SceneFactory }>> = 
   forge: () => import('./scene-forge'),
   fx: () => import('./scene-fx'),
   audition: () => import('./scene-audition'),
+  'ui-menu': () => import('./scene-menu'),
+  transition: () => import('./scene-transition'),
 };
-export const DEFAULT_SCENE = 'empty';
+/** No `scene=`: the app starts at the title / main menu. */
+export const DEFAULT_SCENE = 'ui-menu';

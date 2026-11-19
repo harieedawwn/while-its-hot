@@ -1,0 +1,31 @@
+/* Title + main menu + first settings ledger (LOOK §8). Left third: tag strip. Right two thirds: the smithy. */
+.m-mark { left: calc(var(--sl) + 18px); top: calc(var(--st) + 14px); }
+.m-title { position: absolute; left: calc(var(--sl) + 26px); top: 50%; transform: translateY(-58%); pointer-events: none; }
+.m-title .m-big { font: 900 var(--t-xl)/1.02 var(--f-display); text-transform: uppercase; letter-spacing: 0.005em;
+  border: 5px solid var(--bone); padding: 0.06em 0.16em 0.02em; display: inline-block; }
+.m-title .m-big span { display: block; }
+.m-title .m-big .m-hot { color: var(--iron-hot); }
+.m-title .m-go { margin-top: 18px; display: flex; align-items: center; gap: 12px; font: 600 var(--t-s)/1.4 var(--f-text); color: var(--bone-dim); }
+.m-title .m-go::before { content: ''; width: 34px; height: var(--rule); background: var(--iron-hot); }
+.m-hit { position: absolute; inset: 0; pointer-events: auto; cursor: pointer; appearance: none; border: 0; margin: 0; padding: 0; background: transparent; }
+
+.m-strip { left: calc(var(--sl) + 22px); top: 50%; transform: translateY(-46%); }
+
+/* settings: a shutter over the left 3/4; tabs stamped down the left edge of it */
+.m-set { left: calc(var(--sl) + 14px); top: calc(var(--st) + 10px); bottom: calc(var(--sb) + 10px); width: min(780px, calc(88vw - var(--sl)));
+  display: flex; flex-direction: column; pointer-events: auto; }
+.m-set .k-body { flex: 1; min-height: 0; display: grid; grid-template-columns: max-content 1fr; column-gap: 18px; }
+.m-tabs { display: flex; flex-direction: column; gap: 6px; padding-top: 4px; }
+.m-tab { appearance: none; border: 0; margin: 0; cursor: pointer; text-align: left; min-height: 44px; padding: 4px 18px 4px 12px; color: var(--bone-dim);
+  font: 800 var(--t-m)/1.35 var(--f-display); text-transform: uppercase; letter-spacing: 0.03em; display: grid; grid-template-columns: 2em auto; align-items: center; }
+.m-tab .k-n { font-size: var(--t-xs); color: var(--steel); }
+.m-tab[aria-selected=true] { background: var(--iron-hot); color: var(--bone); }
+.m-tab[aria-selected=true] .k-n { color: var(--iron-hot); }
+.m-rows { overflow-y: auto; min-height: 0; padding-right: 4px; overscroll-behavior: contain; }
+.m-set .k-row { grid-template-columns: 2em minmax(6.5em, 0.8fr) minmax(170px, 1.4fr); }
+.m-set .k-row > :last-child { justify-self: start; width: 100%; }
+.m-set .k-row > .k-seg { width: max-content; }
+@media (max-height: 420px) {
+  .m-set .k-shutter, .m-set { padding: 10px 14px 12px; }
+  .m-set .k-row { min-height: 48px; padding: 3px 4px; }
+}

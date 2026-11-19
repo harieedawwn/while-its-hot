@@ -76,6 +76,10 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/audio/{graph,reverb,settings}.ts` AudioContext + buses/glue/limiter/phone stage/generated reverbs, IR maker, saved volumes+output · `audio/{engine,bank,voices,spatial,catalog}.ts` play/loop facade, manifest+takes+synth fallback, voice stealing, 3D+air filter, event catalog (AUDIO §3)
 - `tools/audio/{fetch.mjs,sources.json,design.py,recipes/*.yaml,check.py}` CC0 fetch, recipe renderer → `client/public/sfx/`, loudness/chime checker + spectrogram sheet · `dev/scene-audition.ts` · `client/public/sfx/CREDITS.md`
 - `client/src/audio/{events,haptics,ambience,places,scene-audio}.ts` bus → sounds+haptics, Capacitor haptics, beds/emitters/one-shots, per-place ambience defs, per-scene audio glue (listener, occlusion ray)
+- `client/src/app/{director,screens}.ts` running scene + transitions between scenes, screen state machine · `core/clock.ts` time scale
+- `client/src/ui/kit/{dom,controls,panels}.ts` UI kit (button, ledger, notched slider, segmented, tag strip, shutter, toast) · `ui/styles/{fonts,tokens,components,menu}.css` · `ui/ui-settings.ts`
+- `client/src/ui/{transition,transition-gl}.ts` quench/stamp/fade overlay, round-end + death grade · `ui/menu/{menu-screens,settings-screen}.ts` title, menu, settings ledger
+- `client/src/world/smithy.ts` night smithy set + helve strike · `render/models/helve.ts` · `dev/{scene-menu,scene-transition}.ts` (`ui-menu`, `transition`)
 - `client/src/ui/strings.vi.ts` all Vietnamese text · `tools/shot.mjs` screenshots · `tools/audio/*` audio checks
 
 ## Conventions

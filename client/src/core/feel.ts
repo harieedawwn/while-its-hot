@@ -210,4 +210,19 @@ export const FEEL = {
     /** Own death: the world muffles to `hz` over `s` seconds. */
     muffle: { hz: 380, s: 0.4 },
   },
+  /** UI motion (LOOK §8–9). Seconds unless noted. */
+  ui: {
+    /** Transition overlay: internal height in px (low-res, pixelated), quench cover/uncover, edge width px, noise px. */
+    wipe: { height: 240, cover: 0.35, uncover: 0.3, edge: 2, noise: 46 },
+    /** Stamp cut: bone flash s, halves shear s, gap they open (fraction of width per half), max rotation rad, crack jag. */
+    stamp: { flash: 1 / 60, shear: 0.5, open: 0.62, rot: 0.06, jag: 0.035, teeth: 11 },
+    /** Reduce-motion replacement: one dithered fade, total s. */
+    fade: 0.2,
+    /** Round end: time scale to `scale` over `ramp` s, held `hold` s (real time), world desaturates `desat`. */
+    roundEnd: { scale: 0.25, ramp: 0.15, hold: 0.6, desat: 0.85 },
+    /** Death: desaturate, edge darkening steps, respawn counter s. */
+    death: { desat: 0.7, edge: 0.85, steps: 4, ramp: 0.5 },
+    /** Menu helve hammer: raise s, fall s, rest angle (held up by the cam) and raised angle (rad), delay after the blow. */
+    hammer: { raise: 0.16, fall: 0.08, rest: 0.12, up: 0.62, after: 0.07 },
+  },
 } as const;

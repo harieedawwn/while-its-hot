@@ -85,6 +85,10 @@ export function bindAudio(a: AudioEngine, localId = 0): AudioBinding {
       else if (e.broke) { a.play('gay', { pos }); a.duck(); buzz('medium'); }
       else { a.play(STRIKE[e.outcome], { pos, db: e.auto ? -3 : 0 }); buzz('light'); }
     }),
+    // UI: dry tactile clicks; the menu's select is a real hammer on the anvil; transitions (AUDIO §3)
+    bus.on('ui:sound', (e) => a.play(`ui_${e.id}`)),
+    bus.on('ui:strike', () => { a.play('ui_select'); buzz('light'); }),
+    bus.on('ui:wipe', (e) => { if (e.kind !== 'fade') a.play(e.kind === 'quench' ? 'wipe_quench' : 'wipe_stamp'); }),
     bus.on('forge:evolve', () => { a.play('quench'); a.duck(-5, 0.8); buzz('heavy'); }),
     bus.on('forge:frenzy', (e) => {
       if (e.on) { a.play('frenzy_start'); loop('frenzy', 'frenzy_loop'); a.duck(); }
