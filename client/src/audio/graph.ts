@@ -99,6 +99,8 @@ export class AudioGraph {
     const f = this.muffleLp.frequency, t = this.ctx.currentTime;
     f.cancelScheduledValues(t); f.setValueAtTime(f.value, t);
     f.exponentialRampToValueAtTime(on ? A.muffle.hz : 22000, t + (on ? A.muffle.s : 0.25));
+    // Always reopen on its own: nothing must be able to leave the whole mix stuck behind the low-pass.
+    if (on) { f.setValueAtTime(A.muffle.hz, t + A.muffle.holdS); f.exponentialRampToValueAtTime(22000, t + A.muffle.holdS + 0.6); }
   }
   /** Browsers and the Android WebView start suspended: resume on the first touch/click/key. */
   autoUnlock(target: EventTarget = window): void {

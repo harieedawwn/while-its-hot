@@ -210,7 +210,7 @@ export const FEEL = {
     /** Ambience one-shots (AUDIO §3): interval s and distance from the listener m. */
     amb: { every: [4, 12] as readonly [number, number], dist: [12, 28] as readonly [number, number] },
     /** Own death: the world muffles to `hz` over `s` seconds. */
-    muffle: { hz: 380, s: 0.4 },
+    muffle: { hz: 380, s: 0.4, holdS: 3.2 }, // holdS: auto-reopen after death (respawn never left it muffled)
   },
   /** UI motion (LOOK §8–9). Seconds unless noted. */
   ui: {
