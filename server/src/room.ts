@@ -5,7 +5,7 @@ import { Lobby, type LobbySave } from './lobby';
 import type { Env } from './worker';
 
 interface Att { id: number }
-const MATCH_MSGS: ReadonlySet<string> = new Set(['atk', 'hit', 'parry', 'dash', 'slam', 'forge', 'anvil', 'take']);
+const MATCH_MSGS: ReadonlySet<string> = new Set(['atk', 'hit', 'parry', 'dash', 'slam', 'forge', 'anvil', 'take', 'draft']);
 /** Seeded per room (mulberry32): forge rolls and spawns come from the room, never from a client. */
 function roomRand(seed: number): () => number {
   let s = seed >>> 0;
@@ -68,6 +68,7 @@ export class Room extends DurableObject<Env> {
   private sendInit(ws: WebSocket): void {
     const m = this.match?.init(this.id(ws));
     if (m && m.t === 'match') this.send(ws, { ...m, t0: this.t0 });
+    for (const x of this.match?.extras(this.id(ws)) ?? []) this.send(ws, x);
   }
   /** Deliver authority output: JSON once per message, to one id or everyone. */
   private dispatch(outs: Out[]): void {
@@ -95,7 +96,7 @@ export class Room extends DurableObject<Env> {
       for (const w of this.ctx.getWebSockets()) if (w !== ws && this.id(w) === r.m.id) { try { w.close(1000, 'replaced'); } catch { /* gone */ } }
       ws.serializeAttachment({ id: r.m.id } satisfies Att);
       this.send(ws, { t: 'welcome', id: r.m.id, token: r.m.token, code: this.lobby.code });
-      if (this.match) { this.match.setOnline(r.m.id, true); this.send(ws, { t: 'start' }); this.sendInit(ws); this.startTick(); }
+      if (this.match && this.lobby.phase === 'match') { this.match.setOnline(r.m.id, true); this.send(ws, { t: 'start' }); this.sendInit(ws); this.startTick(); }
       this.broadcastLobby(); await this.persist(); return;
     }
     if (!id) return this.err(ws, 'bad');
@@ -133,9 +134,17 @@ export class Room extends DurableObject<Env> {
       const ws = this.ctx.getWebSockets(); if (!ws.length || !this.match) return this.stopTick();
       const now = this.mt;
       this.dispatch(this.match.tick(now));
+      const f = this.match.flow;
+      if (f.ph === 'end' && this.lobby.phase === 'match') this.backToLobby();
+      if (f.finished) { this.stopTick(); this.match = null; return; }
       const buf = encodeSnapshot(this.match.snapshot(now));
       for (const w of ws) { try { w.send(buf); } catch { /* closing */ } }
     }, 1000 / BALANCE.net.tickHz);
+  }
+  /** The match is over: the room is a lobby again (ready flags cleared) while the end screens are still up. */
+  private backToLobby(): void {
+    this.lobby.reset();
+    this.broadcastLobby(); void this.persist();
   }
   private stopTick(): void { if (this.tick) clearInterval(this.tick); this.tick = null; }
 }

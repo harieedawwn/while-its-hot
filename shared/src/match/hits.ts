@@ -64,7 +64,7 @@ export function defenderView(t: MPlayer, m: HitMsg, now: number, truceUntil: num
     x: t.st.x, z: t.st.z, yaw: t.st.yaw,
     parrying: parryOk(t.parryAt, m.at, t.rtt, parryWindow(passivesOf(def), C.parry.windowS)),
     blocking: (t.st.flags & FLAG.blocking) !== 0,
-    immune: dodged(t, m.at, m.rt) || (t.stance && t.forge.immune) || now < truceUntil,
+    immune: dodged(t, m.at, m.rt) || (t.stance && t.forge.immune) || now < truceUntil || now < t.ifUntil,
     stamina: t.st.stamina, armorLevel: t.forge.armor,
   };
 }
@@ -81,7 +81,10 @@ export function claimHit(ctx: HitCtx, a: MPlayer, t: MPlayer, m: HitMsg, now: nu
   const p: Vec3 = [m.p[0], m.p[1], m.p[2]];
   if (res.r === 'immune') { out.push({ to: a.id, m: { t: 'reject', s: m.s, tg: m.tg, why: 'immune' } }); return; }
   if (res.r === 'parried') {
-    out.push({ to: 'all', m: { t: 'parried', a: a.id, tg: t.id, st: res.attackerStaggerS, stam: res.parrierStamina, p, s: m.s } });
+    const fx = t.fx;
+    if (fx.parryHp > 0) t.hp = Math.min(C.hp, t.hp + fx.parryHp);
+    out.push({ to: 'all', m: { t: 'parried', a: a.id, tg: t.id, st: res.attackerStaggerS, stam: res.parrierStamina + fx.parryStamina, p, s: m.s } });
+    if (fx.parryHp > 0) out.push({ to: t.id, m: { t: 'heal', hp: t.hp } });
     const kn: Vec3 = [0, 0, 0];
     serverEffects(t, a, parryEffects(passivesOf(t.forge.form)), kn, ctx.list, ctx.harm, out);
     return;
@@ -90,8 +93,9 @@ export function claimHit(ctx: HitCtx, a: MPlayer, t: MPlayer, m: HitMsg, now: nu
   const kn = knockFrom(a.st.x, a.st.z, t, res.r === 'blocked' ? frames.knock * C.block.knockMul : frames.knock);
   const fx: Out[] = [];
   if (res.r !== 'blocked') serverEffects(a, t, hitEffects(passivesOf(def), { kind: sw.kind, combo: sw.combo, dist, reach: def.stats.reach }), kn, ctx.list, ctx.harm, fx);
-  const hp = Math.max(0, t.hp - res.dmg);
-  out.push({ to: 'all', m: { t: 'dmg', a: a.id, tg: t.id, dmg: res.dmg, r: res.r, zone: m.zone, kind: sw.kind, hp, sc: res.staminaCost, st: res.staggerS, kn, p, s: m.s } });
-  ctx.harm(t, res.dmg, a.id, out);
+  const dmg = res.dmg * a.fx.dmgMul;
+  const hp = Math.max(0, t.hp - dmg);
+  out.push({ to: 'all', m: { t: 'dmg', a: a.id, tg: t.id, dmg, r: res.r, zone: m.zone, kind: sw.kind, hp, sc: res.staminaCost, st: res.staggerS, kn, p, s: m.s } });
+  ctx.harm(t, dmg, a.id, out);
   out.push(...fx);
 }

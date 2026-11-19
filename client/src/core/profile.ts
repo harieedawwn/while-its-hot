@@ -1,4 +1,4 @@
-import { PLAYER_COLORS, FAMILIES, WEAPONS, type Family } from '@wih/shared';
+import { PLAYER_COLORS, FAMILIES, MODULE_IDS, WEAPONS, type Family } from '@wih/shared';
 import { loadJson, saveJson } from './store';
 
 /** Offline profile (GDD §9). A form unlocks when reached in an online match; the start set is `phoi` + the three +3 forms. */
@@ -8,6 +8,8 @@ export interface Profile {
   unlocked: Record<string, boolean>;
   bestLevel: Record<Family, number>;
   stats: { kills: number; deaths: number; matches: number };
+  /** Armor modules ever drafted in a match (the training armor stand offers them). */
+  drafted: string[];
 }
 const KEY = 'wih.profile.v1';
 export const NAME_MAX = 14;
@@ -19,6 +21,7 @@ export function defaultProfile(): Profile {
     unlocked: Object.fromEntries(START.map((id) => [id, true])),
     bestLevel: { kiem: 3, bua: 3, thuong: 3 },
     stats: { kills: 0, deaths: 0, matches: 0 },
+    drafted: [],
   };
 }
 export function sanitizeProfile(raw: unknown): Profile {
@@ -33,6 +36,7 @@ export function sanitizeProfile(raw: unknown): Profile {
   return {
     name: typeof r.name === 'string' ? r.name.slice(0, NAME_MAX) : d.name,
     color: typeof r.color === 'string' && (PLAYER_COLORS as readonly string[]).includes(r.color) ? r.color : d.color,
+    drafted: Array.isArray(r.drafted) ? MODULE_IDS.filter((m) => (r.drafted as unknown[]).includes(m)) : [],
     unlocked: un, bestLevel: best, stats: { kills: n(st.kills), deaths: n(st.deaths), matches: n(st.matches) },
   };
 }

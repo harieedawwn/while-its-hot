@@ -168,5 +168,11 @@ export const BALANCE = {
     respawnS: 4, deathLevelLoss: 2, maxCarry: 2,
     /** Blanks: one per player + 1 on the pedestal at the start; rackEach more on the side racks every rackEveryS. */
     rackEveryS: 40, rackEach: 2, maxLying: 11, pickupR: 1.6,
+    /** Round flow (GDD §3, §8): cage countdown (relic draft), the fight clock, result beat, lives, first to winsToWin rounds. */
+    cageS: 10, roundS: 180, resultS: 5, lives: 3, winsToWin: 3, endHoldS: 25,
+    /** Fire ring: appears at startS, closes to minR by closedS (fight clock). Outside: dps + step per everyS since startS; blade heat decays heatMul×. */
+    ring: { startS: 60, closedS: 170, maxR: 38, minR: 2.5, dps: 6, step: 2, everyS: 10, heatMul: 3 },
+    /** Draft: offers per player, rerolls for those below the round winner, kills lead that earns the second Tiếng tăm stack. */
+    draft: { offers: 3, rerolls: 1, bigWin: 3, moduleOffers: 2 },
   },
 } as const;

@@ -6,7 +6,7 @@ import type { SockLike } from './link-sim';
  * and NetBots behind a fake socket, so the client runs the exact online code path, `?lag=` included.
  * `near` puts the bots in an arc in front of our spawn (shots); otherwise they spawn like a real match.
  */
-export interface LoopOpts { bots: number; truce: number; seed: number; near?: { p: Vec3; yaw: number }; passive?: boolean }
+export interface LoopOpts { bots: number; truce: number; seed: number; near?: { p: Vec3; yaw: number }; passive?: boolean; /** Skip the cage countdown and draft (default: run them). */ skipCage?: boolean }
 const ME = 1;
 
 export class Loopback {
@@ -58,7 +58,7 @@ export class Loopback {
     this.toClient({ t: 'lobby', phase: 'match', players, settings: { truce: this.o.truce } });
     this.toClient({ t: 'start' });
     this.t0 = Date.now();
-    const auth = this.auth = new MatchAuthority(players.map((p) => p.id), this.o.truce, rand, 0);
+    const auth = this.auth = new MatchAuthority(players.map((p) => p.id), this.o.truce, rand, 0, !!this.o.skipCage);
     if (this.o.near) this.placeNear(this.o.near.p, this.o.near.yaw);
     for (let i = 0; i < n; i++) {
       const id = ME + 1 + i;

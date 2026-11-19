@@ -4,6 +4,7 @@ import { ForgeSession, type RandFn } from '../forge/session';
 import type { NetState } from '../net/codec';
 import type { ServerMsg } from '../net/protocol';
 import type { Vec3 } from '../net/match-msgs';
+import { NO_RELIC, type RelicFx } from '../data/relics';
 
 /** A message out of the authority: to one player id, or 'all'. */
 export interface Out { to: number | 'all'; m: ServerMsg }
@@ -33,6 +34,16 @@ export interface MPlayer {
   anvil: { p: Vec3; yaw: number } | null;
   /** Damage dealt / kills this match (phase 18 scores rounds from these). */
   dealt: number; kills: number;
+  /** Match totals: points, deaths, rounds won. This round: kills, damage, lives left. */
+  pts: number; deaths: number; wins: number; rKills: number; rDealt: number; lives: number;
+  /** Persist across rounds: relics (and modules), Tiếng tăm stacks this round, best level per family. */
+  relics: string[]; stacks: number; best: [number, number, number];
+  /** Draft state of this round. */
+  offer: string[] | null; rerolls: number; offerNo: number;
+  /** Match ms until which gang_da i-frames last; consecutive Hỏng for mối hàn. */
+  ifUntil: number; hongRun: number;
+  /** Folded relic effects (recomputed when the relic list changes). */
+  fx: RelicFx;
 }
 
 export function blankState(p: Vec3, yaw: number): NetState {
@@ -46,6 +57,8 @@ export function newPlayer(id: number, p: Vec3, yaw: number, rand: RandFn): MPlay
     id, online: true, hp: BALANCE.combat.hp, alive: true, spawnAt: 0, st: blankState(p, yaw), rtt: 0,
     forge, stance: false, heating: false, swings: [], parryAt: -1e9, dashAt: -1e9,
     burnT: 0, burnDps: 0, burnBy: 0, anvil: null, dealt: 0, kills: 0,
+    pts: 0, deaths: 0, wins: 0, rKills: 0, rDealt: 0, lives: BALANCE.match.lives,
+    relics: [], stacks: 0, best: [0, 0, 0], offer: null, rerolls: 0, offerNo: 0, ifUntil: 0, hongRun: 0, fx: NO_RELIC,
   };
 }
 

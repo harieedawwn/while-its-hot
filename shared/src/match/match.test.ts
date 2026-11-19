@@ -9,7 +9,8 @@ import { blankState } from './mplayer';
 const seeded = (s = 7) => () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
 const W = framesOf('kiem', 'light', 0).w * 1000; // phôi swings like a sword
 function setup(truce = 0) {
-  const m = new MatchAuthority([1, 2, 3], truce, seeded());
+  const m = new MatchAuthority([1, 2, 3], truce, seeded(), 0, true);
+  m.tick(0); // flush the round-start messages
   m.state(1, { ...blankState([0, 0, 0], 0) });
   m.state(2, { ...blankState([0, 0, -1.5], Math.PI) }); // in front of 1, facing 1
   m.state(3, { ...blankState([20, 0, 20], 0) });
@@ -69,7 +70,7 @@ describe('match authority: hits', () => {
     v.forge.blades[0].level = 5; v.forge.blades[0].best = 5; v.hp = 3;
     m.msg(1, atk(1, 1000), 1000);
     const o = m.msg(1, hit(1, 2, 1000 + W + 20), 1000 + W + 20);
-    expect(kinds(o)).toEqual(['dmg', 'kill', 'fsync']);
+    expect(kinds(o)).toEqual(['dmg', 'score', 'kill', 'fsync']);
     expect(v.alive).toBe(false); expect(v.forge.blades[0].level).toBe(3); expect(m.players.get(1)!.kills).toBe(1);
     expect(kinds(m.tick(2000))).not.toContain('spawn');
     const sp = m.tick(1000 + W + 20 + BALANCE.match.respawnS * 1000);

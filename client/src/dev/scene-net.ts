@@ -16,6 +16,7 @@ import { serverBase } from '../net/config';
 import { simFromParams } from '../net/link-sim';
 import { Loopback } from '../net/loopback';
 import { NetDebug } from '../net/net-debug';
+import { NetFlow } from '../net/net-flow';
 import { NetMatch } from '../net/net-match';
 import { FirstPersonCamera } from '../player/camera';
 import { bindFeel } from '../player/feel-bind';
@@ -27,17 +28,18 @@ import { Hud } from '../ui/hud/hud';
 import { STR } from '../ui/strings.vi';
 import { loadWeapon } from '../weapons/weapon';
 import { applyFoundryLook, createFoundry } from '../world/foundry';
+import { previewMsgs } from './net-preview';
 import { num } from './params';
 import type { SceneFactory } from './scenes';
 
 /**
  * Online match (phase 17, TECH §4): Arena 1 with remote players, server-judged hits, server-rolled forging,
- * replicated anvils and blanks. Rounds/lives/scoring are phase 18. The room comes from the lobby
+ * replicated anvils and blanks. Rounds, lives, scoring, draft and the end screen: `net/net-flow.ts` (phase 18); `cage=0` skips the countdown, `preview=result|end` shows the end beats. The room comes from the lobby
  * (`room.current`), or `code=ABCD` joins a real room (`server=` as usual; ready is sent at once), or with neither
  * an in-process loopback room runs `bots=2` NetBots (`truce=0`, `near=1` puts them in front of you, `passive=1`).
  * Bad network: `lag=150&jitter=20&loss=0.05`. `netdebug=1` shows the net overlay (always on in dev builds).
  */
-const make: SceneFactory = async ({ renderer, pipeline, params, width, height }) => {
+const make: SceneFactory = async ({ renderer, pipeline, params, width, height, app }) => {
   const q = new URLSearchParams(location.search);
   const scene = new THREE.Scene();
   const rig = new LightRig();
@@ -87,7 +89,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     if (code) rc = new RoomClient(serverBase(), code.toUpperCase(), who, h, { sim });
     else {
       loop = new Loopback({ bots: Math.max(0, Math.min(5, Math.floor(num(params, 'bots', 2)))), truce: num(params, 'truce', 0), seed: params.seed,
-        near: params.get('near') === '1' ? { p: start, yaw: player.yaw } : undefined, passive: params.get('passive') === '1' });
+        near: params.get('near') === '1' ? { p: start, yaw: player.yaw } : undefined, passive: params.get('passive') === '1', skipCage: params.get('cage') === '0' });
       rc = new RoomClient('http://loop', 'LOOP', who, h, { sim, socket: loop.socket });
     }
     rc.connect();
@@ -95,19 +97,38 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   const roomC = rc;
 
   let forge: ForgeController | null = null;
-  const net = new NetMatch({
-    room: roomC, scene, combat: world, collision: arena.world, lib, rig, load, lf, player, session, stage, anvil, hud,
+  let relicInstant = false;
+  // eslint-disable-next-line prefer-const
+  let net: NetMatch;
+  const flow = new NetFlow({
+    host, hud, pipeline, player, arena, me: () => roomC.id, name: (id) => net.name(id), now: () => net.now(),
+    color: (id) => PLAYER_COLORS[roomC.view?.players.find((p) => p.id === id)?.color ?? 0] ?? '#ccc',
+    send: (m) => net.send(m),
+    weaponOf: (id) => id === roomC.id ? { family: session.blade.family, level: session.blade.level } : { family: net.remotes.get(id)?.c.weapon.family ?? null, level: net.remotes.get(id)?.c.level ?? 0 },
+    newRound: () => {
+      forge?.leave();
+      anvil.rule.instant = true; anvil.lift();
+      setTimeout(() => { anvil.rule.instant = relicInstant; }, 150);
+    },
+    relicFx: (fx) => { relicInstant = fx.instantAnvil; anvil.rule.instant = relicInstant; },
+    leave: () => { const code = roomC.code; void app.go('ui-menu', 'quench', code && code !== 'LOOP' ? { screen: 'online', code } : { screen: 'menu' }); },
+  });
+  net = new NetMatch({
+    flow, room: roomC, scene, combat: world, collision: arena.world, lib, rig, load, lf, player, session, stage, anvil, hud,
     forging: () => forge?.inStance ?? false,
     died: () => forge?.leave(),
-    spawned: (p, yaw) => { player.s.pos.set(p[0], p[1], p[2]); player.s.vel.set(0, 0, 0); player.yaw = yaw; player.pitch = 0; },
+    spawned: (p, yaw) => { flow.pinTo(flow.cage ? p : null); player.s.pos.set(p[0], p[1], p[2]); player.s.vel.set(0, 0, 0); player.yaw = yaw; player.pitch = 0; },
   });
   forge = new ForgeController({ player, lf, anvil, stage, session, hud: fhud, touch: input.touch ?? undefined, loadModel: load, link: net.forge });
   net.forge.controller = forge;
   const fxl = new FxLayer({ scene, rig, pipeline, world: arena.world, combat: world, stage, seed: params.seed });
   fxl.trail(() => lf.vm.weapon, () => lf.c.fighter.attacking, (m) => lf.vm.attach(m));
   const debug = params.get('netdebug') === '1' || (import.meta.env.DEV && params.get('netdebug') !== '0') ? new NetDebug(host, net, sim) : null;
-  (window as unknown as { __net: unknown }).__net = net;
+  (window as unknown as { __net: unknown; __flow: unknown }).__net = net; (window as unknown as { __flow: unknown }).__flow = flow;
 
+  const keys = (e: KeyboardEvent) => { if (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3') flow.keyPick(+e.code.slice(5) - 1); };
+  addEventListener('keydown', keys);
+  let pvDone = false;
   let touchOn = false;
   const simTick = (dt: number) => {
     const f = forge!;
@@ -115,6 +136,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     if (pk !== null && !f.inStance && !atAnvil && lf.c.alive && actions.take('forge')) net.take(pk);
     if (input.touch && (pk !== null) !== touchOn) { touchOn = pk !== null; if (!atAnvil) input.touch.setContext('forge', touchOn); }
     net.simTick(dt);
+    flow.simTick();
     f.tick(dt, actions);
     world.tick(dt);
     if (player.s.pos.y < -20) { player.s.pos.set(...start); player.s.vel.set(0, 0, 0); }
@@ -128,9 +150,8 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     const stop = cam.freezeS > 0;
     net.frame(dt, stop);
     forge!.frame(dt, performance.now() / 1000, cam);
-    const truce = net.truceLeft;
-    hud.set({ hp: lf.c.hp, hpMax: BALANCE.combat.hp, stamina: player.s.stamina, staminaMax: BALANCE.move.stamina.pips,
-      level: session.blade.level, family: session.blade.family, roundS: truce > 0 ? truce : null, ringS: null, lives: null });
+    hud.set(flow.frame(net.now(), { hp: lf.c.hp, hpMax: BALANCE.combat.hp, stamina: player.s.stamina, staminaMax: BALANCE.move.stamina.pips,
+      level: session.blade.level, family: session.blade.family, roundS: null, ringS: null, lives: null }));
     sa?.frame(dt, cam.camera.position, v.yaw, Math.hypot(player.s.vel.x, player.s.vel.z));
     fxl.update(stop ? 0 : dt, cam.camera);
     debug?.update();
@@ -150,11 +171,12 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
       frame(fdt, alpha);
       pipeline.render(scene, cam.camera, forge!.showViewmodel ? lf.vm : undefined);
       // final frame for shots: the match is on and remotes are drawn (or a few seconds passed)
+      if (net.started && !pvDone && params.get('preview') && now - (readyAt ||= now) > 800) { pvDone = true; for (const m of previewMsgs(params.get('preview')!, roomC.id)) flow.onMsg(m); }
       if (!out.ready && net.started) { readyAt ||= now; if (now - readyAt > num(params, 'settle', 1500)) out.ready = true; }
     },
     resize(w: number, h: number) { cam.resize(w / h); lf.vm.resize(w / h); },
     dispose() {
-      sa?.dispose(); debug?.dispose(); net.dispose(); loop?.stop();
+      sa?.dispose(); debug?.dispose(); flow.dispose(); removeEventListener('keydown', keys); net.dispose(); loop?.stop();
       roomC.close(); if (current.current === roomC) current.current = null;
       unbindFeel(); fxl.dispose(); lf.dispose(); forge!.dispose(); fhud.dispose(); hud.dispose(); anvil.dispose();
       arena.dispose(); input.dispose();

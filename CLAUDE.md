@@ -91,6 +91,8 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `shared/src/match/{authority,mplayer,hits,effects,forge-auth,pickups,anim-code}.ts` server MatchAuthority, player record, hit-claim checks, passive effects, server forge rolls, blanks, anim byte · `net/{match-msgs,bot}.ts` · `forge/sync.ts`
 - `client/src/net/{net-match,net-combat,net-forge,net-anvils,pickups}.ts` match session + uplink, predicted hits/verdicts, server-rolled forging, others' anvils, blanks
 - `client/src/net/{remote,remotes,interp,pack,link-sim,loopback,net-debug}.ts` remote player, roster, snapshot interp, local State, lag sim, in-process room, dev overlay · `dev/scene-net.ts` (`net`)
+- `shared/src/match/{flow,rules}.ts` RoundFlow (cage/fight/result/end, lives, ring burn, draft, scoring) + pure rules · `shared/src/data/relics.ts` 14 relics + `foldRelics` · `shared/src/unlocks.ts` match-end unlocks · `match/{flow,bots}.test.ts`
+- `client/src/net/net-flow.ts` round machine presentation (HUD, doors, ring, draft, result, end) · `ui/hud/{draft,match-end}.ts` + `styles/match.css` draft cards, banner, end screen · `dev/net-preview.ts`
 
 ## Conventions
 - TypeScript strict, ES modules, npm workspaces: `client/`, `server/`, `shared/`.

@@ -13,6 +13,7 @@ import { STR } from '../ui/strings.vi';
 import type { Hud } from '../ui/hud/hud';
 import type { RoomClient } from './client';
 import { NetAnvils } from './net-anvils';
+import type { NetFlow } from './net-flow';
 import { NetCombat } from './net-combat';
 import { NetForge } from './net-forge';
 import { emptyState, packLocal } from './pack';
@@ -22,6 +23,7 @@ import { Remotes } from './remotes';
 export interface NetMatchDeps {
   room: RoomClient; scene: THREE.Scene; combat: CombatWorld; collision: CollisionWorld; lib: MaterialLib; rig: LightRig;
   load(id: string): Promise<THREE.Object3D>;
+  flow: NetFlow;
   lf: LocalFighter; player: Player; session: ForgeSession; stage: ForgeStage; anvil: Anvil; hud: Hud;
   /** Is the local smith in the forging stance (State flag). */
   forging(): boolean;
@@ -94,7 +96,7 @@ export class NetMatch {
   name(id: number): string { return this.d.room.view?.players.find((p) => p.id === id)?.name ?? STR.profile.defaultName; }
   get rtt(): number { return this.d.room.rtt; }
   /** Seconds of truce left (0 when fighting). */
-  get truceLeft(): number { return this.started ? Math.max(0, (this.truce - this.now()) / 1000) : 0; }
+  get truceLeft(): number { return this.started ? this.d.flow.truceLeft(this.now()) : 0; }
 
   send(m: ClientMsg): void { this.d.room.send(m); }
   take(id: number): void { this.send({ t: 'take', id }); }
@@ -117,6 +119,7 @@ export class NetMatch {
         if (me) this.d.spawned(me.p, me.yaw);
         for (const a of m.anvils) if (a.id !== this.me) this.anvils.place(a.id, a.p, a.yaw, true);
         this.pickups.set(m.pickups);
+        this.d.flow.onMsg({ t: 'phase', f: m.f, rows: m.rows });
         applyForgeSync(this.d.session, m.you, true);
         void this.forge.controller?.syncWeapon(true);
         break;
@@ -124,6 +127,7 @@ export class NetMatch {
       case 'anvil': if (m.id !== this.me) { if (m.act === 'place') this.anvils.place(m.id, m.p, m.yaw); else this.anvils.lift(m.id); } break;
       case 'pickup': for (const id of m.del) this.pickups.del(id); this.pickups.add(m.add); break;
       case 'forged': case 'fsync': this.forge.onMsg(m); break;
+      case 'phase': case 'score': case 'offer': case 'own': case 'end': this.d.flow.onMsg(m); break;
       default: this.combat.onMsg(m);
     }
   }

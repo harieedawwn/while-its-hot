@@ -22,7 +22,15 @@ export type MatchClientMsg =
   | { t: 'parry'; at: number } | { t: 'dash'; at: number } | { t: 'slam'; p: Vec3 }
   | { t: 'forge'; op: ForgeOp }
   | { t: 'anvil'; act: 'place' | 'lift'; p: Vec3; yaw: number }
-  | { t: 'take'; id: number };
+  | { t: 'take'; id: number }
+  /** Relic draft during the cage: take one of the offers, or spend a reroll. */
+  | { t: 'draft'; pick?: string; reroll?: boolean };
+
+export type PhaseName = 'cage' | 'fight' | 'result' | 'end';
+/** Where the round machine is. at = match ms the phase began, end = match ms it ends (0 = open), truce = match ms the truce ends. */
+export interface PhaseNet { ph: PhaseName; n: number; at: number; end: number; truce: number; ring: number; win: number }
+export interface ScoreNet { id: number; pts: number; kills: number; deaths: number; lives: number; wins: number; stacks: number }
+export interface EndRowNet extends ScoreNet { best: [number, number, number]; relics: string[] }
 
 /** One blade as the server keeps it (shared/forge/session.ts Blade). */
 export interface BladeNet { family: Family | null; level: number; best: number }
@@ -42,7 +50,7 @@ export interface MatchPlayerNet { id: number; hp: number; alive: boolean; p: Vec
 
 export type MatchServerMsg =
   /** Full match state: at match start and on a reconnect. t0 = server epoch ms of match start (the room fills it), now = match ms; truce = ms the truce ends. */
-  | { t: 'match'; t0: number; now: number; truce: number; players: MatchPlayerNet[]; anvils: AnvilNet[]; pickups: PickupNet[]; you: ForgeSync }
+  | { t: 'match'; t0: number; now: number; truce: number; f: PhaseNet; rows: ScoreNet[]; players: MatchPlayerNet[]; anvils: AnvilNet[]; pickups: PickupNet[]; you: ForgeSync }
   /** Damage applied. kn = knockback velocity for the target's own body; st = stagger seconds (0 = flinch unless blocked). */
   | { t: 'dmg'; a: number; tg: number; dmg: number; r: HitKindNet; zone: Zone; kind: AttackKind; hp: number; sc: number; st: number; kn: Vec3; p: Vec3; s: number }
   | { t: 'parried'; a: number; tg: number; st: number; stam: number; p: Vec3; s: number }
@@ -54,4 +62,14 @@ export type MatchServerMsg =
   | { t: 'forged'; id: number; r: StrikeNet; n: number }
   | { t: 'fsync'; s: ForgeSync }
   | { t: 'anvil'; id: number; act: 'place' | 'lift'; p: Vec3; yaw: number }
-  | { t: 'pickup'; add: PickupNet[]; del: number[]; by: number };
+  | { t: 'pickup'; add: PickupNet[]; del: number[]; by: number }
+  /** Round machine change (cage → fight → result → next cage … → end). */
+  | { t: 'phase'; f: PhaseNet; rows: ScoreNet[] }
+  | { t: 'score'; rows: ScoreNet[] }
+  /** Draft offers for you, rerolls left; or the relic/module you now own (own = full list). */
+  | { t: 'offer'; ids: string[]; rerolls: number }
+  | { t: 'own'; relics: string[] }
+  /** Your HP was raised by the server (dau_toi). */
+  | { t: 'heal'; hp: number }
+  /** Match over: the standings, each player's best level per family (kiem, bua, thuong) and their relics. */
+  | { t: 'end'; win: number; rows: EndRowNet[] };

@@ -59,6 +59,7 @@ export class NetCombat implements HitResolver {
         if (m.id === this.d.me()) { this.d.lf.c.revive(); this.d.spawned(m.p, m.yaw); }
         else this.d.remotes.teleport(m.id);
         break;
+      case 'heal': this.d.lf.c.hp = m.hp; break;
       case 'knock': pushMove(this.d.lf.c.body.s, m.kn[0], m.kn[2], C.pushS, m.kn[1]); break;
       default: break;
     }

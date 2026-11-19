@@ -1,0 +1,32 @@
+/* Round flow UI (phase 18): relic draft, stamped banner, match end. Flat fills, hard edges, no glow. */
+.d-root { position: fixed; left: var(--sl); right: var(--sr); bottom: calc(var(--sb) + 8px); top: calc(var(--st) + 48px); z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: space-between; pointer-events: none; }
+.d-root[hidden] { display: none; }
+.d-head { font: 800 var(--t-s)/1 var(--f-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--bone); background: var(--soot); padding: 6px 12px 4px; }
+.d-count { font: 900 clamp(48px, 16vh, 96px)/1 var(--f-display); color: var(--bone); text-shadow: 0 3px 0 var(--soot); }
+.d-row { display: flex; gap: 10px; pointer-events: auto; max-width: 100%; }
+.d-card { width: min(210px, 28vw); min-height: 96px; padding: 10px 12px; text-align: left; color: var(--bone); cursor: pointer; display: flex; flex-direction: column; gap: 6px; border: 0; font: inherit; }
+.d-card:active { transform: translateY(2px); }
+.d-card.is-mod { background: var(--oxide); }
+.d-card .d-key { position: absolute; right: 10px; top: 6px; font: 800 var(--t-xs)/1 var(--f-display); color: var(--bone-dim); }
+.d-name { font: 900 var(--t-m)/1.1 var(--f-display); text-transform: uppercase; }
+.d-line { font: 600 var(--t-xs)/1.3 var(--f-text); color: var(--bone-dim); }
+.d-reroll { pointer-events: auto; margin-top: 8px; }
+.d-reroll[hidden] { display: none; }
+.b-banner { position: fixed; left: 50%; top: 26%; transform: translateX(-50%); z-index: 4; font: 900 clamp(34px, 11vh, 72px)/1 var(--f-display); text-transform: uppercase; color: var(--bone); background: var(--soot); padding: 0.18em 0.5em 0.08em; pointer-events: none; white-space: nowrap; }
+.b-banner.is-top { top: calc(var(--st) + 6px); font-size: clamp(22px, 8vh, 44px); }
+.b-banner[hidden] { display: none; }
+.b-banner.is-in { animation: b-stamp 0.14s steps(3) both; }
+@keyframes b-stamp { from { transform: translateX(-50%) scale(1.5); } to { transform: translateX(-50%) scale(1); } }
+.e-root { position: fixed; z-index: 5; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, calc(100vw - var(--sl) - var(--sr) - 24px)); max-height: calc(100vh - var(--st) - var(--sb) - 16px); overflow-y: auto; padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; color: var(--bone); }
+.e-title { font: 900 var(--t-m)/1.1 var(--f-display); text-transform: uppercase; }
+.e-tab { width: 100%; border-collapse: collapse; font: 600 var(--t-xs)/1.25 var(--f-text); }
+.e-tab th { text-align: left; color: var(--bone-dim); font-weight: 600; border-bottom: var(--rule) solid var(--steel); padding: 2px 4px; }
+.e-tab td { padding: 1px 4px; border-bottom: var(--rule) solid var(--steel); }
+.e-tab .n { text-align: right; width: 4em; }
+.e-tab .sw { display: inline-block; width: 12px; height: 12px; margin-right: 8px; vertical-align: -1px; }
+.e-tab tr.is-me td { color: var(--iron-hot); }
+.e-un { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding-top: 4px; }
+.e-cap { font: 800 var(--t-xs)/1 var(--f-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--iron-hot); width: 100%; }
+.e-none { color: var(--bone-dim); font: 600 var(--t-s)/1.3 var(--f-text); }
+.e-form { display: flex; align-items: center; gap: 6px; font: 700 var(--t-s)/1 var(--f-text); }
+.e-form svg { height: 22px; width: 22px; }
