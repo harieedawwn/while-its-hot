@@ -266,7 +266,7 @@ Done when the APK built by CI shows the new icon and splash.
 ### Phase 24 — Import community weapons from weapon-lab · `TODO` · Sonnet 5.5 · medium
 Read: `weapon-lab/PROMPT_FREE_CLAUDE.md` (the kit contract), GDD §6 (roster, data shape). Code map lines for weapons/, shared/src/data/weapons.ts, passives.ts.
 Run this phase again every time the user drops new files into `weapon-lab/weapons/*.js`.
-- Once: `client/src/weapons/lab-kit.ts` implements the same `k` API as `weapon-lab/preview.html` on top of the
+- Once: `client/src/weapons/lab-kit.ts` implements the same `k` API as `weapon-lab/preview.html` (incl. `edge` loft + fuller, `wrap`, `paint`; port the code from that file) on top of the
   game's one-mesh builder (`wkit`): merges all parts into one geometry, maps slots → weapon atlas palette,
   metal slots → heatMask, flat normals, keeps `tip`/`base` markers. A loader registers each lab file as a
   model by `meta.id`.

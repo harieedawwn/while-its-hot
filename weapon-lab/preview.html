@@ -59,10 +59,80 @@ const mats = {};
 for (const [k, c] of Object.entries(SLOTS)) mats[k] = new THREE.MeshLambertMaterial({ color: c, flatShading: true });
 
 // ---- the kit (same API the game adapter implements) ----
+const paintMats = {};
 function mesh(geo, slot) {
-  if (!mats[slot]) { warn(`slot lạ: ${slot}`); slot = 'steel'; }
+  let mat, metal;
+  if (slot && typeof slot === 'object') {           // k.paint('#hex', metal)
+    const key = slot.color + (slot.metal ? 'm' : '');
+    mat = paintMats[key] ??= new THREE.MeshLambertMaterial({ color: new THREE.Color(slot.color), flatShading: true });
+    metal = !!slot.metal;
+  } else {
+    if (!mats[slot]) { warn(`slot lạ: ${slot}`); slot = 'steel'; }
+    mat = mats[slot]; metal = METAL.has(slot);
+  }
   geo.computeVertexNormals();
-  const m = new THREE.Mesh(geo, mats[slot]); m.userData.slot = slot; return m;
+  const m = new THREE.Mesh(geo, mat); m.userData.metal = metal; return m;
+}
+// Catmull-Rom resample of a 2D polyline (z,y) -> n points per segment
+function smooth2(pts, n) {
+  if (pts.length < 3 || n <= 1) return pts.map(p => [...p]);
+  const out = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+    for (let j = 0; j < n; j++) {
+      const t = j / n, t2 = t * t, t3 = t2 * t;
+      out.push([0, 1].map(a => 0.5 * (2 * p1[a] + (-p0[a] + p2[a]) * t + (2 * p0[a] - 5 * p1[a] + 4 * p2[a] - p3[a]) * t2 + (-p0[a] + 3 * p1[a] - 3 * p2[a] + p3[a]) * t3)));
+    }
+  }
+  out.push([...pts[pts.length - 1]]); return out;
+}
+function lerpArr(arr, u) { if (!Array.isArray(arr)) return arr; const f = u * (arr.length - 1), i = Math.min(arr.length - 2, Math.floor(f)); return arr.length < 2 ? arr[0] : arr[i] + (arr[i + 1] - arr[i]) * (f - i); }
+// Loft a blade along a spine in the Z-Y plane. Cross-section is a real flat-then-bevel wedge (or diamond).
+function loftBlade(o) {
+  const sp = smooth2(o.spine, o.smooth ?? 6), n = sp.length;
+  const T = o.thickness ?? 0.012, E = o.edgeThickness ?? 0.002, B = Math.min(0.95, Math.max(0.05, o.bevel ?? 0.45));
+  const mode = o.edge ?? 'front';
+  // cumulative length for width interpolation
+  const L = [0]; for (let i = 1; i < n; i++) L.push(L[i - 1] + Math.hypot(sp[i][0] - sp[i - 1][0], sp[i][1] - sp[i - 1][1]));
+  const rings = [], frames = [];
+  for (let i = 0; i < n; i++) {
+    const a = sp[Math.max(0, i - 1)], b = sp[Math.min(n - 1, i + 1)];
+    let tz = b[0] - a[0], ty = b[1] - a[1]; const l = Math.hypot(tz, ty) || 1; tz /= l; ty /= l;
+    const nz = ty, ny = -tz;                        // normal: toward +Z for an upward spine
+    const u = L[i] / (L[n - 1] || 1), w = Math.max(0, lerpArr(o.width, u)), t = T * (o.taper ? 1 - o.taper * u : 1);
+    const P = (off, x) => [x, sp[i][1] + ny * off, sp[i][0] + nz * off];   // -> [x, y, z]
+    let ring;
+    if (mode === 'both') ring = [P(-w / 2, -E / 2), P(-w / 2 * B, -t / 2), P(0, -t / 2), P(w / 2 * B, -t / 2), P(w / 2, -E / 2), P(w / 2, E / 2), P(w / 2 * B, t / 2), P(0, t / 2), P(-w / 2 * B, t / 2), P(-w / 2, E / 2)];
+    else { const s = mode === 'back' ? -1 : 1, f = w * (1 - B);
+      ring = [P(0, -t / 2), P(s * f, -t / 2), P(s * w, -E / 2), P(s * w, E / 2), P(s * f, t / 2), P(0, t / 2)]; }
+    rings.push(ring); frames.push({ c: sp[i], nz, ny, w, u, t });
+  }
+  const pos = [], tri = (p, q, r) => pos.push(...p, ...q, ...r);
+  const K = rings[0].length;
+  for (let i = 0; i < n - 1; i++) for (let j = 0; j < K; j++) {
+    const a = rings[i][j], b = rings[i][(j + 1) % K], c = rings[i + 1][(j + 1) % K], d = rings[i + 1][j];
+    tri(a, b, c); tri(a, c, d);
+  }
+  const cap = (r, flip) => { const c = r.reduce((s, p) => s.map((v, k) => v + p[k] / r.length), [0, 0, 0]);
+    for (let j = 0; j < K; j++) flip ? tri(c, r[(j + 1) % K], r[j]) : tri(c, r[j], r[(j + 1) % K]); };
+  cap(rings[0], true); cap(rings[n - 1], false);
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  const blade = mesh(g, o.slot ?? 'steel');
+  if (o.fuller) {                                    // a groove strip on both faces that follows the curve
+    const fu = o.fuller, fp = [];
+    const s = mode === 'back' ? -1 : 1;
+    for (const side of [-1, 1]) for (let i = 0; i < n - 1; i++) {
+      const f0 = frames[i], f1 = frames[i + 1];
+      if (f0.u < (fu.from ?? 0.05) || f1.u > (fu.to ?? 0.6)) continue;
+      const q = (f, off) => { const o2 = mode === 'both' ? off - f.w / 2 : off; return [side * (f.t / 2 + 0.0008), f.c[1] + f.ny * o2 * s, f.c[0] + f.nz * o2 * s]; };
+      const at = fu.at ?? 0.3, wd = fu.width ?? 0.18;
+      const a = q(f0, f0.w * at), b = q(f0, f0.w * (at + wd)), c = q(f1, f1.w * (at + wd)), d = q(f1, f1.w * at);
+      fp.push(...a, ...b, ...c, ...a, ...c, ...d, ...a, ...c, ...b, ...a, ...d, ...c); // both windings: always visible
+    }
+    if (fp.length) { const fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.Float32BufferAttribute(fp, 3));
+      const fm = mesh(fg, fu.slot ?? 'steel_dark'); const grp = new THREE.Group(); grp.add(blade, fm); return grp; }
+  }
+  return blade;
 }
 const kit = {
   group: () => new THREE.Group(),
@@ -71,6 +141,13 @@ const kit = {
   cone: (r, h, n, s) => mesh(new THREE.ConeGeometry(r, h, Math.max(3, n | 0)), s),
   sphere: (r, d, s) => mesh(new THREE.IcosahedronGeometry(r, Math.min(2, d | 0)), s),
   lathe: (pts, n, s) => mesh(new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(Math.max(0, r), y)), Math.max(3, n | 0)), s),
+  paint: (color, metal = false) => ({ color, metal }),
+  edge: (o) => loftBlade(o),
+  wrap(y0, y1, r, turns, s, sides = 3) {
+    const pts = [], N = Math.max(8, Math.round(turns * 8));
+    for (let i = 0; i <= N; i++) { const a = (i / N) * turns * Math.PI * 2; pts.push([Math.cos(a) * r, y0 + (y1 - y0) * (i / N), Math.sin(a) * r]); }
+    return kit.tube(pts, Math.max(0.003, r * 0.22), sides, s, N);
+  },
   blade(pts, th, s, bevel = 0.6) {
     const sh = new THREE.Shape(pts.map(([z, y]) => new THREE.Vector2(z, y)));
     const g = new THREE.ExtrudeGeometry(sh, { depth: th, bevelEnabled: false });
@@ -84,9 +161,9 @@ const kit = {
     }
     return mesh(g, s);
   },
-  tube(pts, r, n, s) {
+  tube(pts, r, n, s, segs) {
     const c = new THREE.CatmullRomCurve3(pts.map(p => new THREE.Vector3(...p)));
-    return mesh(new THREE.TubeGeometry(c, Math.max(4, pts.length * 4), r, Math.max(3, n | 0)), s);
+    return mesh(new THREE.TubeGeometry(c, segs ?? Math.min(48, Math.max(4, pts.length * 3)), r, Math.max(3, n | 0)), s);
   },
   marker(g, name, xyz) { const o = new THREE.Object3D(); o.name = name; o.position.set(...xyz); g.add(o); },
 };
@@ -167,7 +244,7 @@ function show(w) {
 const info = document.getElementById('info'), heatEl = document.getElementById('heat');
 function setHeat(h) {
   const step = HEAT[Math.min(HEAT.length - 1, Math.floor(h * HEAT.length))];
-  pivot.traverse(o => { if (o.isMesh && METAL.has(o.userData.slot)) {
+  pivot.traverse(o => { if (o.isMesh && o.userData.metal) {
     if (!o.userData.own) { o.material = o.material.clone(); o.userData.own = true; }
     o.material.emissive.copy(h < 0.05 ? new THREE.Color(0) : step); o.material.emissiveIntensity = h < 0.05 ? 0 : 0.9;
   } });
@@ -216,6 +293,7 @@ function animate(now) {
   renderer.render(scene, cam);
 }
 requestAnimationFrame(animate);
+window.__lab = { cam, ctl };
 
 // a tiny sample so the page is never empty
 addSource(`export default { meta: { id: 'mau_kiem', name: 'Kiếm mẫu', family: 'kiem', level: 3, inspiration: 'mẫu kiểm tra',
