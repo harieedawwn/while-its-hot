@@ -1,0 +1,69 @@
+# Declarative sound recipes (AUDIO §2). Routing, mix level and voice limits live in client/src/audio/catalog.ts, not here. Each event = layers mixed at `at` seconds. gain/hp/lp in dB/Hz.
+# Phase 11 = skeleton + test sounds so the engine can be auditioned; phase 12 designs the rest.
+events:
+  strike_dat:                      # clean anvil ping, hammer weight layer
+    lufs: -15
+    variants: 1
+    layers:
+      - {src: "oga_hammer_anvil/forger_0.ogg", start: 0.0, dur: 0.9, gain: 0, hp: 120}
+      - {synth: click, at: 0, dur: 0.012, decay: 0.002, hp: 2500, gain: -12}
+      - {synth: thump, at: 0, dur: 0.14, f0: 95, f1: 48, decay: 0.05, gain: -6}
+  strike_hong:                     # dead crunchy clack, no ring
+    lufs: -17
+    layers:
+      - {src: "oga_blacksmith_hammer/*.wav", start: 0.0, dur: 0.14, lp: 2600, drive: 6, gain: 0, fade: 0.06}
+      - {synth: noise, at: 0, dur: 0.05, decay: 0.012, hp: 900, lp: 5000, gain: -10}
+  parry:
+    squash: 24                      # crest-heavy source: compress harder so the loudness target is reachable                           # the signature: bright steel clang + crack + sub punch
+    lufs: -15                       # aim hot: the encoder trim leaves it near `expect`
+    expect: -17
+    variants: 3
+    layers:
+      - {src: "oga_weapon_clash_1/*Blade on Blade.wav", start: 0.0, dur: 0.6, hp: 300, gain: 0, fade: 0.25}
+      - {synth: click, at: 0, dur: 0.012, decay: 0.0015, hp: 4000, gain: -8}
+      - {synth: thump, at: 0, dur: 0.12, f0: 110, f1: 55, decay: 0.045, gain: -11}
+  hit_blocked:
+    squash: 14                      # crest-heavy source: compress harder so the loudness target is reachable                     # dull shield thunk
+    lufs: -17
+    variants: 3
+    layers:
+      - {src: "oga_weapon_clash_1/*Haft*.wav", start: 0.0, dur: 0.3, lp: 3500, gain: 0}
+      - {synth: thump, at: 0, dur: 0.1, f0: 80, f1: 50, decay: 0.04, gain: -6}
+  swing_sword:
+    lead_check: false                     # the pack's swishes are 0.07-0.2 s: pitched down they read as a blade, not a flick
+    lufs: -22
+    variants: 4
+    layers:
+      - {src: ["oga_swishes/swishes/swish-9.wav", "oga_swishes/swishes/swish-7.wav", "oga_swishes/swishes/swish-3.wav", "oga_swishes/swishes/swish-4.wav"], pitch: -4, hp: 250, gain: 0, fade: 0.08, fade_in: 0.02}
+  swing_hammer:
+    lead_check: false
+    lufs: -20
+    variants: 3
+    layers:
+      - {src: ["oga_swishes/swishes/swish-9.wav", "oga_swishes/swishes/swish-7.wav", "oga_swishes/swishes/swish-8.wav"], pitch: -10, lp: 3500, gain: 0, fade: 0.15, fade_in: 0.04}
+      - {synth: thump, at: 0.12, dur: 0.18, f0: 70, f1: 45, decay: 0.08, gain: -12}
+  footstep_stone:
+    lufs: -24
+    variants: 6
+    layers:
+      - {src: "oga_footsteps/Fantozzi-footsteps/flac/Fantozzi-Stone*.flac", start: 0.0, dur: 0.32, hp: 90, gain: 0, fade: 0.08}
+  footstep_slag:
+    lufs: -24
+    variants: 6
+    layers:
+      - {src: "oga_footsteps/Fantozzi-footsteps/flac/Fantozzi-Sand*.flac", start: 0.0, dur: 0.32, hp: 90, pitch: -2, gain: 0, fade: 0.08}
+  quench:                          # water hiss + deep iron thoom
+    lufs: -15
+    layers:
+      - {src: "oga_steam/steam hisses - Marker #1.wav", start: 0.0, dur: 1.5, hp: 400, gain: -2, fade: 0.5}
+      - {synth: thump, at: 0, dur: 0.4, f0: 70, f1: 38, drop: 0.08, decay: 0.15, gain: -2}
+  steam_vent:
+    lufs: -20
+    variants: 3
+    layers:
+      - {src: "oga_steam/steam hisses - Marker #*.wav", start: 0.0, dur: 1.6, hp: 300, gain: 0, fade: 0.5}
+  heat_loop:                       # brazier roar, swells while held (engine drives gain/filter)
+    lufs: -22
+    loop: 0.4
+    layers:
+      - {src: "oga_fire/fire.wav", start: 4.0, dur: 5.0, hp: 60, gain: 0, fade: 0}

@@ -9,6 +9,8 @@ export const STR = {
     /** VFX setting (phase 10): hit puffs and floor marks; off = sparks only. */
     blood: 'Máu',
   },
+  /** Audio settings (AUDIO §1.5); the ledger UI arrives in phase 14. */
+  audio: { master: 'Âm lượng', sfx: 'Hiệu ứng', world: 'Môi trường', ui: 'Giao diện', output: 'Đầu ra', phone: 'Loa điện thoại', headphones: 'Tai nghe' },
   /** Touch layout editor (Điều khiển → Chỉnh bố cục). Game buttons carry pictograms only, never text. */
   layout: {
     done: 'Xong', reset: 'Đặt lại', grid: 'Lưới', size: 'Cỡ', opacity: 'Độ mờ',

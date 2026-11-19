@@ -1,0 +1,57 @@
+{
+ "footstep_slag": {
+  "n": 6,
+  "loop": false,
+  "lufs": -24
+ },
+ "footstep_stone": {
+  "n": 6,
+  "loop": false,
+  "lufs": -24
+ },
+ "heat_loop": {
+  "n": 1,
+  "loop": true,
+  "lufs": -22
+ },
+ "hit_blocked": {
+  "n": 3,
+  "loop": false,
+  "lufs": -17
+ },
+ "parry": {
+  "n": 3,
+  "loop": false,
+  "lufs": -15
+ },
+ "quench": {
+  "n": 1,
+  "loop": false,
+  "lufs": -15
+ },
+ "steam_vent": {
+  "n": 3,
+  "loop": false,
+  "lufs": -20
+ },
+ "strike_dat": {
+  "n": 1,
+  "loop": false,
+  "lufs": -15
+ },
+ "strike_hong": {
+  "n": 1,
+  "loop": false,
+  "lufs": -17
+ },
+ "swing_hammer": {
+  "n": 3,
+  "loop": false,
+  "lufs": -20
+ },
+ "swing_sword": {
+  "n": 4,
+  "loop": false,
+  "lufs": -22
+ }
+}

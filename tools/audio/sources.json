@@ -1,0 +1,14 @@
+{
+  "_note": "CC0 sources only. kenney.nl answers 403 to automated clients, so Kenney packs are added by hand if wanted (put the zip's files in audio-src/<id>/ and add an entry with url null). freesound needs an API key; not used yet.",
+  "sources": [
+    { "id": "oga_weapon_clash_1", "url": "https://opengameart.org/sites/default/files/medieval_sfx_weapon_on_weapon_1_of_2.7z", "license": "CC0", "page": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts", "what": "real blade and haft clashes (1 of 2)" },
+    { "id": "oga_weapon_clash_2", "url": "https://opengameart.org/sites/default/files/medieval_sfx_weapon_on_weapon_2_of_2.7z", "license": "CC0", "page": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts", "what": "real blade and haft clashes (2 of 2)" },
+    { "id": "oga_firearms", "url": "https://opengameart.org/sites/default/files/Prepared%20SFX%20Library.7z", "license": "CC0", "page": "https://opengameart.org/content/the-free-firearm-sound-library", "what": "shoulder gun, bolt, bomb mechanics" },
+    { "id": "oga_blacksmith_hammer", "url": "https://opengameart.org/sites/default/files/blacksmithhammer.wav", "license": "CC0", "page": "https://opengameart.org/content/blacksmiths-hammer", "what": "hammer on iron" },
+    { "id": "oga_hammer_anvil", "url": "https://opengameart.org/sites/default/files/forger_0.ogg", "license": "CC0", "page": "https://opengameart.org/content/hammer-on-anvil", "what": "hammer on anvil, real" },
+    { "id": "oga_footsteps", "url": "https://opengameart.org/sites/default/files/Fantozzi-footsteps.7z", "license": "CC0", "page": "https://opengameart.org/content/fantozzis-footsteps-grasssand-stone", "what": "boots on stone, grass, sand" },
+    { "id": "oga_steam", "url": "https://opengameart.org/sites/default/files/steam_hisses.zip", "license": "CC0", "page": "https://opengameart.org/content/steam-release-sounds", "what": "steam hisses (quench, vents)" },
+    { "id": "oga_fire", "url": "https://opengameart.org/sites/default/files/fire.wav", "license": "CC0", "page": "https://opengameart.org/content/fireplace-sound-loop", "what": "fire loop (brazier, ring)" },
+    { "id": "oga_swishes", "url": "https://opengameart.org/sites/default/files/swishes.zip", "license": "CC0", "page": "https://opengameart.org/content/swishes-sound-pack", "what": "weapon swishes" }
+  ]
+}

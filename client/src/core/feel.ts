@@ -184,4 +184,23 @@ export const FEEL = {
     /** Fire ring: card width/height (m), embers per second and their life, world tint inside (0..1). */
     ring: { cardW: 1.5, cardH: 3.6, rows: 2, embersPerS: 22, emberLife: [1.2, 2.4] as const, tint: 0.22 },
   },
+  /** Audio (AUDIO §1/§2/§5). Gains in dB relative to their bus; the mix snapshot is the starting point, adjust by listening notes. */
+  audio: {
+    /** Glue compressor on master (ratio, attack s, release s, threshold dB) and the limiter after it (ceiling dB). */
+    glue: { ratio: 3, attack: 0.005, release: 0.12, threshold: -14, knee: 6 },
+    limiter: { threshold: -1, ratio: 20, attack: 0.001, release: 0.06 },
+    /** Generated reverbs: length s, decay s, start brightness (0..1 noise smoothing). Per-area send level 0..1 in `send`. */
+    reverb: { room_small: { len: 0.5, decay: 0.16, bright: 0.55 }, hall_foundry: { len: 1.4, decay: 0.42, bright: 0.38 } },
+    send: { room_small: 0.16, hall_foundry: 0.3 },
+    /** 3D: inverse-distance ref and max (m), air-absorption cutoff at ref and at max (Hz), occlusion factor on the cutoff, probe rate (Hz). */
+    spatial: { ref: 2, max: 45, lpNear: 20000, lpFar: 2800, occlusion: 0.28, probeHz: 4 },
+    /** Variation (AUDIO §1.3): pitch ± fraction, volume ± dB. */
+    vary: { pitch: 0.04, db: 1.5 },
+    /** "Loa điện thoại": high-pass Hz, exciter band (Hz) re-synthesised as harmonics, exciter drive and mix. Tai nghe bypasses it. */
+    phone: { highpass: 140, exciterLp: 150, exciterHp: 230, drive: 6, mix: 0.45 },
+    /** Ambience duck under big events: dB and seconds (AUDIO §1.6). */
+    duck: { db: -4, s: 0.4 },
+    /** Mix snapshot (AUDIO §5), dB. Catalog rows pick one of these keys. */
+    mix: { parry: 0, kill: 0, strike: -2, hit: -3, swing: -6, footOwn: -14, footEnemy: -10, dash: -8, ambience: -20, emitter: -16, ui: -12, move: -10 } as Record<string, number>,
+  },
 } as const;
