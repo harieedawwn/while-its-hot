@@ -59,6 +59,11 @@ export const STR = {
     } as Record<string, string>,
   },
   /** In-game HUD, pause and scoreboard (LOOK §8): labels only where a player truly needs one. */
+  /** Training yard boards (GDD §10): painted words on the world's own signs. */
+  yard: {
+    modes: { idle: 'Đứng yên', block: 'Đỡ đòn', counter: 'Phản đòn', move: 'Di chuyển' },
+    lastHit: 'Đòn cuối', dps: 'DPS', armor: 'Giáp', rack: 'Vũ khí', dummies: 'Người gỗ',
+  },
   hud: { fps: 'FPS', lives: 'Mạng', ring: 'Vòng lửa', kills: 'Hạ', deaths: 'Gục', level: 'Cấp', you: 'Bạn' },
   pause: { title: 'Tạm dừng', resume: 'Tiếp tục', settings: 'Cài đặt', leave: 'Về menu' },
   score: { title: 'Bảng điểm', player: 'Người chơi', weapon: 'Vũ khí' },

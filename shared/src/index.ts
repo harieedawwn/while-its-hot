@@ -10,3 +10,4 @@ export * from './combat/fighter';
 export * from './combat/damage';
 export * from './combat/sweep';
 export * from './forge/index';
+export * from './training';

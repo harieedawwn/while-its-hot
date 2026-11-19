@@ -4,7 +4,7 @@ import { uiRoot } from '../ui/kit/dom';
 import { SettingsScreen } from '../ui/menu/settings-screen';
 
 /** Scenes that are played (not menus): back / Esc / the pause button opens the pause menu instead of leaving. */
-export const PLAY_SCENES: ReadonlySet<string> = new Set(['movement', 'combat', 'forge', 'hud']);
+export const PLAY_SCENES: ReadonlySet<string> = new Set(['movement', 'combat', 'forge', 'hud', 'training']);
 
 /**
  * In-game pause (LOOK §8): freezes the loop through `app:pause`, shows Tiếp tục / Cài đặt / Về menu.

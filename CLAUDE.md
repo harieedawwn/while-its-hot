@@ -83,6 +83,7 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/core/{game-settings,profile}.ts` saved gfx/view settings (live), offline profile · `ui/fps-badge.ts` · `ui/kit/fields.ts` range slider, text field, swatches
 - `client/src/ui/menu/{settings-screen,settings-rows,armory-screen}.ts` settings shell + 5 tab row builders, armory rails · `world/turntable.ts` · `ui/styles/armory.css`
 - `client/src/ui/hud/{hud,overlays,silhouettes}.ts`+`hud.css` HUD, scoreboard, pause menu, family silhouettes · `app/pause.ts` in-game pause · `dev/{scene-hud,scene-ui-settings,scene-ui-armory}.ts`
+- `shared/src/training.ts` rack offers, caps, DPS window, yard modes · `client/src/training/{boards,yard}.ts` canvas signs, yard props/stations · `dev/scene-training.ts` Luyện tập yard (`training`)
 - `client/src/ui/strings.vi.ts` all Vietnamese text · `tools/shot.mjs` screenshots · `tools/audio/*` audio checks
 
 ## Conventions

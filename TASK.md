@@ -164,7 +164,7 @@ Read: LOOK §8, §10. TECH §5 (settings list). GDD §9.
   pause menu, scoreboard overlay.
 Shots: `ui-settings`, `ui-armory`, `hud` on all devices. Done when no overlap/clip on any device.
 
-### Phase 15 — Training yard and profile · `TODO` · Sonnet 5.5 · medium
+### Phase 15 — Training yard and profile · `DONE` · Sonnet 5.5 · medium
 Read: GDD §9, §10.
 - Profile storage (localStorage + Capacitor Preferences), unlock rules, cap at bestLevel with the refused
   strike, weapon rack + armor stand of unlocked items, dummy mode switch (diegetic lever/board), movement
@@ -279,4 +279,7 @@ Done when the sim results are in the log and the APK release is current.
 - Armory (`ui/menu/armory-screen.ts`, `world/turntable.ts`): 3 rails, forms placed by minLevel, locked = dark tile + black silhouette on the anvil turntable, passive line from `STR.armory.passive`. Menu "Kho vũ khí" now opens it (view shifts right in armory). HUD (`ui/hud/{hud,overlays,silhouettes}.ts`, `hud.css`): HP segments, stamina chevrons, lives pips, +N level with family silhouette (under swap/pause, top-right), timer + ring countdown, kill feed, `Scoreboard`, `PauseMenu`. Nothing feeds the HUD in combat/movement yet: phase 15/18 must call `hud.set(...)` / `hud.kill(...)` (see `dev/scene-hud.ts`).
 - Pause: `app/pause.ts` `GamePause` (Director-owned) opens on `app:back` in PLAY_SCENES (movement, combat, forge, hud); the touch/KB pause button now emits `app:back` from `InputRig.poll`; loop freezes via `app:pause`. Cài đặt inside pause reuses the settings ledger. Third person (`game.thirdPerson`) is honored by `combat` only (`tp=` overrides). Hidden-by-default FPS badge `ui/fps-badge.ts`.
 - Test on the phone: pause button → Tiếp tục/Cài đặt/Về menu; Cài đặt → Điều khiển → Mở (layout editor) and back; Hiện FPS + Giới hạn FPS; Góc nhìn FOV/shake in `combat`; menu → Kho vũ khí tap each tile. Harness note: `tools/shot.mjs` sometimes loses its dev server mid-run (ERR_CONNECTION_REFUSED); start `npm run dev` first.
+- Phase 15: `?scene=training` (menu Luyện tập → stamp cut → it; pause works there). Foundry NW corner: 3 dummies, your anvil with caps = `profile.bestLevel` (the phase-09 refused strike applies), weapon rack of `rackOffers(profile)`, armor stand, lever board (Đứng yên/Đỡ đòn/Phản đòn/Di chuyển), chalkboard (last hit + 5 s DPS) — all painted canvas signs (`training/{boards,yard}.ts`), rules in `shared/src/training.ts` (+test). Rèn (E / touch Rèn button) near a station cycles it; at the anvil it forges as before. HUD is live there (`hud.set` each frame, no timer/lives).
+- Decisions: the movement course is Arena 1's own wall-jump shafts + crane tower (no separate geometry); the armor stand cycles tiers 0–10 freely, modules wait for phase 18's draft (profile has no drafted list yet); profile stays localStorage only (Android WebView persists it, Capacitor Preferences not needed); the 'attack' dummy mode is not on the lever (Phản đòn covers it). Menu "Kho vũ khí" unchanged.
+- Test on the phone: Luyện tập → walk to the board row north of the dummies, tap Rèn at rack/armor/lever; hit dummies and read the chalkboard; place the anvil (Đe) and strike past +3 — it must refuse; the APK already opens to the menu.
 

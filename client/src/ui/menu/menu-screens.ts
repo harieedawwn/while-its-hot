@@ -88,7 +88,7 @@ export class MenuScreen implements Screen {
     await smithy.strike();
     await wait(FEEL.ui.hammer.after);
     this.strip?.clear();
-    if (id === 'training') await app.go('combat', 'stamp', {}, origin);
+    if (id === 'training') await app.go('training', 'stamp', {}, origin);
     else if (id === 'settings' || id === 'armory') await machine.go(id, 'quench', origin);
     else if (id === 'quit') void App.exitApp();
     else { sfx('error'); toast(layer, STR.menu.closed); }
