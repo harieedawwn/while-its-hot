@@ -20,3 +20,4 @@ android/capacitor-cordova-android-plugins/
 android/local.properties
 audio-check
 __pycache__
+server/.wrangler
