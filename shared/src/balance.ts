@@ -68,10 +68,10 @@ export const BALANCE = {
    */
   forge: {
     rows: [
-      { upTo: 4, tuyet: 15, dat: 60, giu: 15, hong: 10 },
-      { upTo: 9, tuyet: 10, dat: 45, giu: 20, hong: 25 },
-      { upTo: 14, tuyet: 7, dat: 33, giu: 25, hong: 35 },
-      { upTo: 99, tuyet: 5, dat: 25, giu: 25, hong: 45 },
+      { upTo: 4, tuyet: 12, dat: 55, giu: 18, hong: 15 },
+      { upTo: 9, tuyet: 6, dat: 38, giu: 20, hong: 36 },
+      { upTo: 14, tuyet: 4, dat: 25, giu: 22, hong: 49 },
+      { upTo: 99, tuyet: 2, dat: 16, giu: 22, hong: 60 },
     ],
     armor: { maxLevel: 10, rowMul: 2 },
     /** Heat bands (upper edges) and the points each moves from success to Hỏng. */
@@ -81,7 +81,7 @@ export const BALANCE = {
     strike: { cadenceS: 0.5, ringS: 1.1, zoneFrac: 0.18, perfectShift: 15, perfectDatShare: 2 / 3, missShift: 15 },
     /** Tiếng tăm: points per stack moved from Đạt to Hỏng. */
     notorietyShift: 6,
-    frenzy: { perDat: 1, perTuyet: 2, full: 10, durS: 4, cadenceMul: 0.5 },
+    frenzy: { perDat: 1, perTuyet: 2, full: 12, durS: 3.5, cadenceMul: 0.5 },
     /** Anvil (Đe): place / pick-up time, cooldown after picking up, how far in front it is placed, interaction reach. */
     anvil: { placeS: 0.6, pickupS: 0.6, cooldownS: 5, placeDist: 1.15, useRadius: 2.2, radius: 0.42, height: 0.86 },
     stance: { blendInS: 0.35, blendOutS: 0.2, pickS: 3 },

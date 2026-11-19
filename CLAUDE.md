@@ -17,6 +17,7 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `node tools/weapon-atlas.mjs [--sheet]` — rebuild the weapon texture atlas `client/public/tex/weapon.png`
 - `node tools/audio/fetch.mjs` then `python3 tools/audio/design.py [event…]` then `python3 tools/audio/check.py` — sources → `client/public/sfx/` → verify (`pip install numpy scipy soundfile pedalboard pyyaml pyloudnorm matplotlib py7zr`)
 - `npm run dev:server` — local Worker + Durable Object (wrangler dev)
+- `node tools/forge-sim.mjs [--n 4000] [--nofrenzy] [--blade|--armor]` — forge EV / level-by-time sim (balance check)
 - `node tools/sweep.mjs [--devices all|a,b] [--only substr]` — every scene x device: stats, errors, DOM fit check → `shots/sweep.json`
 - `node tools/leak.mjs [--cycles 4] [--scenes a,b]` — scene-cycling leak check (GPU counts, heap, DOM) · `node tools/aobake.mjs` — rebake `client/public/ao/*.bin` after changing static foundry/smithy geometry
 
