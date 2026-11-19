@@ -82,8 +82,9 @@ export const STR = {
   score: { title: 'Bảng điểm', player: 'Người chơi', weapon: 'Vũ khí' },
   /** Touch layout editor (Điều khiển → Chỉnh bố cục). Game buttons carry pictograms only, never text. */
   layout: {
-    done: 'Xong', reset: 'Đặt lại', grid: 'Lưới', size: 'Cỡ', opacity: 'Độ mờ',
-    slot: (n: number) => `Bố cục ${n}`,
+    done: 'Xong', reset: 'Đặt lại hết', resetOne: 'Đặt lại nút', grid: 'Lưới', size: 'Cỡ', opacity: 'Độ mờ', mirror: 'Đảo tay',
+    slot: (n: number) => `Bố cục ${n}`, slots: 'Bố cục', presets: 'Mẫu',
+    preset: { two: '2 ngón', three: '3 ngón', four: '4 ngón' } as Record<'two' | 'three' | 'four', string>,
   },
   /** Armor tiers (GDD §7) and modules; ids come from shared/src/data. */
   armorTier: { tap_de: 'Tạp dề', da: 'Giáp da', da_dinh: 'Giáp da đinh', giap_nua: 'Giáp nửa', giap_toan_than: 'Giáp toàn thân' },

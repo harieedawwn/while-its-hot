@@ -137,6 +137,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height, a
     if (input.touch && (pk !== null) !== touchOn) { touchOn = pk !== null; if (!atAnvil) input.touch.setContext('forge', touchOn); }
     net.simTick(dt);
     flow.simTick();
+    flow.peek(actions.isHeld('scoreboard'));
     f.tick(dt, actions);
     world.tick(dt);
     if (player.s.pos.y < -20) { player.s.pos.set(...start); player.s.vel.set(0, 0, 0); }

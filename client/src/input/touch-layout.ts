@@ -1,8 +1,8 @@
 import { FEEL } from '../core/feel';
 
 /** Touch layout model (TECH §5, LOOK §8): pure data + geometry, no DOM. Sizes are "design px" at a 360 px tall safe rect. */
-export type ControlId = 'stick' | 'attack' | 'jump' | 'slide' | 'parry' | 'forge' | 'anvil' | 'swap' | 'pause';
-export const CONTROL_IDS: readonly ControlId[] = ['stick', 'attack', 'jump', 'slide', 'parry', 'forge', 'anvil', 'swap', 'pause'];
+export type ControlId = 'stick' | 'attack' | 'jump' | 'slide' | 'parry' | 'forge' | 'anvil' | 'swap' | 'pause' | 'scoreboard';
+export const CONTROL_IDS: readonly ControlId[] = ['stick', 'attack', 'jump', 'slide', 'parry', 'forge', 'anvil', 'swap', 'pause', 'scoreboard'];
 /** Forge and anvil only show when the game says so (contextual); the editor always shows them. */
 export const CONTEXTUAL: readonly ControlId[] = ['forge', 'anvil'];
 
@@ -12,33 +12,10 @@ export type Layout = Record<ControlId, Ctl>;
 export interface Circle { cx: number; cy: number; r: number }
 const T = FEEL.input.touch;
 
-const c = (ax: 'l' | 'r', ay: 't' | 'b', dx: number, dy: number, size: number, opacity = 0.9): Ctl => ({ ax, ay, dx, dy, size, opacity });
-/** Right thumb: big attack with jump / parry / slide on an arc; left thumb: stick; top corner: swap, pause. */
-export const DEFAULT_LAYOUT: Layout = {
-  stick: c('l', 'b', 104, 100, 128, 0.8),
-  attack: c('r', 'b', 82, 88, 88),
-  jump: c('r', 'b', 180, 62, 56),
-  parry: c('r', 'b', 152, 138, 56),
-  slide: c('r', 'b', 224, 122, 56),
-  forge: c('r', 'b', 84, 250, 52),
-  anvil: c('r', 'b', 160, 210, 52),
-  swap: c('r', 't', 40, 40, 48, 0.8),
-  pause: c('r', 't', 100, 40, 48, 0.8),
-};
-
 const clone = (l: Layout): Layout => JSON.parse(JSON.stringify(l)) as Layout;
 export const cloneLayout = clone;
-const mirror = (l: Layout): Layout => { const o = clone(l); for (const id of CONTROL_IDS) o[id].ax = o[id].ax === 'l' ? 'r' : 'l'; return o; };
-const compact = (l: Layout): Layout => {
-  const o = clone(l);
-  for (const id of CONTROL_IDS) {
-    const k = o[id], lo = id === 'stick' ? T.minStick : T.minButton;
-    k.dx *= 0.86; k.dy *= 0.86; k.size = Math.max(lo, Math.round(k.size * 0.86));
-  }
-  return o;
-};
-/** Factory layouts for the 3 slots: right-handed default, mirrored (left-handed), compact. */
-export const PRESETS: readonly Layout[] = [clone(DEFAULT_LAYOUT), mirror(DEFAULT_LAYOUT), compact(DEFAULT_LAYOUT)];
+/** Left-handed copy: every control re-anchored to the opposite side edge. */
+export function mirrorLayout(l: Layout): Layout { const o = clone(l); for (const id of CONTROL_IDS) o[id].ax = o[id].ax === 'l' ? 'r' : 'l'; return o; }
 
 /** Design px → real px for a safe rect of this height (tablets scale up, phones stay 1:1). */
 export function uiScale(safeH: number): number { return Math.min(T.scaleMax, Math.max(T.scaleMin, safeH / T.refHeight)); }

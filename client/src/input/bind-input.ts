@@ -17,11 +17,11 @@ export interface InputRig {
   dispose(): void;
 }
 
-/** Wires every input source to one action layer. `touch` = on-screen controls (mouse then acts as a finger in dev). */
+/** Wires every input source to one action layer. `touch` = on-screen controls (mouse then acts as a finger in dev); `?preset=two|three|four` previews a factory layout unsaved. */
 export function bindInput(host: HTMLElement, canvas: HTMLElement, opts: { touch: boolean }): InputRig {
   const actions = new Actions();
   const controls = new Controls();
-  const touch = opts.touch ? new TouchControls(host, actions, controls, new LayoutStore()) : null;
+  const touch = opts.touch ? new TouchControls(host, actions, controls, new LayoutStore(new URLSearchParams(location.search).get('preset'))) : null;
   const unKm = touch ? () => {} : bindKeyboardMouse(actions, canvas);
   const unGyro = bindGyro(actions, controls);
   const pad = bindGamepad(actions, controls);

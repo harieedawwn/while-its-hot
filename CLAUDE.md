@@ -56,6 +56,7 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/input/{bind-input,controls-settings,layout-store}.ts` wire all sources, control settings, 3 saved layout slots · `core/store.ts` safe localStorage
 - `client/src/input/{touch,touch-view,touch-math,touch-layout,pictograms}.ts` touch controller, DOM layer, pure math, layout model, SVG pictograms
 - `client/src/input/{layout-editor,gyro,gamepad}.ts` layout editor, gyro aim, gamepad mapping · `input/input.test.ts`
+- `client/src/input/{touch-router,touch-presets,touch-rims,touch-css}.ts` pure pointer ownership (+test), 2/3/4 ngón presets, cooldown/charge rims from the bus, disc styles
 - `client/src/app/native.ts` Capacitor glue (back, pause, splash, APK default scene) · `android/` Capacitor project, `tools/android-keystore.sh`, `.github/workflows/apk.yml`
 - `shared/src/world/arenas/foundry.ts` Arena 1 layout data (cages, racks, pedestal, ring centers, respawns, helpers) · `client/src/world/region-batch.ts` per-light-region StaticBatch
 - `client/src/world/foundry/{index,ctx,floor,shell,furnace,catwalks,crane,landmarks}.ts` arena builders · `foundry/{molten,cages,ring}.ts` animated molten sheet, cage doors, fire ring · `dev/scene-arena.ts`

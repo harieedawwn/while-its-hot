@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { sanitizeControls } from './controls-settings';
 import { padAxis } from './gamepad';
 import { gyroLook } from './gyro';
-import { CONTROL_IDS, DEFAULT_LAYOUT, PRESETS, overlaps, placeCtl, realSize, resolveCtl, sanitizeLayout, uiScale } from './touch-layout';
+import { CONTROL_IDS, mirrorLayout, overlaps, placeCtl, realSize, resolveCtl, sanitizeLayout, uiScale } from './touch-layout';
+import { DEFAULT_LAYOUT, PRESETS, PRESET_IDS } from './touch-presets';
 import { clampKnob, dragToLook, hitDisc, stickVector } from './touch-math';
 
 /** Safe rects of the shot devices (px): 16:9, 20:9, 21:9 phones minus a 48 px cutout side, and a 4:3 tablet. */
@@ -10,20 +11,24 @@ const SAFE = [[640, 360], [800, 360], [840, 360], [780, 360], [1024, 768], [736,
 
 describe('touch layout', () => {
   it('no preset overlaps anywhere, and every control is at least 48 px', () => {
-    for (const [pi, p] of PRESETS.entries()) for (const [w, h] of SAFE) {
+    for (const pi of PRESET_IDS) for (const p of [PRESETS[pi], mirrorLayout(PRESETS[pi])]) for (const [w, h] of SAFE) {
       expect(overlaps(p, w, h), `preset ${pi} @${w}x${h}`).toEqual([]);
       for (const id of CONTROL_IDS) expect(realSize(id, p[id], uiScale(h))).toBeGreaterThanOrEqual(48);
     }
   });
   it('every disc stays inside the safe rect', () => {
-    for (const p of PRESETS) for (const [w, h] of SAFE) for (const id of CONTROL_IDS) {
+    for (const p of PRESET_IDS.map((i) => PRESETS[i])) for (const [w, h] of SAFE) for (const id of CONTROL_IDS) {
       const c = resolveCtl(id, p[id], w, h);
       expect(c.cx - c.r).toBeGreaterThanOrEqual(0); expect(c.cx + c.r).toBeLessThanOrEqual(w);
       expect(c.cy - c.r).toBeGreaterThanOrEqual(0); expect(c.cy + c.r).toBeLessThanOrEqual(h);
     }
   });
-  it('mirrored preset puts the stick on the right', () => {
-    const c = resolveCtl('stick', PRESETS[1]!.stick, 800, 360), d = resolveCtl('stick', DEFAULT_LAYOUT.stick, 800, 360);
+  it('claw presets put Nhảy/Trượt/Đánh in the top corners', () => {
+    for (const p of [PRESETS.four]) for (const id of ['jump', 'slide', 'attack'] as const) expect(resolveCtl(id, p[id], 800, 360).cy).toBeLessThan(120);
+    expect(resolveCtl('attack', PRESETS.three.attack, 800, 360).cy).toBeLessThan(120);
+  });
+  it('mirrored layout puts the stick on the right', () => {
+    const c = resolveCtl('stick', mirrorLayout(DEFAULT_LAYOUT).stick, 800, 360), d = resolveCtl('stick', DEFAULT_LAYOUT.stick, 800, 360);
     expect(c.cx).toBeCloseTo(800 - d.cx, 5);
   });
   it('placeCtl re-anchors to the nearest edge and snaps to the grid', () => {

@@ -62,6 +62,12 @@ export class NetFlow {
   mine(): ScoreNet | undefined { return this.rows.find((r) => r.id === this.d.me()); }
   /** Seconds of truce left. */
   truceLeft(now: number): number { return this.fighting ? Math.max(0, (this.f.truce - now) / 1000) : 0; }
+  /** Scoreboard while the scoreboard button is held (Tab / touch); the result beat shows it on its own. */
+  peek(on: boolean): void {
+    if (this.f.ph === 'result' || this.f.ph === 'end') return;
+    if (on && !this.board.visible) this.board.show(this.scoreRows());
+    else if (!on && this.board.visible) this.board.hide();
+  }
   /** Held in the cage until the doors open. */
   pinTo(p: Vec3 | null): void { this.pin = p; }
 
