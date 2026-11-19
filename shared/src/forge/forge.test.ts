@@ -10,24 +10,24 @@ const seq = (...v: number[]) => { let i = 0; return () => v[i++ % v.length]; };
 
 describe('odds table (GDD §6)', () => {
   it('matches the four level rows', () => {
-    expect(baseOdds(0)).toEqual({ tuyet: 15, dat: 60, giu: 15, hong: 10 });
-    expect(baseOdds(4)).toEqual({ tuyet: 15, dat: 60, giu: 15, hong: 10 });
-    expect(baseOdds(5)).toEqual({ tuyet: 10, dat: 45, giu: 20, hong: 25 });
-    expect(baseOdds(12)).toEqual({ tuyet: 7, dat: 33, giu: 25, hong: 35 });
-    expect(baseOdds(19)).toEqual({ tuyet: 5, dat: 25, giu: 25, hong: 45 });
+    expect(baseOdds(0)).toEqual({ tuyet: 12, dat: 55, giu: 18, hong: 15 });
+    expect(baseOdds(4)).toEqual({ tuyet: 12, dat: 55, giu: 18, hong: 15 });
+    expect(baseOdds(5)).toEqual({ tuyet: 6, dat: 38, giu: 20, hong: 36 });
+    expect(baseOdds(12)).toEqual({ tuyet: 4, dat: 25, giu: 22, hong: 49 });
+    expect(baseOdds(19)).toEqual({ tuyet: 2, dat: 16, giu: 22, hong: 60 });
   });
   it('heat bands', () => {
     expect([0.1, 0.3, 0.5, 0.9, 0.95].map(heatBand)).toEqual(['cold', 'dull', 'forging', 'forging', 'burning']);
   });
   it('heat moves 20 / 8 / 0 / 10 points to Hỏng', () => {
     const at = (heat: number) => oddsFor({ level: 0, target: 'blade', heat, timing: 'auto' }).hong;
-    expect(at(0.1)).toBeCloseTo(30); expect(at(0.3)).toBeCloseTo(18); expect(at(0.7)).toBeCloseTo(10); expect(at(0.95)).toBeCloseTo(20);
+    expect(at(0.1)).toBeCloseTo(35); expect(at(0.3)).toBeCloseTo(23); expect(at(0.7)).toBeCloseTo(15); expect(at(0.95)).toBeCloseTo(25);
   });
   it('perfect timing: 15 points Hỏng → Đạt/Tuyệt 2:1; a miss moves 15 to Hỏng', () => {
     const p = oddsFor({ level: 5, target: 'blade', heat: 0.7, timing: 'perfect' });
-    expect(p.hong).toBeCloseTo(10); expect(p.dat).toBeCloseTo(55); expect(p.tuyet).toBeCloseTo(15);
+    expect(p.hong).toBeCloseTo(21); expect(p.dat).toBeCloseTo(48); expect(p.tuyet).toBeCloseTo(11);
     const m = oddsFor({ level: 5, target: 'blade', heat: 0.7, timing: 'miss' });
-    expect(m.hong).toBeCloseTo(40); expect(sum(m)).toBeCloseTo(100);
+    expect(m.hong).toBeCloseTo(51); expect(sum(m)).toBeCloseTo(100);
   });
   it('perfect cannot move more than the Hỏng that is there', () => {
     const p = oddsFor({ level: 0, target: 'blade', heat: 0.7, timing: 'perfect' });
@@ -40,9 +40,9 @@ describe('odds table (GDD §6)', () => {
   });
   it('passive, notoriety and mercy hooks', () => {
     const n = oddsFor({ level: 0, target: 'blade', heat: 0.7, timing: 'auto', mods: { ...NO_MODS, notoriety: 2 } });
-    expect(n.dat).toBeCloseTo(48); expect(n.hong).toBeCloseTo(22);
+    expect(n.dat).toBeCloseTo(43); expect(n.hong).toBeCloseTo(27);
     const m = oddsFor({ level: 5, target: 'blade', heat: 0.7, timing: 'auto', mods: { ...NO_MODS, mercy: 10 } });
-    expect(m.hong).toBeCloseTo(15); expect(m.giu).toBeCloseTo(30);
+    expect(m.hong).toBeCloseTo(26); expect(m.giu).toBeCloseTo(30);
   });
   it('every combination sums to 100 and never goes negative', () => {
     for (let lv = 0; lv <= 19; lv += 3) for (const heat of [0, 0.3, 0.7, 1]) for (const timing of ['perfect', 'miss', 'auto'] as const) {
@@ -125,15 +125,15 @@ describe('ForgeSession', () => {
     s.cooldown = 0; s.target = 'armor'; s.armor = 10;
     expect(s.strike('auto').refused).toBe(true); expect(s.armor).toBe(10);
   });
-  it('frenzy meter: +1 Đạt, +2 Tuyệt, full at 10, activation gives 4 s of 2× auto-strikes', () => {
+  it('frenzy meter: +1 Đạt, +2 Tuyệt, full at 12, activation gives 3.5 s of 2× auto-strikes', () => {
     const s = new ForgeSession(rng(5)); s.heat = 0.7; s.blades[0] = { family: 'kiem', level: 3, best: 3 };
-    s.frenzyMeter = 9;
+    s.frenzyMeter = 11;
     expect(s.activateFrenzy()).toBe(false);
-    s.frenzyMeter = 10; expect(s.activateFrenzy()).toBe(true);
+    s.frenzyMeter = 12; expect(s.activateFrenzy()).toBe(true);
     expect(s.frenzyMeter).toBe(0);
     let n = 0;
     for (let t = 0; t < 4.5; t += 1 / 60) { s.heat = 0.7; n += s.tick(1 / 60, false).length; }
-    expect(n).toBeGreaterThanOrEqual(15); expect(n).toBeLessThanOrEqual(17);
+    expect(n).toBeGreaterThanOrEqual(13); expect(n).toBeLessThanOrEqual(15);
     expect(s.frenzy).toBe(false);
   });
   it('heat: +0.55/s held, −0.05/s decay, −0.12 per strike, cadence 0.5 s', () => {

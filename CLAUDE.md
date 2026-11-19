@@ -17,6 +17,9 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `node tools/weapon-atlas.mjs [--sheet]` — rebuild the weapon texture atlas `client/public/tex/weapon.png`
 - `node tools/audio/fetch.mjs` then `python3 tools/audio/design.py [event…]` then `python3 tools/audio/check.py` — sources → `client/public/sfx/` → verify (`pip install numpy scipy soundfile pedalboard pyyaml pyloudnorm matplotlib py7zr`)
 - `npm run dev:server` — local Worker + Durable Object (wrangler dev)
+- `node tools/forge-sim.mjs [--n 4000] [--nofrenzy] [--blade|--armor]` — forge EV / level-by-time sim (balance check)
+- `node tools/sweep.mjs [--devices all|a,b] [--only substr]` — every scene x device: stats, errors, DOM fit check → `shots/sweep.json`
+- `node tools/leak.mjs [--cycles 4] [--scenes a,b]` — scene-cycling leak check (GPU counts, heap, DOM) · `node tools/aobake.mjs` — rebake `client/public/ao/*.bin` after changing static foundry/smithy geometry
 
 ## Hard rules
 1. Mobile first. Target: mid-range Android 2021+, 60 fps, landscape only. Desktop only needs to work for dev.
@@ -88,6 +91,12 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 
 - `shared/src/net/{protocol,codec,clock}.ts` lobby msgs, binary State/Snapshot, clock sync · `server/src/{worker,room,lobby}.ts` routes, Room DO, pure roster rules · `wrangler.jsonc` · `tools/netbot.mjs`
 - `client/src/net/{config,client}.ts` server URL, RoomClient + `room.current` · `ui/menu/lobby-screen.ts` + `styles/lobby.css` Chơi mạng lobby
+- `shared/src/match/{authority,mplayer,hits,effects,forge-auth,pickups,anim-code}.ts` server MatchAuthority, player record, hit-claim checks, passive effects, server forge rolls, blanks, anim byte · `net/{match-msgs,bot}.ts` · `forge/sync.ts`
+- `client/src/net/{net-match,net-combat,net-forge,net-anvils,pickups}.ts` match session + uplink, predicted hits/verdicts, server-rolled forging, others' anvils, blanks
+- `client/src/net/{remote,remotes,interp,pack,link-sim,loopback,net-debug}.ts` remote player, roster, snapshot interp, local State, lag sim, in-process room, dev overlay · `dev/scene-net.ts` (`net`)
+- `shared/src/match/{flow,rules}.ts` RoundFlow (cage/fight/result/end, lives, ring burn, draft, scoring) + pure rules · `shared/src/data/relics.ts` 14 relics + `foldRelics` · `shared/src/unlocks.ts` match-end unlocks · `match/{flow,bots}.test.ts`
+- `client/src/net/net-flow.ts` round machine presentation (HUD, doors, ring, draft, result, end) · `ui/hud/{draft,match-end}.ts` + `styles/match.css` draft cards, banner, end screen · `dev/net-preview.ts`
+- `client/src/render/{dispose,geo/ao-cache}.ts` `disposeTree` (geometry-only; call it on any model you replace/drop), pre-baked vertex AO files `public/ao/*.bin` · `tools/{sweep,leak,aobake}.mjs`
 
 ## Conventions
 - TypeScript strict, ES modules, npm workspaces: `client/`, `server/`, `shared/`.

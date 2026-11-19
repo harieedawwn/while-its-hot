@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { FOUNDRY } from '@wih/shared';
 import { bus } from '../../core/events';
 import { bakeAO } from '../../render/geo/ao';
+import { preloadAO } from '../../render/geo/ao-cache';
 import type { LightRig } from '../../render/lights';
 import { MaterialLib } from '../../render/materials/library';
 import { CollisionWorld } from '../../physics/world';
@@ -47,11 +48,11 @@ export interface FoundryView {
 
 /** Build the whole arena: statics (batched per light region), molten sheet, cage doors, fire ring, lights. */
 export async function createFoundry(rig: LightRig, seed = 1): Promise<FoundryView> {
-  const lib = await MaterialLib.load(rig, SURFACES);
+  const [lib] = await Promise.all([MaterialLib.load(rig, SURFACES), preloadAO('foundry')]);
   const c: Ctx = { lib, seed, b: new RegionBatch(FOUNDRY.half, REGION), pal: PAL };
   buildFloor(c); buildShell(c); buildFurnace(c); buildCatwalks(c); buildCrane(c); buildLandmarks(c);
   const statics = c.b.build();
-  bakeAO(statics.filter((m) => m.material !== lib.get('glow')), { rays: 6, dist: 2.2, strength: 0.7 });
+  bakeAO(statics.filter((m) => m.material !== lib.get('glow')), { rays: 6, dist: 2.2, strength: 0.7, key: 'foundry' });
 
   const root = new THREE.Group();
   statics.forEach((m) => root.add(m));

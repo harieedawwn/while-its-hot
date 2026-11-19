@@ -9,6 +9,7 @@ import { flat, mesh } from '../render/models/kit';
 import { hammer } from '../render/models/props';
 import { marker, setHeat } from '../weapons/weapon';
 import { BRAZIER_X } from './anvil';
+import { disposeTree } from '../render/dispose';
 
 const S = FEEL.forge, H = S.hammer, D2R = Math.PI / 180;
 const ease = (t: number) => t * t * (3 - 2 * t);
@@ -28,6 +29,9 @@ export class ForgeStage {
   private slide = 0;
   private nung = false;
   private hitT = 99;
+  private raising = false;
+  private raiseK = 0;
+  private fromDeg: number = H.restDeg;
   private phase = 0;
   private dip = 0;
   private target: 'blade' | 'armor' = 'blade';
@@ -59,7 +63,7 @@ export class ForgeStage {
 
   /** Lay a blade model on the anvil (grip at origin, +Y, edge +Z). Replaces the previous one. */
   setBlade(model: THREE.Object3D): void {
-    this.blade?.removeFromParent();
+    if (this.blade) { this.blade.removeFromParent(); disposeTree(this.blade); }
     this.blade = model;
     const tip = marker(model, 'tip')?.position, base = marker(model, 'base')?.position;
     const len = tip && base ? tip.distanceTo(base) : 1, from = base ?? new THREE.Vector3();
@@ -100,8 +104,12 @@ export class ForgeStage {
   }
   get workTarget(): 'blade' | 'armor' { return this.target; }
   setNung(on: boolean): void { this.nung = on; }
-  /** The hammer comes down now. */
-  strike(): void { this.hitT = 0; this.dip = 1; }
+  /** The hammer comes down now (from wherever raise() lifted it). */
+  strike(): void { this.raising = false; this.hitT = 0; this.dip = 1; }
+  /** Online: lift the hammer high at the press while the server rolls; strike() brings it down. */
+  raise(): void { if (!this.raising) { this.raising = true; this.raiseK = 0; } }
+  /** The roll never came (refused): settle back to rest. */
+  lower(): void { if (this.raising) { this.raising = false; this.fromDeg = H.restDeg; this.hitT = 1e3; } }
   /** True from the strike until the hammer has touched down (for sparks). */
   get contact(): boolean { return this.hitT >= H.fallS && this.hitT - 1 / 30 < H.fallS; }
 
@@ -131,9 +139,11 @@ export class ForgeStage {
     if (this.hideT > 0) { this.hideT -= dt; if (this.hideT <= 0) this.syncTarget(); }
     this.hitT += dt;
     let deg: number;
-    if (this.hitT < H.fallS) deg = H.restDeg + (H.hitDeg - H.restDeg) * (this.hitT / H.fallS) ** 1.6;
+    if (this.raising) { this.raiseK = Math.min(1, this.raiseK + dt / H.raiseS); deg = this.fromDeg = H.restDeg + (H.raiseDeg - H.restDeg) * ease(this.raiseK); }
+    else if (this.hitT < H.fallS) deg = this.fromDeg + (H.hitDeg - this.fromDeg) * (this.hitT / H.fallS) ** 1.6;
     else if (this.hitT < H.fallS + H.riseS) deg = H.hitDeg + (H.restDeg - H.hitDeg) * ease((this.hitT - H.fallS) / H.riseS);
     else deg = H.restDeg + Math.sin(time * 2.1) * H.idleDeg;
+    if (!this.raising && this.hitT >= H.fallS) this.fromDeg = H.restDeg;
     this.swing(deg);
     this.place();
   }

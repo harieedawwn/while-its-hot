@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { MeshBVH } from 'three-mesh-bvh';
+import { cachedAO, recordAO } from './ao-cache';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export interface AOOpts {
@@ -8,6 +9,8 @@ export interface AOOpts {
   /** 0..1 max darkening */ strength?: number;
   /** extra occluders that are not darkened themselves (e.g. a dynamic prop standing on the floor) */
   occluders?: THREE.Mesh[];
+  /** Name of a pre-baked result in public/ao/<key>.bin (render/geo/ao-cache.ts); falls back to computing. */
+  key?: string;
 }
 
 /**
@@ -16,6 +19,27 @@ export interface AOOpts {
  * Vertices sharing position+normal share the result. Run once at load (≈ 0.2–0.5 s for a room).
  */
 export function bakeAO(meshes: THREE.Mesh[], o: AOOpts = {}): void {
+  if (o.key) {
+    const hit = cachedAO(o.key, meshes, o);
+    if (hit) { applyAO(meshes, hit); return; }
+  }
+  const k = computeAO(meshes, o);
+  if (o.key) recordAO(o.key, meshes, o, k);
+  applyAO(meshes, k);
+}
+
+/** Multiply each mesh's `color` by the per-vertex factor (all meshes in order). */
+export function applyAO(meshes: THREE.Mesh[], k: Float32Array): void {
+  let at = 0;
+  for (const mesh of meshes) {
+    const col = mesh.geometry.getAttribute('color') as THREE.BufferAttribute;
+    for (let i = 0; i < col.count; i++, at++) col.setXYZ(i, col.getX(i) * k[at], col.getY(i) * k[at], col.getZ(i) * k[at]);
+    col.needsUpdate = true;
+  }
+}
+
+/** The slow part: one factor (1 = unoccluded) per vertex, over `meshes` in order. */
+export function computeAO(meshes: THREE.Mesh[], o: AOOpts = {}): Float32Array {
   const rays = o.rays ?? 12, dist = o.dist ?? 1.4, strength = o.strength ?? 0.8;
   const all = [...meshes, ...(o.occluders ?? [])].map((m) => {
     m.updateMatrixWorld(true);
@@ -26,7 +50,8 @@ export function bakeAO(meshes: THREE.Mesh[], o: AOOpts = {}): void {
     return g;
   });
   const merged = mergeGeometries(all, false);
-  if (!merged) return;
+  const out = new Float32Array(meshes.reduce((n, m) => n + m.geometry.getAttribute('position').count, 0)).fill(1);
+  if (!merged) return out;
   const bvh = new MeshBVH(merged);
 
   // fixed cosine-weighted directions in tangent space (golden-angle spiral), twisted per vertex
@@ -39,9 +64,9 @@ export function bakeAO(meshes: THREE.Mesh[], o: AOOpts = {}): void {
   const nm = new THREE.Matrix3();
   const cache = new Map<string, number>();
 
+  let at = 0;
   for (const mesh of meshes) {
     const pos = mesh.geometry.getAttribute('position'), nor = mesh.geometry.getAttribute('normal');
-    const col = mesh.geometry.getAttribute('color') as THREE.BufferAttribute;
     nm.getNormalMatrix(mesh.matrixWorld);
     for (let i = 0; i < pos.count; i++) {
       p.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
@@ -65,11 +90,10 @@ export function bakeAO(meshes: THREE.Mesh[], o: AOOpts = {}): void {
         occ = sum / rays;
         cache.set(key, occ);
       }
-      const k = 1 - strength * Math.min(1, occ * 1.6);
-      col.setXYZ(i, col.getX(i) * k, col.getY(i) * k, col.getZ(i) * k);
+      out[at++] = 1 - strength * Math.min(1, occ * 1.6);
     }
-    col.needsUpdate = true;
   }
   merged.dispose();
   all.forEach((g) => g.dispose());
+  return out;
 }

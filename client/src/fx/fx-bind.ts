@@ -40,6 +40,7 @@ export function bindFx(d: FxDeps): () => void {
   const offs = [
     bus.on('forge:strike', (e) => {
       const p = new THREE.Vector3(e.x, e.y, e.z), floor = floorAt(p) + 0.005;
+      if (e.owner) { fx.later(e.fallS ?? FEEL.forge.hammer.fallS, () => fx.forgeStrike(p, e.outcome, floor)); return; } // someone else's anvil
       const onBlade = e.target === 'blade' && !!stage?.bladeSegment(a, b);
       if (e.broke && onBlade) {
         stage!.hideBlade(X.shatter.hideS);
@@ -48,7 +49,7 @@ export function bindFx(d: FxDeps): () => void {
       }
       const up = (e.outcome === 'tuyet' || e.outcome === 'dat') && !e.refused;
       const sa = a.clone(), sb = b.clone();
-      fx.later(FEEL.forge.hammer.fallS, () => {
+      fx.later(e.fallS ?? FEEL.forge.hammer.fallS, () => {
         fx.forgeStrike(p, e.outcome, floor);
         if (up && onBlade) {
           stage!.boost(Math.min(1, e.heat + 1 / 9), X.levelUp.pulseS);

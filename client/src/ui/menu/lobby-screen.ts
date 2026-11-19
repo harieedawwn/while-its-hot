@@ -21,7 +21,7 @@ export class LobbyScreen implements Screen {
   private view: RoomView | null = null;
   private myId = 0;
   private esc = (e: KeyboardEvent) => { if (e.key === 'Escape') this.back(); };
-  constructor(private layer: HTMLElement, private onLeave: () => void, private autoJoin?: string) {}
+  constructor(private layer: HTMLElement, private onLeave: () => void, private autoJoin?: string, private onStart: () => void = () => {}) {}
 
   enter(): void {
     addEventListener('keydown', this.esc);
@@ -61,7 +61,7 @@ export class LobbyScreen implements Screen {
     const idx = Math.max(0, PLAYER_COLORS.indexOf(profile.color as (typeof PLAYER_COLORS)[number]));
     const c = new RoomClient(serverBase(), code, { name: profile.name || STR.profile.defaultName, color: idx }, {
       lobby: (v, id) => { this.view = v; this.myId = id; if (room.current !== c) { room.current = c; this.client = c; this.showRoom(); } else this.paint(); },
-      start: () => { /* match flow arrives in phase 17/18 */ },
+      start: () => this.onStart(),
       err: (e) => { this.err(e); if (e !== 'bad' && e !== 'host') this.drop(); },
       link: (s) => { if (s === 'retry') toast(this.layer, L.retry); },
     });

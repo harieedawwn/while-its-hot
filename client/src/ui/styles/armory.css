@@ -5,11 +5,11 @@
 .a-rail { border-bottom: var(--rule) solid var(--ash); padding-bottom: clamp(4px, 1.2vmin, 10px); display: grid; grid-template-columns: 5.4em 1fr; align-items: center; column-gap: 8px; }
 .a-fam { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; font: 900 var(--t-m)/1.32 var(--f-display); text-transform: uppercase; color: var(--bone-dim); }
 .a-fam svg { width: 20px; height: 20px; }
-.a-track { position: relative; height: clamp(44px, 11.5vmin, 58px); margin: 0 2px; }
+.a-track { position: relative; height: clamp(33px, 9.2vmin, 58px); margin: 0 2px; }
 .a-track::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: var(--rule); margin-top: -1px; background: var(--ash); }
-.a-tile { position: absolute; top: 0; width: clamp(44px, 11.5vmin, 58px); height: 100%; left: calc(var(--p) * (100% - clamp(44px, 11.5vmin, 58px)));
+.a-tile { position: absolute; top: 0; width: clamp(33px, 9.2vmin, 58px); height: 100%; left: calc(var(--p) * (100% - clamp(33px, 9.2vmin, 58px)));
   appearance: none; border: 0; margin: 0; padding: 2px 0 0; cursor: pointer; color: var(--bone); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; pointer-events: auto; }
-.a-tile svg { width: clamp(18px, 5.2vmin, 26px); height: clamp(18px, 5.2vmin, 26px); }
+.a-tile svg { width: clamp(15px, 4.6vmin, 26px); height: clamp(15px, 4.6vmin, 26px); }
 .a-tile .k-num { font-size: var(--t-s); line-height: 1.15; }
 .a-tile.is-locked { color: var(--ash); }
 .a-tile.is-locked::before { background: var(--soot); }

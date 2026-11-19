@@ -72,7 +72,7 @@ export class Smithy {
     this.root.add(hv.root);
 
     const statics = b.build();
-    bakeAO(statics.filter((m) => m.material !== lib.get('glow')), { rays: 12, dist: 1.3, strength: 0.75 });
+    bakeAO(statics.filter((m) => m.material !== lib.get('glow')), { rays: 12, dist: 1.3, strength: 0.75, key: 'smithy' });
     statics.forEach((m) => this.root.add(m));
     this.coal.applyMatrix4(brazier.matrixWorld);
     this.root.add(this.coal);

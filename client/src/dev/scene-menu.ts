@@ -10,6 +10,7 @@ import { fontsReady, uiRoot } from '../ui/kit/dom';
 import { MenuScreen, TitleScreen, wordmark } from '../ui/menu/menu-screens';
 import { TABS } from '../ui/menu/settings-rows';
 import { SettingsScreen } from '../ui/menu/settings-screen';
+import { preloadAO } from '../render/geo/ao-cache';
 import { Smithy } from '../world/smithy';
 import { Turntable } from '../world/turntable';
 import { LobbyScreen } from '../ui/menu/lobby-screen';
@@ -33,6 +34,7 @@ const make: SceneFactory = async ({ pipeline, params, width, height, app }) => {
   const rig = new LightRig();
   pipeline.bindRig(rig);
   const lib = await MaterialLib.load(rig, ['brick', 'grate', 'steel', 'rust', 'concrete', 'wood', 'slag', 'coal']);
+  await preloadAO('smithy');
   const smithy = new Smithy(lib, rig, params.seed);
   scene.add(smithy.root);
   scene.background = rig.fogColor;
@@ -62,7 +64,7 @@ const make: SceneFactory = async ({ pipeline, params, width, height, app }) => {
   const ctx = { layer, smithy, machine, app, turntable };
   const tabId = params.get('tab');
   const tab = TABS.find((t) => t === tabId) ?? 'gfx';
-  machine.add('title', new TitleScreen(ctx)).add('menu', new MenuScreen(ctx)).add('armory', new ArmoryScreen(ctx, params.get('sel') ?? undefined)).add('online', new LobbyScreen(layer, () => void machine.go('menu', 'quench'), params.get('code') ?? undefined)).add('settings', new SettingsScreen(layer, () => void machine.go('menu', 'quench'), tab));
+  machine.add('title', new TitleScreen(ctx)).add('menu', new MenuScreen(ctx)).add('armory', new ArmoryScreen(ctx, params.get('sel') ?? undefined)).add('online', new LobbyScreen(layer, () => void machine.go('menu', 'quench'), params.get('code') ?? undefined, () => void ctx.app.go('net', 'stamp'))).add('settings', new SettingsScreen(layer, () => void machine.go('menu', 'quench'), tab));
   const start = params.get('screen');
   const first = start === 'menu' || start === 'settings' || start === 'armory' || start === 'online' ? start : 'title';
   if (first === 'settings' || first === 'armory') await machine.go('menu', 'cut');

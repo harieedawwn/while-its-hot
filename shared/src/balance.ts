@@ -68,10 +68,10 @@ export const BALANCE = {
    */
   forge: {
     rows: [
-      { upTo: 4, tuyet: 15, dat: 60, giu: 15, hong: 10 },
-      { upTo: 9, tuyet: 10, dat: 45, giu: 20, hong: 25 },
-      { upTo: 14, tuyet: 7, dat: 33, giu: 25, hong: 35 },
-      { upTo: 99, tuyet: 5, dat: 25, giu: 25, hong: 45 },
+      { upTo: 4, tuyet: 12, dat: 55, giu: 18, hong: 15 },
+      { upTo: 9, tuyet: 6, dat: 38, giu: 20, hong: 36 },
+      { upTo: 14, tuyet: 4, dat: 25, giu: 22, hong: 49 },
+      { upTo: 99, tuyet: 2, dat: 16, giu: 22, hong: 60 },
     ],
     armor: { maxLevel: 10, rowMul: 2 },
     /** Heat bands (upper edges) and the points each moves from success to Hỏng. */
@@ -81,7 +81,7 @@ export const BALANCE = {
     strike: { cadenceS: 0.5, ringS: 1.1, zoneFrac: 0.18, perfectShift: 15, perfectDatShare: 2 / 3, missShift: 15 },
     /** Tiếng tăm: points per stack moved from Đạt to Hỏng. */
     notorietyShift: 6,
-    frenzy: { perDat: 1, perTuyet: 2, full: 10, durS: 4, cadenceMul: 0.5 },
+    frenzy: { perDat: 1, perTuyet: 2, full: 12, durS: 3.5, cadenceMul: 0.5 },
     /** Anvil (Đe): place / pick-up time, cooldown after picking up, how far in front it is placed, interaction reach. */
     anvil: { placeS: 0.6, pickupS: 0.6, cooldownS: 5, placeDist: 1.15, useRadius: 2.2, radius: 0.42, height: 0.86 },
     stance: { blendInS: 0.35, blendOutS: 0.2, pickS: 3 },
@@ -154,5 +154,25 @@ export const BALANCE = {
     maxPlayers: 6, codeLen: 4, codeAlphabet: 'ABCDEFGHJKLMNPQRSTUVWXYZ',
     tickHz: 20, reconnectS: 30, emptyRoomS: 300, pingEveryS: 2, clockKeep: 5,
     nameMax: 16, truceChoices: [0, 30, 60], truceDefault: 30, roundsToWin: 3,
+    /** Remote players (TECH §4): buffer = 2 × jitter + base, clamped; extrapolate at most extrapMs, then freeze. */
+    interp: { baseMs: 50, minMs: 80, maxMs: 200, startMs: 100, extrapMs: 100, jitterK: 0.1 },
+    /**
+     * Server checks of a hit claim (TECH §4). reachTol = extra meters between server-known positions; the swing's
+     * hit must land inside its active frames ± early/lateMs; claims older than maxAgeMs are stale; an attack may not
+     * start sooner than rateMul × the previous swing's length; the parry window widens by min(parryMaxMs, rtt/2).
+     */
+    auth: { reachTol: 2, earlyMs: 60, lateMs: 160, maxAgeMs: 1000, rateMul: 0.6, parryMaxMs: 80, anvilTol: 1.5, pickupTol: 1, strikeTolS: 0.15 },
+  },
+  /** Match rules that phase 17 enforces on the server (GDD §3). Rounds/lives/scoring arrive in phase 18. */
+  match: {
+    respawnS: 4, deathLevelLoss: 2, maxCarry: 2,
+    /** Blanks: one per player + 1 on the pedestal at the start; rackEach more on the side racks every rackEveryS. */
+    rackEveryS: 40, rackEach: 2, maxLying: 11, pickupR: 1.6,
+    /** Round flow (GDD §3, §8): cage countdown (relic draft), the fight clock, result beat, lives, first to winsToWin rounds. */
+    cageS: 10, roundS: 180, resultS: 5, lives: 3, winsToWin: 3, endHoldS: 25,
+    /** Fire ring: appears at startS, closes to minR by closedS (fight clock). Outside: dps + step per everyS since startS; blade heat decays heatMul×. */
+    ring: { startS: 60, closedS: 170, maxR: 38, minR: 2.5, dps: 6, step: 2, everyS: 10, heatMul: 3 },
+    /** Draft: offers per player, rerolls for those below the round winner, kills lead that earns the second Tiếng tăm stack. */
+    draft: { offers: 3, rerolls: 1, bigWin: 3, moduleOffers: 2 },
   },
 } as const;

@@ -12,6 +12,8 @@ export const FEEL = {
     defaultResolution: 450,
     /** Adaptive quality: a frame slower than this (ms) counts as slow… */
     adaptiveSlowMs: 18,
+    /** A frame longer than this is a hitch (load, tab switch), not sustained slowness: ignored, restarts the grace. */
+    adaptiveHitchMs: 250,
     /** …and this many seconds of slow frames in a row steps resolution down one notch. */
     adaptiveHoldS: 2,
     /** Never step below this height. */
@@ -151,7 +153,7 @@ export const FEEL = {
     /** Stick length beyond this leaves the stance. */
     exitStick: 0.3,
     /** Hammer swings about the grip (near the smith): head tilt below horizontal (deg, − = raised) at rest and at contact; fall/rise times (s); grip x, height above the face and z, yaw toward the anvil (rad); handle length (m). */
-    hammer: { restDeg: -38, hitDeg: 33, fallS: 0.07, riseS: 0.34, x: 0.4, gripY: 0.3, gripZ: 0.32, yaw: 0.85, len: 0.5, head: 0.15, idleDeg: 2.5 },
+    hammer: { restDeg: -38, hitDeg: 33, fallS: 0.07, riseS: 0.34, raiseDeg: -78, raiseS: 0.12, x: 0.4, gripY: 0.3, gripZ: 0.32, yaw: 0.85, len: 0.5, head: 0.15, idleDeg: 2.5 },
     /** Blade on the anvil: longest length shown (m), and how fast it slides into the brazier (1/s). */
     blade: { showLen: 1.15, maxScale: 1.4, slideRate: 7, brazierX: -0.88 },
     /** Camera trauma and hit-stop on a strike, by outcome. */

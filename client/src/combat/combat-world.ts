@@ -22,7 +22,7 @@ export class CombatWorld {
     for (const c of this.list) this.events(c);
     for (const c of this.list) this.sweep(c);
     for (const c of this.list) {
-      if (c.alive && c.hp <= 0) { c.hp = 0; c.fighter.kill(); bus.emit('combat:kill', { target: c.id, by: -1 }); }
+      if (c.alive && c.hp <= 0 && !c.netOwned) { c.hp = 0; c.fighter.kill(); bus.emit('combat:kill', { target: c.id, by: -1 }); }
     }
   }
 

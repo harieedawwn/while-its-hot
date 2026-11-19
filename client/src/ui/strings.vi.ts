@@ -95,6 +95,30 @@ export const STR = {
     bua_ren: 'Búa rèn', bua_ta: 'Búa tạ', chuy_gai: 'Chùy gai', bua_chien: 'Búa chiến', bua_de: 'Búa đe',
     giao_sat: 'Giáo sắt', thuong_thep: 'Thương thép', kich: 'Kích', dai_dao: 'Đại đao', tram_ma_dao: 'Trảm mã đao',
   },
+  /** Round flow (GDD §3, §8): cage draft, round result, match end. */
+  match: {
+    draft: 'Chọn di vật', reroll: 'Đổi', round: (n: number) => `Vòng ${n}`, fight: 'Đấu!', truce: 'Hưu chiến',
+    won: (name: string) => `${name} thắng vòng`, draw: 'Hòa vòng', wins: 'Vòng', points: 'Điểm', back: 'Về sảnh',
+    champion: (name: string) => `${name} vô địch`, unlocked: 'Mở khóa', none: 'Không có gì mới', eliminated: 'Hết mạng',
+    stacks: 'Tiếng tăm', moduleTag: 'Mô-đun giáp',
+  },
+  /** Relics (GDD §8): name + the one line that says what it does. */
+  relic: {
+    da_niem: { name: 'Đá niêm', line: 'Chặn lần Gãy đầu tiên mỗi vòng' },
+    hon_than_do: { name: 'Hòn than đỏ', line: 'Một nhát Tuyệt chắc chắn mỗi vòng' },
+    vong_da: { name: 'Vòng da', line: 'Nhịp búa nhanh hơn 20%' },
+    moi_han: { name: 'Mối hàn', line: 'Mỗi lần Hỏng giảm 10 điểm Hỏng kế tiếp' },
+    an_sat: { name: 'Ấn sắt', line: 'Vũ khí mạnh hơn 10%' },
+    kim_giu_nhiet: { name: 'Kìm giữ nhiệt', line: 'Nhiệt nguội chậm một nửa' },
+    ong_be: { name: 'Ống bễ', line: 'Nung nóng nhanh gấp đôi' },
+    bua_nen: { name: 'Búa nện', line: 'Mỗi lần Hỏng hất văng người quanh đe' },
+    de_nhe: { name: 'Đe nhẹ', line: 'Đặt và nhấc đe tức thì' },
+    dau_toi: { name: 'Dầu tôi', line: 'Đỡ đòn hồi 1 thể lực và 5 máu' },
+    gang_da: { name: 'Găng da', line: 'Rời bàn rèn được miễn đòn 0,3 giây' },
+    mat_tho: { name: 'Mắt thợ', line: 'Vùng ngọt rộng hơn 40%' },
+    sat_vun: { name: 'Sắt vụn', line: 'Hạ người: vũ khí +1 cấp' },
+    dinh_tan: { name: 'Đinh tán', line: 'Mỗi vòng bắt đầu với giáp +2' },
+  },
   /** Forge stance HUD (GDD §6). Only result words and what a player truly needs to read. */
   forge: {
     outcome: { tuyet: 'Tuyệt', dat: 'Đạt', giu: 'Giữ', hong: 'Hỏng' },

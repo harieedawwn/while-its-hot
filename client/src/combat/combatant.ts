@@ -27,6 +27,8 @@ export class Combatant {
   burnDps = 0;
   /** Seconds dead (respawn timing belongs to the owner). */
   deadT = 0;
+  /** Online: hp, death and revive come from the server; CombatWorld never kills this one by itself. */
+  netOwned = false;
   private eyeV: V3 = [0, 0, 0];
 
   constructor(readonly id: number, readonly body: Player, weapon: WeaponDef, o: CombatantOpts = {}) {

@@ -87,12 +87,28 @@ export class Pipeline {
     if (g.fadeColor !== undefined) u.uFadeColor.value.setHex(parseInt(g.fadeColor.slice(1), 16), THREE.LinearSRGBColorSpace); // raw sRGB values
   }
 
+  private warmed = new WeakSet<THREE.Object3D>();
+  /**
+   * First time we see a scene: show every hidden object, compile all programs, hide them again. Effect pools stay
+   * invisible until their first spark / puff / shard, and compiling a shader mid-fight is a visible hitch on a phone.
+   */
+  private warm(scene: THREE.Scene, camera: THREE.Camera): void {
+    if (this.warmed.has(scene)) return;
+    this.warmed.add(scene);
+    const hidden: THREE.Object3D[] = [];
+    scene.traverse((o) => { if (!o.visible) { hidden.push(o); o.visible = true; } });
+    this.renderer.compile(scene, camera);
+    for (const o of hidden) o.visible = false;
+  }
+
   /** World, then an optional overlay (viewmodel) over a cleared depth buffer, then post. */
   render(scene: THREE.Scene, camera: THREE.Camera, overlay?: { scene: THREE.Scene; camera: THREE.Camera }): void {
     const r = this.renderer;
     r.setRenderTarget(this.rt);
+    this.warm(scene, camera);
     r.render(scene, camera);
     if (overlay) {
+      this.warm(overlay.scene, overlay.camera);
       r.autoClear = false;
       r.clearDepth();
       r.render(overlay.scene, overlay.camera);
@@ -103,13 +119,16 @@ export class Pipeline {
 
   /**
    * Adaptive quality (LOOK §1.8): slower than adaptiveSlowMs for adaptiveHoldS seconds → one notch down,
-   * never below adaptiveFloor. Returns true when it stepped (the caller may want to persist it).
+   * never below adaptiveFloor. `targetMs` = the frame time the FPS cap asks for (0 = uncapped): a 30 fps cap is not
+   * "slow". A hitch (scene load, tab switch, GC) is not slowness either: it only restarts the grace period.
+   * Returns true when it stepped (the caller may want to persist it).
    */
-  frame(frameMs: number): boolean {
+  frame(frameMs: number, targetMs = 0): boolean {
     if (!this.q.adaptive) return false;
+    if (frameMs > FEEL.render.adaptiveHitchMs) { this.graceS = Math.max(this.graceS, FEEL.render.adaptiveGraceS); this.slowS = 0; return false; }
     const dt = frameMs / 1000;
     if (this.graceS > 0) { this.graceS -= dt; return false; }
-    this.slowS = frameMs > FEEL.render.adaptiveSlowMs ? this.slowS + dt : 0;
+    this.slowS = frameMs > Math.max(FEEL.render.adaptiveSlowMs, targetMs * 1.15) ? this.slowS + dt : 0;
     if (this.slowS < FEEL.render.adaptiveHoldS) return false;
     this.slowS = 0;
     const steps = FEEL.render.resolutions.filter((r) => r > 0 && r >= FEEL.render.adaptiveFloor);

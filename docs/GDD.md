@@ -87,14 +87,16 @@ Perfect timing moves 15 points from Hỏng to Đạt/Tuyệt (2:1); a miss moves
 **Outcomes** (base %, by current level, after the heat and timing shifts; the server rolls them):
 | Level | Tuyệt (+2) | Đạt (+1) | Giữ (0) | Hỏng (−1) |
 |---|---|---|---|---|
-| 0–4 | 15 | 60 | 15 | 10 |
-| 5–9 | 10 | 45 | 20 | 25 |
-| 10–14 | 7 | 33 | 25 | 35 |
-| 15–19 | 5 | 25 | 25 | 45 |
+| 0–4 | 12 | 55 | 18 | 15 |
+| 5–9 | 6 | 38 | 20 | 36 |
+| 10–14 | 4 | 25 | 22 | 49 |
+| 15–19 | 2 | 16 | 22 | 60 |
+
+(Retuned in phase 20 with `tools/forge-sim.mjs`: without frenzy a 35% / 60% / 85% sweet-zone smith settles around +10 / +13 / +16; +18 takes a perfect run.)
 Max level +20. **Gãy** (break): a Hỏng at level 0 destroys the blade. That is the only way to lose a blade.
 A blade remembers its highest level (its form never goes backwards, like ForgeTax).
 
-**Nhập thần (Frenzy):** meter +1 per Đạt, +2 per Tuyệt, full at 10. Activate in stance: 4 s of auto-strikes at
+**Nhập thần (Frenzy):** meter +1 per Đạt, +2 per Tuyệt, full at 12. Activate in stance: 3.5 s of auto-strikes at
 2× cadence, Hỏng becomes Giữ, and you cannot be damaged while at the anvil (everyone can see the effect).
 
 **Evolution:** reaching +3 opens a quick 3-way pick (Kiếm / Búa / Thương, 3 s, defaults to last used).

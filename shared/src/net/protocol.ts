@@ -1,4 +1,5 @@
 import { BALANCE } from '../balance';
+import type { MatchClientMsg, MatchServerMsg } from './match-msgs';
 
 /** Lobby/control messages are JSON; State/Snapshot are binary (codec.ts). */
 export type RoomPhase = 'lobby' | 'match';
@@ -11,7 +12,8 @@ export type ClientMsg =
   | { t: 'settings'; s: Partial<RoomSettings> }
   | { t: 'start' }
   | { t: 'ping'; c: number }
-  | { t: 'rtt'; v: number };
+  | { t: 'rtt'; v: number }
+  | MatchClientMsg;
 
 export type ErrCode = 'full' | 'closed' | 'started' | 'bad' | 'notfound' | 'host';
 export type ServerMsg =
@@ -19,7 +21,8 @@ export type ServerMsg =
   | { t: 'lobby'; phase: RoomPhase; players: LobbyPlayer[]; settings: RoomSettings }
   | { t: 'pong'; c: number; s: number }
   | { t: 'err'; code: ErrCode }
-  | { t: 'start' };
+  | { t: 'start' }
+  | MatchServerMsg;
 
 export const DEFAULT_SETTINGS: RoomSettings = { truce: BALANCE.net.truceDefault };
 

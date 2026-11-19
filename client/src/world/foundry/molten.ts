@@ -161,5 +161,5 @@ export class Molten {
     });
     p.needsUpdate = true;
   }
-  dispose(): void { this.sheet.geometry.dispose(); this.crust.geometry.dispose(); }
+  dispose(): void { this.sheet.geometry.dispose(); this.crust.geometry.dispose(); (this.sheet.material as THREE.Material).dispose(); this.u.map.value.dispose(); }
 }

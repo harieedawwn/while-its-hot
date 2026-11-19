@@ -62,6 +62,8 @@ export class Lobby {
     if (on.length < 2 || !on.every((m) => m.ready || m.id === id)) return 'bad';
     this.phase = 'match'; return null;
   }
+  /** After a match: back to the lobby, nobody ready. */
+  reset(): void { this.phase = 'lobby'; for (const m of this.members) m.ready = false; }
   view(): LobbyPlayer[] {
     const h = this.host?.id;
     return this.members.map((m) => ({ id: m.id, name: m.name, color: m.color, ready: m.ready || m.id === h, host: m.id === h, online: m.online, ping: m.ping }));

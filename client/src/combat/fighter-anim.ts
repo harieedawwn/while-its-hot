@@ -15,7 +15,7 @@ export class FighterAnim {
 
   constructor(private ch: Character) {}
 
-  sync(f: Fighter): void {
+  sync(f: Pick<Fighter, 'phase' | 'swingId' | 'kind' | 'combo' | 'weapon'>): void {
     const fam = CLIP_FAMILY[f.weapon.stats.moveset], a = this.ch.anim;
     const p = f.phase, changed = p !== this.phase, swung = f.swingId !== this.swing;
     if (!changed && !swung) return;
