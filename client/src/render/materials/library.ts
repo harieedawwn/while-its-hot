@@ -18,6 +18,8 @@ export const SURFACES = {
   coal: { tex: 'coal', tile: 0.6, foot: 'gravel' },
   leather: { tex: 'leather', tile: 0.5, foot: 'stone' },
   cloth: { tex: 'cloth', tile: 0.5, foot: 'stone' },
+  /** weapons: one atlas (bright/forged steel, wood, leather), UVs placed per part by weapons/wkit.ts */
+  forged: { tex: 'weapon', tile: 1, foot: 'metal' },
   /** vertex color only */
   paint: { tex: null, tile: 1, foot: 'metal' },
   /** shows its color unlit: window glass, furnace mouth */

@@ -18,4 +18,12 @@ export const STR = {
     phan_luc: 'Bộ phản lực', sung_may_vai: 'Súng máy vai', no_vai: 'Nỏ vai',
     banh_lan: 'Bánh lăn gót', khien_tay: 'Khiên tay', binh_no: 'Bình nổ',
   },
+  /** Weapon families and forms (GDD §5–6); ids come from shared/src/data/weapons.ts. */
+  family: { kiem: 'Kiếm', bua: 'Búa', thuong: 'Thương' },
+  weapon: {
+    phoi: 'Phôi thép',
+    kiem_tho: 'Kiếm thô', kiem_thep: 'Kiếm thép', kiem_ban_rong: 'Kiếm bản rộng', truong_kiem: 'Trường kiếm', kiem_toi_lua: 'Kiếm tôi lửa',
+    bua_ren: 'Búa rèn', bua_ta: 'Búa tạ', chuy_gai: 'Chùy gai', bua_chien: 'Búa chiến', bua_de: 'Búa đe',
+    giao_sat: 'Giáo sắt', thuong_thep: 'Thương thép', kich: 'Kích', dai_dao: 'Đại đao', tram_ma_dao: 'Trảm mã đao',
+  },
 } as const;

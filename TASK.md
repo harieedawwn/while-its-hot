@@ -88,7 +88,7 @@ Read: LOOK §4. GDD §7 (armor tiers, modules list).
 - `character` scene: lineup of 5 armor tiers + module showcase + an animation player (`?clip=run`).
 Shots: `character` (lineup, run frozen mid-stride, slide). Done when armor swaps never clip the body.
 
-### Phase 07 — Weapons: data and 16 models · `TODO` · Sonnet 5.5 · high
+### Phase 07 — Weapons: data and 16 models · `DONE` · Sonnet 5.5 · high
 Read: GDD §5 (families), §6 (roster, data shape). LOOK §2, §3.
 - `shared/src/data/weapons.ts` (16 rows), `shared/src/passives.ts` (hook registry; implement the hooks
   needed by the roster, stubs where gameplay doesn't exist yet), unit tests for data integrity
@@ -245,3 +245,8 @@ Done when the sim results are in the log and the APK release is current.
 - Attack slots for phase 08: `clips/index.ts` `ATTACK_SLOTS` (`atk_<sword|hammer|polearm>_<light1|light2|light3|heavy_charge|heavy_release>`), fill with `registerClip()`; `animator.play(attackId(...))`. Tuning in `FEEL.anim` / `FEEL.thirdPerson`.
 - Third person: `player/third-person.ts` `ThirdPersonCamera.apply(cam.camera, viewState, dt, world)` runs after `FirstPersonCamera.update` (keeps FOV kicks/roll/shake), over-the-shoulder, ray-pulled in front of walls, eased back out. FOV setting = the existing `cam.hfov`. Scenes: `character` (view=0 tier lineup, `view=1` modules, `clip=<id>` + `armor=0..10` `mods=a,b` `color=0..5`, `t` replays then freezes, `cam` override), `movement&tp=1[&armor=n][&arena=1]` = walk with the body and TP camera. Not wired into a settings UI yet (phase 14: "góc nhìn" toggle + FOV).
 - Judge on a phone: run cycle speed/leg sliding at 9 m/s (no IK: feet float/slide a few cm), slide/dash silhouettes from the TP camera, and whether the player colors separate in the orange-lit arena. Armor-clip check was done visually from front/side/back in several poses (no automated penetration test).
+- Phase 07: `shared/src/data/weapons.ts` (16 rows; `stats` spread from `BALANCE.weapons.family`, phôi = sword moveset with light 9 / heavy 20; `formFor(family, level)`, `passivesOf(def)` stacks the family's lower forms — rows list only their own passive) + `shared/src/passives.ts` (12 passives as pure hooks `modifyAttack/modifyParryWindow/onHit/onParry/onSlamLand/modifyForgeOdds`, folded by `applyAttack/parryWindow/hitEffects/slamEffects/forgeOdds`; numbers in `BALANCE.weapons.passive`). Decision: no `name` field in data (rule 4) — names are `STR.weapon[id]`, families `STR.family[f]`.
+- Models: `client/src/weapons/models/<id>.ts` via `WeaponBuilder` (`wkit.ts`) → ONE mesh, ONE material (`forged` surface, atlas `tex/weapon.png` from `tools/weapon-atlas.mjs`: bright steel / forged scale / wood / leather quads, no mipmaps) = 1 draw call, 380–1190 tris. Contract: grip at origin, +Y, edge +Z, markers `tip`/`base` (+ `grip_l` on two-handers), `heatMask` (blade 1, fittings 0.25–0.6, wood/leather 0); `setHeat(root, h)`. `loadWeapon()` uses `public/models/weapons/<model>.glb` when it is a real glTF (`_HEATMASK` attr), else procedural.
+- Scene `weapons`: rack grouped phôi|kiếm|búa|thương on a 0.5/1 m scale board, each turning ±0.5 rad about broadside; `?weapon=<id>&heat=&yaw=` diagonal close-up (polearms frame their top 1.3 m). Phase 08 should hold weapons on `character.hold.hand_r` and sweep `base→tip`.
+- Judge on a phone: at 450p the rack is small (that's the scale check); heat ≥ 0.6 turns the blade a flat ramp color by the phase-01 shader (detail lost) — revisit in phase 10 if it reads as a cutout.
+

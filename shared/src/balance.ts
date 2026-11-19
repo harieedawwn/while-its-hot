@@ -29,4 +29,36 @@ export const BALANCE = {
     /** Capsule body. height is the full standing capsule; low = sliding hitbox. */
     body: { radius: 0.35, height: 1.8, lowHeight: 1.0, stepUp: 0.35, maxSlopeDeg: 45, skin: 0.002 },
   },
+
+  /**
+   * Weapons (GDD §5, §6). Family movesets are read through shared/src/data/weapons.ts; passive numbers
+   * through shared/src/passives.ts. Damage = base × (1 + levelDmg × level) × armor × passives.
+   */
+  weapons: {
+    levelDmg: 0.06,
+    maxLevel: 20,
+    /** Level at which the blank becomes a family form (the 3-way pick). */
+    familyPick: 3,
+    family: {
+      kiem: { light: 12, comboHits: 3, comboS: 0.38, heavy: 30, heavyKind: 'thrust', reach: 2.3 },
+      bua: { light: 18, comboHits: 2, comboS: 0.62, heavy: 45, heavyKind: 'overhead', reach: 2.0 },
+      thuong: { light: 10, comboHits: 3, comboS: 0.42, heavy: 26, heavyKind: 'sweep', reach: 3.2 },
+    },
+    /** The blank fights like a weak sword. */
+    phoi: { light: 9, heavy: 20 },
+    passive: {
+      combo3Mul: 1.2,
+      parryPlusS: 0.03,
+      burn: { dps: 3, durS: 2 },
+      staggerPlusS: 0.4,
+      slamAoe: { dmg: 20, r: 3 },
+      /** "max reach" = the outer (1 − maxReachFrac) of the reach. */
+      maxReach: { frac: 0.85, mul: 1.25 },
+      sweepArcDeg: 220,
+      lungeMul: 1.5,
+      pullM: 2,
+      /** bua_de: the target is launched upward; the shockwave only pushes (no damage) everyone else near. */
+      launch: { upVel: 9, shockR: 2.5, shockPush: 6 },
+    },
+  },
 } as const;

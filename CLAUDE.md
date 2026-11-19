@@ -14,6 +14,7 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `npm run dev` — client dev server (Vite) · `npm run build` · `npm run typecheck` · `npm test`
 - `node tools/shot.mjs <scene> [--devices phones|all] [--q "k=v&k=v"]` — screenshots for self-check
 - `node tools/texbake.mjs [name…] [--sheet] [--try id,id]` — rebake world textures into `client/public/tex/`
+- `node tools/weapon-atlas.mjs [--sheet]` — rebuild the weapon texture atlas `client/public/tex/weapon.png`
 - `npm run dev:server` — local Worker + Durable Object (wrangler dev)
 
 ## Hard rules
@@ -57,6 +58,9 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/player/character/{skeleton,skin-batch,body,character}.ts` rigid skeleton + sockets, CPU-skinned batch, base body, assembled Character · `armor-{kit,soft,plate}.ts`, `armor.ts`, `modules.ts` armor tiers + 6 modules
 - `client/src/player/character/{pose,animator,drive}.ts` clip sampling/blend, base+action animator, MoveState → anim · `clips/*.ts` clip data + attack slots · `player/third-person.ts` TP camera · `render/geo/cbox.ts` 44-tri box
 - `shared/src/data/{armor,modules,colors}.ts` armor tiers, module defs, player colors · `dev/scene-character.ts` lineup / `clip=` player
+- `shared/src/data/weapons.ts` 16 forms, formFor/passivesOf · `shared/src/passives.ts` passive hook registry + folds
+- `client/src/weapons/{wkit,shapes,palette,tassel,weapon}.ts` one-mesh builder + atlas UVs/heatMask, blade loft/profile/wrap, colors, tassel, build/load(GLB)/setHeat · `weapons/models/*.ts` 16 builders + index
+- `client/src/dev/scene-weapons.ts` rack / `?weapon=&heat=` close-up · `tools/weapon-atlas.mjs` → `public/tex/weapon.png`
 - `client/src/ui/strings.vi.ts` all Vietnamese text · `tools/shot.mjs` screenshots · `tools/audio/*` audio checks
 
 ## Conventions
