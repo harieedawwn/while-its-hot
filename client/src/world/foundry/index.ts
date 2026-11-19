@@ -39,6 +39,8 @@ export interface FoundryView {
   closeCages(): void;
   /** Show the fire ring around ring center `i` with `radius` m (0 hides it). */
   setRing(i: number, radius: number): void;
+  /** The live fire ring (radius 0 = none), for embers and the inside tint. */
+  readonly ring: { readonly cx: number; readonly cz: number; readonly radius: number };
   dispose(): void;
 }
 
@@ -56,12 +58,12 @@ export async function createFoundry(rig: LightRig, seed = 1): Promise<FoundryVie
 
   const molten = new Molten(rig, lib.get('coal'));
   const doors = new CageDoors(lib);
-  const ring = new FireRing(lib.get('glow'));
+  const ring = new FireRing(rig);
   root.add(molten.sheet, molten.crust, doors.group, ring.mesh);
   addLights(rig);
 
   return {
-    root, statics, world,
+    root, statics, world, ring,
     update(dt, time) { molten.update(time); doors.update(dt); ring.update(time); },
     setDoors: (p) => doors.set(p),
     openCages: () => doors.open(),

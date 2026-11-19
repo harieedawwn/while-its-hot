@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { FEEL } from '../core/feel';
 import { LightRig } from '../render/lights';
+import { FxLayer } from '../fx/fx-layer';
 import { applyFoundryLook, createFoundry } from '../world/foundry';
 import { num } from './params';
 import type { SceneFactory } from './scenes';
@@ -38,16 +39,20 @@ const make: SceneFactory = async ({ pipeline, params, width, height }) => {
   else { camera.position.set(...(c ? [c[0], c[1], c[2]] as THREE.Vector3Tuple : v.pos)); camera.lookAt(...v.look); }
   camera.updateMatrixWorld();
 
+  // the fire ring brings its embers and the inside tint
+  const fxl = ring > 0 ? new FxLayer({ scene, rig, pipeline, world: arena.world, seed: params.seed, ring: arena.ring }) : null;
+  if (fxl && params.t !== null) for (let i = 0; i < 120; i++) fxl.update(1 / 60, camera);
   let opened = false;
   return {
     ready: true,
     update(dt, time) {
       if (pinned === null && !opened && time > 1.5) { opened = true; arena.openCages(); }
       arena.update(dt, time);
+      if (dt > 0) fxl?.update(dt, camera);
     },
     render() { pipeline.render(scene, camera); },
     resize(w, h) { camera.aspect = w / h; camera.updateProjectionMatrix(); },
-    dispose() { arena.dispose(); },
+    dispose() { fxl?.dispose(); arena.dispose(); },
   };
 };
 export default make;

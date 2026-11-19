@@ -6,6 +6,8 @@ export const STR = {
     resolution: 'Độ phân giải điểm ảnh', native: 'Gốc',
     quantize: 'Nén màu', quantOff: 'Tắt', quantLight: 'Nhẹ', quantStrong: 'Mạnh',
     snap: 'Rung đỉnh',
+    /** VFX setting (phase 10): hit puffs and floor marks; off = sparks only. */
+    blood: 'Máu',
   },
   /** Touch layout editor (Điều khiển → Chỉnh bố cục). Game buttons carry pictograms only, never text. */
   layout: {

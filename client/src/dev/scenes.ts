@@ -26,5 +26,6 @@ export const SCENES: Record<string, () => Promise<{ default: SceneFactory }>> = 
   weapons: () => import('./scene-weapons'),
   combat: () => import('./scene-combat'),
   forge: () => import('./scene-forge'),
+  fx: () => import('./scene-fx'),
 };
 export const DEFAULT_SCENE = 'empty';

@@ -133,7 +133,8 @@ export class ForgeController {
     const p = stage.hitPoint(anvil.pos.clone());
     bus.emit('forge:strike', { outcome: r.outcome, perfect: r.timing === 'perfect', auto, target: r.target, level: r.level, refused: r.refused, broke: r.broke, heat: session.heat, x: p.x, y: p.y, z: p.z });
     bus.emit('cam:trauma', { amount: S.strike.trauma[r.outcome] });
-    bus.emit('cam:hitstop', { ms: S.strike.hitStopMs });
+    const up = (r.outcome === 'tuyet' || r.outcome === 'dat') && !r.refused;
+    bus.emit('cam:hitstop', { ms: up ? S.strike.levelStopMs : S.strike.hitStopMs });
     hud.flash(r.broke ? 'broke' : r.refused ? 'refused' : (r.outcome as FlashKind));
     if (r.target === 'armor') { lf.c.armor = session.armor; this.d.onArmor?.(session.armor); }
     if (r.pick) { hud.openPick(session.lastFamily, F.stance.pickS, (f) => this.pick(f)); this.pickT = F.stance.pickS; }

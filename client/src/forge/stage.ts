@@ -32,6 +32,9 @@ export class ForgeStage {
   private dip = 0;
   private target: 'blade' | 'armor' = 'blade';
   private heat = 0;
+  private boostH = 0;
+  private boostT = 0;
+  private hideT = 0;
 
   constructor(lib: MaterialLib) {
     this.root.name = 'forge_stage';
@@ -66,19 +69,36 @@ export class ForgeStage {
     // base of the blade (just above the grip) sits at the left end of the face
     this.bladeBase.set(-0.5 - from.y * this.bladeScale, ANVIL.faceY + 0.02, 0.02);
     this.root.add(model);
-    this.syncTarget(); this.place(); setHeat(model, this.heat);
+    this.syncTarget(); this.place(); setHeat(model, this.shownHeat);
   }
 
   setTarget(t: 'blade' | 'armor'): void { this.target = t; this.syncTarget(); }
   private syncTarget(): void {
-    if (this.blade) this.blade.visible = this.target === 'blade';
+    if (this.blade) this.blade.visible = this.target === 'blade' && this.hideT <= 0;
     this.plate.visible = this.target === 'armor';
   }
   setHeat(h: number): void {
     this.heat = h;
-    if (this.blade) setHeat(this.blade, h);
-    this.plate.userData.heat = h;
+    const shown = this.shownHeat;
+    if (this.blade) setHeat(this.blade, shown);
+    this.plate.userData.heat = shown;
   }
+  private get shownHeat(): number { return this.boostT > 0 ? Math.max(this.heat, this.boostH) : this.heat; }
+  /** VFX: show the work at least this hot for `s` seconds (level-up pulse, quench flash). */
+  boost(heat: number, s: number): void {
+    if (this.boostT > 0 && this.boostH > heat) return; // a white-hot flash is not cut short by a pulse
+    this.boostH = heat; this.boostT = s; this.setHeat(this.heat); }
+  /** VFX: the blade is gone for `s` seconds (it shattered; the fresh phôi lands after). */
+  hideBlade(s: number): void { this.hideT = s; this.syncTarget(); }
+  /** World base and tip of the blade on the anvil (false if none). */
+  bladeSegment(a: THREE.Vector3, b: THREE.Vector3): boolean {
+    const base = this.blade && marker(this.blade, 'base'), tip = this.blade && marker(this.blade, 'tip');
+    if (!base || !tip) return false;
+    this.root.updateMatrixWorld();
+    a.setFromMatrixPosition(base.matrixWorld); b.setFromMatrixPosition(tip.matrixWorld);
+    return true;
+  }
+  get workTarget(): 'blade' | 'armor' { return this.target; }
   setNung(on: boolean): void { this.nung = on; }
   /** The hammer comes down now. */
   strike(): void { this.hitT = 0; this.dip = 1; }
@@ -107,6 +127,8 @@ export class ForgeStage {
     const d = want - this.slide, st = S.blade.slideRate * dt;
     this.slide += Math.abs(d) <= st ? d : Math.sign(d) * st;
     this.dip = Math.max(0, this.dip - dt * 6);
+    if (this.boostT > 0) { this.boostT -= dt; if (this.boostT <= 0) this.setHeat(this.heat); }
+    if (this.hideT > 0) { this.hideT -= dt; if (this.hideT <= 0) this.syncTarget(); }
     this.hitT += dt;
     let deg: number;
     if (this.hitT < H.fallS) deg = H.restDeg + (H.hitDeg - H.restDeg) * (this.hitT / H.fallS) ** 1.6;

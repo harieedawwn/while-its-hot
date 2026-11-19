@@ -1,20 +1,20 @@
 import * as THREE from 'three';
 import { FOUNDRY, type Rect } from '@wih/shared';
-import { HEAT_HEX } from '../../render/heat';
+import { HEAT_LINEAR } from '../../render/heat';
 import type { LightRig } from '../../render/lights';
 import * as P from '../../render/geo/procgeo';
-import { psxMaterial } from '../../render/materials/psx';
 
 /**
- * Molten channels (LOOK §7): one flat sheet per arm whose small emissive texture scrolls outward in
- * 8 Hz steps, plus dark crust islands drifting at their own speeds over it. Two draw calls in all.
+ * Molten channels (LOOK §7): one flat sheet per arm; two samples of a noise texture scroll outward at
+ * different speeds and scales (8 Hz steps) and are cut into heat steps, plus dark crust islands drifting
+ * at their own speeds over it. Two draw calls in all.
  * The sheet is unlit (it IS the light source); the crust is lit slag so it reads against it.
  */
 const STEP_HZ = 8, TILE = 8, FLOW = 0.9;
 const SIZE = 64;
 
-/** Tileable hot-metal texture: lattice noise → 5 heat steps. Pure pixels, nearest sampled. */
-function moltenTexture(seed: number): THREE.DataTexture {
+/** Tileable value-noise texture (R = 0..1). The shader cuts two scrolling samples of it into heat steps. */
+function moltenNoise(seed: number): THREE.DataTexture {
   const rnd = P.rng(seed), L = 8, lat = new Float32Array(L * L).map(() => rnd());
   const at = (x: number, y: number) => lat[((y % L) + L) % L * L + (((x % L) + L) % L)];
   const smooth = (t: number) => t * t * (3 - 2 * t);
@@ -24,16 +24,12 @@ function moltenTexture(seed: number): THREE.DataTexture {
     return a * (1 - ty) + b * ty;
   };
   const data = new Uint8Array(SIZE * SIZE * 4);
-  const cuts = [0.3, 0.46, 0.62, 0.78];
   for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
-    const u = x / SIZE, v = y / SIZE;
+    const u = x / SIZE, v = y / SIZE, i = (y * SIZE + x) * 4;
     const n = 0.55 * val(u, v, 1) + 0.3 * val(u, v, 2) + 0.15 * val(u, v, 4);
-    // sRGB bytes straight from the heat-ramp hex (the texture is flagged sRGB)
-    const k = parseInt(HEAT_HEX[3 + cuts.filter((c) => n > c).length].slice(1), 16), i = (y * SIZE + x) * 4;
-    data[i] = (k >> 16) & 255; data[i + 1] = (k >> 8) & 255; data[i + 2] = k & 255; data[i + 3] = 255;
+    data[i] = data[i + 1] = data[i + 2] = Math.round(n * 255); data[i + 3] = 255;
   }
   const t = new THREE.DataTexture(data, SIZE, SIZE);
-  t.colorSpace = THREE.SRGBColorSpace;
   t.magFilter = THREE.NearestFilter;
   t.minFilter = THREE.NearestMipmapLinearFilter;
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
@@ -41,6 +37,37 @@ function moltenTexture(seed: number): THREE.DataTexture {
   t.needsUpdate = true;
   return t;
 }
+
+const MOLTEN_VERT = /* glsl */ `
+varying vec2 vUv;
+varying float vDepth;
+void main() {
+  vUv = uv;
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  vDepth = -mv.z;
+  gl_Position = projectionMatrix * mv;
+}
+`;
+const MOLTEN_FRAG = /* glsl */ `
+uniform sampler2D map;
+uniform vec4 uOff;  // layer offsets, wrapped to 0..1 on the CPU (mediump-safe)
+uniform vec3 uHeatRamp[9];
+uniform vec3 uFogColor;
+uniform vec2 uFog;
+varying vec2 vUv;
+varying float vDepth;
+void main() {
+  // two layers: the fast surface flow and a slow, larger, slightly skewed under-current
+  float a = texture2D(map, vUv * 1.7 + uOff.xy).r;
+  float b = texture2D(map, vUv * vec2(0.55, 0.7) + uOff.zw).r;
+  float n = a * 0.6 + b * 0.55 - 0.05;
+  int i = 3 + int(step(0.3, n) + step(0.44, n) + step(0.58, n) + step(0.72, n));
+  vec3 c = uHeatRamp[i];
+  float f = clamp((vDepth - uFog.x) / max(uFog.y - uFog.x, 1e-3), 0.0, 1.0);
+  gl_FragColor = vec4(mix(c, uFogColor, f * 0.6), 1.0);
+  #include <colorspace_fragment>
+}
+`;
 
 interface Arm { rect: Rect; dir: THREE.Vector2; out0: number; out1: number }
 const E = FOUNDRY.half, W = FOUNDRY.channel.halfW, A = FOUNDRY.channel.from, FURNACE_BACK = FOUNDRY.half + FOUNDRY.furnace.depth - 0.1;
@@ -59,6 +86,7 @@ export class Molten {
   private shape: Float32Array[] = [];
   private cpos: THREE.BufferAttribute;
   private lastStep = -1;
+  private u: Record<string, THREE.IUniform>;
 
   constructor(rig: LightRig, crustMat: THREE.Material) {
     const y = FOUNDRY.channel.surfaceY;
@@ -69,7 +97,12 @@ export class Molten {
     g.setAttribute('normal', new THREE.Float32BufferAttribute(pos.map((_, i) => (i % 3 === 1 ? 1 : 0)), 3));
     this.uv = new THREE.BufferAttribute(new Float32Array((pos.length / 3) * 2), 2);
     g.setAttribute('uv', this.uv);
-    const mat = psxMaterial(rig, { map: moltenTexture(7), unlit: 1 });
+    for (let i = 0; i < pos.length / 3; i++) {
+      const arm = ARMS[Math.floor(i / 6)], x = pos[i * 3], z = pos[i * 3 + 2];
+      this.uv.setXY(i, (x * arm.dir.x + z * arm.dir.y) / TILE, (-x * arm.dir.y + z * arm.dir.x) / TILE);
+    }
+    this.u = { map: { value: moltenNoise(7) }, uOff: { value: new THREE.Vector4() }, uHeatRamp: { value: HEAT_LINEAR }, uFogColor: rig.shared.uFogColor, uFog: rig.shared.uFog };
+    const mat = new THREE.ShaderMaterial({ uniforms: this.u, vertexShader: MOLTEN_VERT, fragmentShader: MOLTEN_FRAG });
     mat.name = 'molten';
     this.sheet = new THREE.Mesh(g, mat);
     this.sheet.frustumCulled = false;
@@ -110,13 +143,8 @@ export class Molten {
   }
 
   private write(t: number): void {
-    const sheetPos = this.sheet.geometry.getAttribute('position');
-    for (let i = 0; i < sheetPos.count; i++) {
-      const arm = ARMS[Math.floor(i / 6)], x = sheetPos.getX(i), z = sheetPos.getZ(i);
-      const along = x * arm.dir.x + z * arm.dir.y, across = -x * arm.dir.y + z * arm.dir.x;
-      this.uv.setXY(i, along / TILE - t * FLOW / TILE, across / TILE);
-    }
-    this.uv.needsUpdate = true;
+    const fr = (x: number) => x - Math.floor(x);
+    (this.u.uOff.value as THREE.Vector4).set(fr((-t * FLOW * 1.7) / TILE), 0, fr(0.37 - (t * FLOW * 0.35) / TILE), fr(t * 0.012));
     const y = FOUNDRY.channel.surfaceY + 0.06, p = this.cpos;
     let k = 0;
     this.islands.forEach((isl, n) => {

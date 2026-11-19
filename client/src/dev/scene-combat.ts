@@ -6,6 +6,7 @@ import { FighterAnim } from '../combat/fighter-anim';
 import { LocalFighter } from '../combat/local-fighter';
 import { bus } from '../core/events';
 import { FEEL } from '../core/feel';
+import { FxLayer } from '../fx/fx-layer';
 import { bindInput } from '../input/bind-input';
 import { FirstPersonCamera } from '../player/camera';
 import { IDLE_INPUT } from '../player/character/animator';
@@ -84,10 +85,14 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   // dummies: the demo's one in front, or the lineup across the corner
   const modes = (params.get('modes')?.split(',') ?? (demo ? [demo.front] : LINEUP)).filter((m): m is DummyMode => (DUMMY_MODES as readonly string[]).includes(m));
   const dummies: Dummy[] = [];
+  const fxl = new FxLayer({ scene, rig, pipeline, world: arena.world, combat: world, seed: params.seed, blood: params.get('blood') === '0' ? false : undefined });
+  fxl.trail(() => lf.vm.weapon, () => lf.c.fighter.attacking, (m) => lf.vm.attach(m));
   for (let i = 0; i < modes.length; i++) {
     const n = modes.length, pos = demo ? spot(demo.dist ?? 2.0, 0) : spot(n === 1 ? 2.6 : 4.4 - Math.abs(i - (n - 1) / 2) * 0.5, (i - (n - 1) / 2) * 1.8);
-    const d = new Dummy(i + 1, arena.world, lib, dw, await loadWeapon(dw.id, ctx), pos, YAW + Math.PI, modes[i], PLAYER_COLORS[(i + 1) % PLAYER_COLORS.length]);
+    const dm = await loadWeapon(dw.id, ctx);
+    const d = new Dummy(i + 1, arena.world, lib, dw, dm, pos, YAW + Math.PI, modes[i], PLAYER_COLORS[(i + 1) % PLAYER_COLORS.length]);
     world.add(d.c); dummies.push(d); scene.add(d.ch.root);
+    fxl.trail(() => dm, () => d.c.fighter.attacking, (m) => scene.add(m));
   }
 
   const stats = { hits: 0, parries: 0, blocks: 0, kills: 0, last: '', get me() { const f = lf.c.fighter; return `${f.phase} ${f.kind}${f.combo} #${f.swingId} t=${f.t.toFixed(3)} hp=${lf.c.hp}`; }, get dummies() { return dummies.map((d) => `${d.mode}:${d.c.fighter.phase}:${d.c.hp.toFixed(0)}`).join(' '); } };
@@ -144,6 +149,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
       body.root.position.copy(v.pos); body.root.rotation.y = v.yaw;
       body.update(stop ? 0 : dt, animInputFromMove(player.s, v.yaw, animIn));
     }
+    fxl.update(stop ? 0 : dt, cam.camera);
   };
 
   if (frozen) {
@@ -174,7 +180,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     },
     resize(w, h) { cam.resize(w / h); lf.vm.resize(w / h); },
     dispose() {
-      offs.forEach((o) => o()); unbindFeel(); lf.dispose(); dummies.forEach((d) => d.dispose()); body?.dispose();
+      offs.forEach((o) => o()); unbindFeel(); fxl.dispose(); lf.dispose(); dummies.forEach((d) => d.dispose()); body?.dispose();
       arena.dispose(); input.dispose(); hud.dispose(); removeEventListener('keydown', dev);
       scene.traverse((o) => { if (o instanceof THREE.Mesh) o.geometry.dispose(); });
     },

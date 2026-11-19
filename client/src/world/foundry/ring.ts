@@ -1,78 +1,99 @@
 import * as THREE from 'three';
-import { HEAT_HEX } from '../../render/heat';
-import * as P from '../../render/geo/procgeo';
+import { FEEL } from '../../core/feel';
+import type { LightRig } from '../../render/lights';
+import { FLAME_FRAMES, flameAtlas } from './flame-atlas';
+
+const R = FEEL.fx.ring, FPS = 8, MAX_CARDS = 256;
+
+const VERT = /* glsl */ `
+attribute float aOff;
+uniform float uFrame;
+varying vec2 vUv;
+varying float vDepth;
+void main() {
+  float f = mod(uFrame + aOff, ${FLAME_FRAMES}.0);
+  vUv = vec2((f + uv.x) / ${FLAME_FRAMES}.0, uv.y);
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  vDepth = -mv.z;
+  gl_Position = projectionMatrix * mv;
+}
+`;
+const FRAG = /* glsl */ `
+uniform sampler2D map;
+uniform vec3 uFogColor;
+uniform vec2 uFog;
+varying vec2 vUv;
+varying float vDepth;
+void main() {
+  vec4 t = texture2D(map, vUv);
+  if (t.a < 0.5) discard;
+  float f = clamp((vDepth - uFog.x) / max(uFog.y - uFog.x, 1e-3), 0.0, 1.0);
+  gl_FragColor = vec4(mix(t.rgb, uFogColor, f * 0.5), 1.0);
+  #include <colorspace_fragment>
+}
+`;
 
 /**
- * Fire ring placeholder (LOOK §7): a wall of flame tongues around a center, stepped down the heat ramp,
- * re-rolled at 8 fps. Real flame cards, embers and the world tint come with the VFX pass (phase 10).
+ * Fire ring (LOOK §7): a wall of low-res flame cards (4-frame atlas, 8 fps, stepped) standing on a circle,
+ * two staggered rows, each card on its own frame offset. Unlit, alpha-cut, one draw call. Embers and the
+ * world tint inside the wall come from the fx layer (it reads `center`/`radius`).
  */
-const TONGUES = 72, FPS = 8;
-const LAYERS: { h0: number; h1: number; w0: number; w1: number; hex: string }[] = [
-  { h0: 0, h1: 0.42, w0: 1, w1: 0.8, hex: HEAT_HEX[3] },
-  { h0: 0.42, h1: 0.75, w0: 0.8, w1: 0.45, hex: HEAT_HEX[4] },
-  { h0: 0.75, h1: 1, w0: 0.45, w1: 0, hex: HEAT_HEX[5] },
-  { h0: 0, h1: 0.3, w0: 0.5, w1: 0.3, hex: HEAT_HEX[6] },
-];
-const VERTS_PER_TONGUE = LAYERS.length * 6 * 2; // quads as 2 tris, both faces
-
 export class FireRing {
   readonly mesh: THREE.Mesh;
-  private pos: THREE.BufferAttribute;
-  private last = -1;
-  private cx = 0; private cz = 0; private radius = 0;
-  private rnd = P.rng(31);
+  cx = 0; cz = 0; radius = 0;
+  private u: Record<string, THREE.IUniform>;
 
-  constructor(material: THREE.Material) {
-    const n = TONGUES * VERTS_PER_TONGUE;
+  constructor(rig: LightRig) {
     const g = new THREE.BufferGeometry();
-    this.pos = new THREE.BufferAttribute(new Float32Array(n * 3), 3);
-    g.setAttribute('position', this.pos);
-    const nrm = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) nrm[i * 3 + 1] = 1;
-    g.setAttribute('normal', new THREE.BufferAttribute(nrm, 3));
-    g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(n * 2), 2));
-    const col = new Float32Array(n * 3), c = new THREE.Color();
-    for (let t = 0; t < TONGUES; t++) LAYERS.forEach((l, i) => {
-      c.set(l.hex);
-      for (let v = 0; v < 12; v++) col.set([c.r, c.g, c.b], ((t * LAYERS.length + i) * 12 + v) * 3);
-    });
-    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    this.mesh = new THREE.Mesh(g, material);
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(MAX_CARDS * 4 * 3), 3));
+    g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(MAX_CARDS * 4 * 2), 2));
+    g.setAttribute('aOff', new THREE.BufferAttribute(new Float32Array(MAX_CARDS * 4), 1));
+    const idx: number[] = [];
+    for (let i = 0; i < MAX_CARDS; i++) { const a = i * 4; idx.push(a, a + 1, a + 2, a, a + 2, a + 3); }
+    g.setIndex(idx);
+    g.setDrawRange(0, 0);
+    this.u = { map: { value: flameAtlas() }, uFrame: { value: 0 }, uFogColor: rig.shared.uFogColor, uFog: rig.shared.uFog };
+    const m = new THREE.ShaderMaterial({ uniforms: this.u, vertexShader: VERT, fragmentShader: FRAG, side: THREE.DoubleSide });
+    m.name = 'fire_ring';
+    this.mesh = new THREE.Mesh(g, m);
     this.mesh.frustumCulled = false;
     this.mesh.visible = false;
     this.mesh.userData.noCollide = true;
   }
 
   /** radius <= 0 hides the ring. */
-  set(cx: number, cz: number, radius: number): void { this.cx = cx; this.cz = cz; this.radius = radius; this.last = -1; this.mesh.visible = radius > 0; }
-
-  update(time: number): void {
-    if (this.radius <= 0) return;
-    const step = Math.floor(time * FPS);
-    if (step === this.last) return;
-    this.last = step;
-    this.write(step);
+  set(cx: number, cz: number, radius: number): void {
+    this.cx = cx; this.cz = cz; this.radius = radius;
+    this.mesh.visible = radius > 0;
+    if (radius > 0) this.build();
   }
 
-  private write(step: number): void {
-    const p = this.pos;
+  update(time: number): void { this.u.uFrame.value = Math.floor(time * FPS) % FLAME_FRAMES; }
+
+  private build(): void {
+    const g = this.mesh.geometry, pos = g.getAttribute('position') as THREE.BufferAttribute;
+    const uv = g.getAttribute('uv') as THREE.BufferAttribute, off = g.getAttribute('aOff') as THREE.BufferAttribute;
+    const hash = (a: number) => { const s = Math.sin(a * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
     let k = 0;
-    const hash = (a: number, b: number) => { const s = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return s - Math.floor(s); };
-    for (let t = 0; t < TONGUES; t++) {
-      const a = (t / TONGUES) * Math.PI * 2, wid = ((Math.PI * 2 * this.radius) / TONGUES) * 0.9;
-      const h = 3.2 + hash(t, step & 3) * 3.4 + (t % 3 === 0 ? 1.4 : 0);
-      const ox = Math.cos(a), oz = Math.sin(a), tx = -oz, tz = ox, bx = this.cx + ox * this.radius, bz = this.cz + oz * this.radius;
-      const sway = (hash(t, (step & 3) + 9) - 0.5) * 0.9;
-      for (const l of LAYERS) {
-        const pt = (hh: number, ww: number, s: number): [number, number, number] => {
-          const lean = sway * hh * hh;
-          return [bx + tx * ww * wid * s + ox * lean, hh * h, bz + tz * ww * wid * s + oz * lean];
-        };
-        const a0 = pt(l.h0, l.w0, -1), a1 = pt(l.h0, l.w0, 1), b0 = pt(l.h1, l.w1, -1), b1 = pt(l.h1, l.w1, 1);
-        for (const v of [a0, a1, b1, a0, b1, b0, a0, b1, a1, a0, b0, b1]) { p.setXYZ(k++, v[0], v[1], v[2]); }
+    for (let row = 0; row < R.rows && k < MAX_CARDS; row++) {
+      const rr = this.radius - row * 0.35, n = Math.min(Math.floor((MAX_CARDS - k)), Math.ceil((Math.PI * 2 * rr) / (R.cardW * 0.62)));
+      for (let i = 0; i < n; i++, k++) {
+        const a = ((i + row * 0.5) / n) * Math.PI * 2, rnd = hash(k * 3.1 + row);
+        const w = R.cardW * (0.85 + rnd * 0.3) / 2, h = R.cardH * (row === 0 ? 0.8 + rnd * 0.45 : 0.55 + rnd * 0.3);
+        const ox = Math.cos(a), oz = Math.sin(a), tx = -oz, tz = ox, bx = this.cx + ox * rr, bz = this.cz + oz * rr;
+        // cards toe in a little so the wall has depth from any side
+        const tw = 0.25 * (rnd - 0.5);
+        const cx = tx + ox * tw, cz = tz + oz * tw;
+        const v = k * 4;
+        pos.setXYZ(v, bx - cx * w, -0.05, bz - cz * w); pos.setXYZ(v + 1, bx + cx * w, -0.05, bz + cz * w);
+        pos.setXYZ(v + 2, bx + cx * w, h, bz + cz * w); pos.setXYZ(v + 3, bx - cx * w, h, bz - cz * w);
+        uv.setXY(v, 0, 0); uv.setXY(v + 1, 1, 0); uv.setXY(v + 2, 1, 1); uv.setXY(v + 3, 0, 1);
+        const o = Math.floor(rnd * FLAME_FRAMES);
+        for (let j = 0; j < 4; j++) off.setX(v + j, o);
       }
     }
-    p.needsUpdate = true;
+    pos.needsUpdate = uv.needsUpdate = off.needsUpdate = true;
+    g.setDrawRange(0, k * 6);
   }
-  dispose(): void { this.mesh.geometry.dispose(); }
+  dispose(): void { this.mesh.geometry.dispose(); (this.mesh.material as THREE.Material).dispose(); (this.u.map.value as THREE.Texture).dispose(); }
 }

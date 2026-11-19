@@ -8,6 +8,7 @@ import { FEEL } from '../core/feel';
 import { Anvil } from '../forge/anvil';
 import { ForgeController } from '../forge/controller';
 import { ForgeStage } from '../forge/stage';
+import { FxLayer } from '../fx/fx-layer';
 import { bindInput } from '../input/bind-input';
 import { FirstPersonCamera } from '../player/camera';
 import { Character } from '../player/character/character';
@@ -79,6 +80,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   anvil.root.add(stage.root);
   scene.add(anvil.root);
   const hud = new ForgeHud(document.getElementById('app')!);
+  const fxl = new FxLayer({ scene, rig, pipeline, world: arena.world, combat: world, stage, seed: params.seed });
   // the smith's own body is invisible in first person; keep one hidden Character only to prove armor builds at every level
   const body = new Character(lib, { armor: session.armor, modules: session.modules });
   const forge = new ForgeController({
@@ -121,6 +123,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     lf.frame(dt, cam, v);
     dummy?.render(dt, alpha, cam.freezeS > 0);
     forge.frame(dt, time, cam);
+    fxl.update(cam.freezeS > 0 ? 0 : dt, cam.camera);
   };
 
   // presets that start placed / in the stance
@@ -168,7 +171,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     },
     resize(w, h) { cam.resize(w / h); lf.vm.resize(w / h); },
     dispose() {
-      offs.forEach((o) => o()); unbindFeel(); lf.dispose(); forge.dispose(); hud.dispose(); anvil.dispose(); body.dispose();
+      offs.forEach((o) => o()); unbindFeel(); fxl.dispose(); lf.dispose(); forge.dispose(); hud.dispose(); anvil.dispose(); body.dispose();
       arena.dispose(); input.dispose(); removeEventListener('keydown', dev);
       scene.traverse((o) => { if (o instanceof THREE.Mesh) o.geometry.dispose(); });
     },

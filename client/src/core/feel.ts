@@ -155,10 +155,33 @@ export const FEEL = {
     /** Blade on the anvil: longest length shown (m), and how fast it slides into the brazier (1/s). */
     blade: { showLen: 1.15, maxScale: 1.4, slideRate: 7, brazierX: -0.88 },
     /** Camera trauma and hit-stop on a strike, by outcome. */
-    strike: { trauma: { tuyet: 0.5, dat: 0.32, giu: 0.2, hong: 0.4 } as Record<string, number>, hitStopMs: 55, kickBack: 0.05 },
+    strike: { trauma: { tuyet: 0.5, dat: 0.32, giu: 0.2, hong: 0.4 } as Record<string, number>, hitStopMs: 55, levelStopMs: 60, kickBack: 0.05 },
     /** Anvil appearing/leaving: drop height of the placing animation (m). */
     drop: 0.55,
     /** HUD: seconds a result word stays. */
     flashS: 0.8,
+  },
+
+  /** VFX (LOOK §7): few, physical. Counts per event; ≤ 60 live particles and ≤ 2 draw calls per effect. */
+  fx: {
+    /** Spark pool: gravity (m/s²), floor bounce keep (vertical, horizontal), width (m, never under 1 px), length per m/s, max length. */
+    spark: { pool: 400, gravity: 11, bounceY: 0.32, bounceXZ: 0.55, width: 0.012, lenPerSpeed: 0.022, maxLen: 0.24 },
+    /** Forge strike: sparks by outcome, speed range (m/s), life range (s). Spawned when the hammer lands. */
+    strike: { count: { tuyet: 40, dat: 28, giu: 16, hong: 12 } as Record<string, number>, speed: [2.2, 5.5] as const, life: [0.3, 0.8] as const },
+    /** Level up: sparks along the blade, blade pulse up one heat step for pulseS. */
+    levelUp: { sparks: 14, pulseS: 0.16 },
+    /** Form evolution (quench): white flash, steam column, ground ring, camera punch. */
+    evolve: { flashS: 0.25, steam: 8, steamRise: 1.1, steamLife: 1.2, ringR: 1.5, ringS: 0.55, trauma: 0.45 },
+    /** Gãy: shard count range, sparks, start heat (dull red) and cooling time (s), how long shards stay. */
+    shatter: { shards: [3, 5] as const, sparks: 18, heat: 0.36, coolS: 2.6, stayS: 3.2, hideS: 0.35 },
+    /** Melee: clash sparks on a block, hit sparks when Máu is off, puffs + decal when on; parry star. */
+    hit: { clash: 6, sparksNoBlood: 6, puffs: 4, puffLife: 0.45, decalR: [0.22, 0.42] as const, decalS: 9 },
+    parry: { sparks: 4, speed: 6, life: 0.16 },
+    /** Slam landing: ground ring out to BALANCE.move.slam.knockR over ringS, dust puffs. */
+    slam: { ringS: 0.32, dust: 8 },
+    /** Weapon ribbon: segments, seconds of history it shows, min tip speed (m/s) to draw, opacity. */
+    trail: { segments: 8, lifeS: 0.1, minSpeed: 3.5, alpha: 0.42 },
+    /** Fire ring: card width/height (m), embers per second and their life, world tint inside (0..1). */
+    ring: { cardW: 1.5, cardH: 3.6, rows: 2, embersPerS: 22, emberLife: [1.2, 2.4] as const, tint: 0.22 },
   },
 } as const;
