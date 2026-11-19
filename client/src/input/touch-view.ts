@@ -14,6 +14,7 @@ const CSS = `
 .tb.stick{background:#1c1917a0;border-width:2px}
 .tb .knob{position:absolute;left:50%;top:50%;width:42%;height:42%;margin:-21% 0 0 -21%;border-radius:50%;background:#e9e1d3c8;border:2px solid #0d0b0a}
 .tc.edit{pointer-events:none}
+.modal-open .tc{pointer-events:none;visibility:hidden}
 .tc.edit .tb{pointer-events:auto;cursor:grab;touch-action:none}
 .tc.edit .tb{outline:2px dashed #7f93a1;outline-offset:3px}
 .tc.edit .tb.sel{border-color:#f26a1b;border-width:3px}

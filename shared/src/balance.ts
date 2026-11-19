@@ -16,12 +16,9 @@ export const BALANCE = {
     coyoteS: 0.1,
     jumpBufferS: 0.12,
     stamina: { pips: 3, regenS: 1.4 },
-    /** Dash (Lướt): speed for durS, then horizontal speed is clamped to exitSpeed. No gravity while dashing. */
-    dash: { cost: 1, speed: 24, durS: 0.17, iframeS: 0.12, exitSpeed: 9 },
-    /** Jump during a ground dash: costs this many extra pips (2 total) and keeps the dash speed. */
-    dashJump: { cost: 1 },
-    /** Slide (Trượt): speed decays from speed to endSpeed over decayS, then holds. steer = rad/s toward stick. */
-    slide: { speed: 14, endSpeed: 10, decayS: 1.5, steer: 2.2 },
+    /** Slide (Trượt): speed eases from speed down to endSpeed (= run speed) over maxS, then the player stands
+     *  up even if the button is still held; cooldownS before the next one. steer = rad/s toward stick. */
+    slide: { speed: 14, endSpeed: 9, maxS: 0.8, cooldownS: 0.35, steer: 2.2 },
     /** Slam: straight down; jump within bounceS of landing jumps ×bounceMul. knockR used by phase 08/17. */
     slam: { speed: 40, bounceS: 0.15, bounceMul: 1.5, knockR: 3 },
     /** Wall jump/cling. probe = extra radius that counts as touching a wall; graceS keeps contact that long. */
@@ -105,7 +102,7 @@ export const BALANCE = {
     heavy: { minS: 0.45, maxS: 1.0 },
     parry: { windowS: 0.16, recoverS: 0.34, staggerS: 0.6, stamina: 1, frontDeg: 100 },
     block: { reduce: 0.7, stamina: 1, slow: 0.4, frontDeg: 80, guardBreakS: 0.7, knockMul: 0.35 },
-    dash: { windowS: 0.25, lungeM: 2, dmgMul: 1.2 },
+    slideAtk: { windowS: 0.25, lungeM: 2, dmgMul: 1.2 },
     /** Armor: +3% reduction per level, max 30% (GDD §7). */
     armor: { perLevel: 0.03, max: 0.3 },
     /** Any hit interrupts a windup or charge; light hits flinch this long. */
@@ -154,6 +151,11 @@ export const BALANCE = {
     maxPlayers: 6, codeLen: 4, codeAlphabet: 'ABCDEFGHJKLMNPQRSTUVWXYZ',
     tickHz: 20, reconnectS: 30, emptyRoomS: 300, pingEveryS: 2, clockKeep: 5,
     nameMax: 16, truceChoices: [0, 30, 60], truceDefault: 30, roundsToWin: 3,
+    /** Host match settings (Chơi mạng): the allowed values (first of each row is NOT the default; see defaults) and their defaults.
+     *  ring = closing speed index (chậm/vừa/nhanh): ringTime scales the closing time (closedS - startS). */
+    choices: { rounds: [2, 3, 5], roundS: [120, 180, 240], lives: [1, 3, 5], ring: [0, 1, 2], maxPlayers: [2, 3, 4, 5, 6] },
+    defaults: { rounds: 3, roundS: 180, lives: 3, ring: 1, maxPlayers: 6 },
+    ringTime: [1.5, 1, 0.65],
     /** Remote players (TECH §4): buffer = 2 × jitter + base, clamped; extrapolate at most extrapMs, then freeze. */
     interp: { baseMs: 50, minMs: 80, maxMs: 200, startMs: 100, extrapMs: 100, jitterK: 0.1 },
     /**

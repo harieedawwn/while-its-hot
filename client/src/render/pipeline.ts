@@ -97,18 +97,25 @@ export class Pipeline {
     this.warmed.add(scene);
     const hidden: THREE.Object3D[] = [];
     scene.traverse((o) => { if (!o.visible) { hidden.push(o); o.visible = true; } });
-    this.renderer.compile(scene, camera);
+    // async: the page keeps painting (the cover animation) while the driver links programs in parallel
+    this.warming++;
+    const done = () => { this.warming = Math.max(0, this.warming - 1); };
+    const guard = setTimeout(done, 4000); // never stay blank if the promise is lost
+    this.renderer.compileAsync(scene, camera).catch(() => {}).finally(() => { clearTimeout(guard); done(); });
     for (const o of hidden) o.visible = false;
   }
+  /** Scenes being compiled in the background; the world is not drawn (and the scene is not "ready") until 0. */
+  warming = 0;
 
   /** World, then an optional overlay (viewmodel) over a cleared depth buffer, then post. */
   render(scene: THREE.Scene, camera: THREE.Camera, overlay?: { scene: THREE.Scene; camera: THREE.Camera }): void {
     const r = this.renderer;
     r.setRenderTarget(this.rt);
     this.warm(scene, camera);
+    if (overlay) this.warm(overlay.scene, overlay.camera);
+    if (this.warming > 0) return;
     r.render(scene, camera);
     if (overlay) {
-      this.warm(overlay.scene, overlay.camera);
       r.autoClear = false;
       r.clearDepth();
       r.render(overlay.scene, overlay.camera);

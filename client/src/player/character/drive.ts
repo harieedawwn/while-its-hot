@@ -7,7 +7,6 @@ import type { Character } from './character';
 export function animInputFromMove(s: MoveState, yaw: number, out: AnimInput): AnimInput {
   out.vx = s.vel.x; out.vy = s.vel.y; out.vz = s.vel.z; out.yaw = yaw;
   out.grounded = s.grounded; out.sliding = s.sliding; out.slamming = s.slamming; out.clinging = s.clinging;
-  out.dashing = s.dashT > 0;
   return out;
 }
 

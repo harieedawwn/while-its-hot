@@ -6,10 +6,13 @@ import type { RandFn } from '../forge/session';
 /** Pure round rules (GDD §3, §8): ring size and burn, round winner, Tiếng tăm, draft offers. */
 const M = BALANCE.match, R = M.ring;
 
+/** Seconds the ring takes to close at speed index `speed` (0 chậm · 1 vừa · 2 nhanh). */
+export function ringSpan(speed = 1): number { return (R.closedS - R.startS) * (BALANCE.net.ringTime[speed] ?? 1); }
+
 /** Fire ring radius at fight-clock `s` seconds: 0 (no ring) before it starts, then shrinking to minR by closedS. */
-export function ringRadius(s: number): number {
+export function ringRadius(s: number, speed = 1): number {
   if (s < R.startS) return 0;
-  const k = Math.min(1, (s - R.startS) / (R.closedS - R.startS));
+  const k = Math.min(1, (s - R.startS) / ringSpan(speed));
   return R.maxR + (R.minR - R.maxR) * k;
 }
 /** Damage per second outside the ring at fight-clock `s`. */

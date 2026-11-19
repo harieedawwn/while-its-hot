@@ -26,14 +26,14 @@ describe('frame data', () => {
       for (const l of C.family[fam].light) expect(l.w).toBeGreaterThanOrEqual(C.tapS);
     }
   });
-  it('shapes: dash +20%, heavy table values, passives fold in', () => {
-    expect(attackShape(weaponById('kiem_tho'), 'dash', 0).dmg).toBeCloseTo(12 * 1.2);
+  it('shapes: slide +20%, heavy table values, passives fold in', () => {
+    expect(attackShape(weaponById('kiem_tho'), 'slide', 0).dmg).toBeCloseTo(12 * 1.2);
     expect(attackShape(weaponById('bua_ren'), 'heavy', 0).dmg).toBe(45);
     expect(attackShape(weaponById('bua_ren'), 'heavy', 0).breaksBlock).toBe(true);
     expect(attackShape(weaponById('phoi'), 'light', 0).dmg).toBe(9);
     expect(attackShape(weaponById('kiem_thep'), 'light', 2).dmg).toBeCloseTo(12 * 1.2);
     expect(attackShape(weaponById('kich'), 'heavy', 0).arcDeg).toBe(220);
-    expect(attackShape(weaponById('dai_dao'), 'dash', 0).lungeM).toBeCloseTo(C.dash.lungeM * 1.5);
+    expect(attackShape(weaponById('dai_dao'), 'slide', 0).lungeM).toBeCloseTo(C.slideAtk.lungeM * 1.5);
   });
 });
 
@@ -80,13 +80,13 @@ describe('fighter', () => {
     expect(g.kind).toBe('heavy');
     expect(g.chargeS).toBeLessThanOrEqual(C.heavy.maxS + DT);
   });
-  it('dash attack within the window is a dash kind with a 2 m lunge', () => {
+  it('slide attack within the window is a slide kind with a 2 m lunge', () => {
     const f = new Fighter(weaponById('kiem_tho'));
-    f.tick(DT, { ...NO_FIGHT, attackPressed: true, sinceDash: 0.2 });
-    expect(f.kind).toBe('dash');
-    expect(f.events.find((e) => e.k === 'lunge')).toMatchObject({ m: C.dash.lungeM });
+    f.tick(DT, { ...NO_FIGHT, attackPressed: true, sinceSlide: 0.2 });
+    expect(f.kind).toBe('slide');
+    expect(f.events.find((e) => e.k === 'lunge')).toMatchObject({ m: C.slideAtk.lungeM });
     const g = new Fighter(weaponById('kiem_tho'));
-    g.tick(DT, { ...NO_FIGHT, attackPressed: true, sinceDash: 0.3 });
+    g.tick(DT, { ...NO_FIGHT, attackPressed: true, sinceSlide: 0.3 });
     expect(g.kind).toBe('light');
   });
   it('parry window then block while held; tap parry recovers to idle', () => {

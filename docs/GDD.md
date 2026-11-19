@@ -38,10 +38,8 @@ Scoring: kill = 1 point; killing the player with Tiếng tăm (§8) = +1 bonus p
 |---|---|
 | Run speed | 9 m/s, ground accel 80 m/s², air accel 30 m/s² (strong air control) |
 | Gravity / jump | 30 m/s² / jump velocity 10 m/s; coyote time 0.1 s; jump buffer 0.12 s |
-| Stamina | 3 pips, regen 1 pip / 1.4 s, no regen while sliding |
-| Dash (Lướt) | 1 pip, 24 m/s for 0.17 s in stick direction (forward if none), i-frames 0.12 s, works in air |
-| Dash-jump | jump during a ground dash: 2 pips total, keeps horizontal speed (long jump) |
-| Slide (Trượt) | hold while moving on ground: 14 m/s, decays to 10 m/s over 1.5 s, lower hitbox, slide-jump keeps speed |
+| Stamina | 3 pips (guard only: block / parry), regen 1 pip / 1.4 s, no regen while sliding |
+| Slide (Trượt) | on ground while moving: 14 m/s easing down to run speed over 0.8 s max, then you stand up even if held (release before the next one); 0.35 s cooldown; lower hitbox; slide-jump keeps speed. There is no dash. |
 | Slam | slide/crouch in air: 40 m/s down; landing knocks nearby players up (r 3 m, no damage); jump within 0.15 s of landing = slam bounce (jump ×1.5) |
 | Wall jump | up to 3 before landing; wall cling slows falling to 3 m/s while pushing into a wall |
 
@@ -52,7 +50,7 @@ Players do not collide hard with each other (soft push). Fall into molten channe
 - **Đánh** (tap): light attack, 3-hit combo per family. **Hold**: charge heavy (0.45–1.0 s), release to strike.
 - **Đỡ** (tap): parry window 0.16 s. A parried attacker is staggered 0.6 s and takes nothing; the parrier gets
   hit-stop + 1 stamina. Holding Đỡ = block: −70% front damage, drains 1 stamina per blocked hit, slows you 40%.
-- Dash attack: attacking within 0.25 s after a dash lunges 2 m (counts as light, +20% dmg).
+- Slide attack: attacking while sliding or within 0.25 s after a slide lunges 2 m (counts as light, +20% dmg).
 - Damage = `base × (1 + 0.06 × level) × armorFactor × passives`. Hit-stop 50–90 ms (local feel only).
 - Aim assist (setting, default on for touch): slight magnetism + 30% look slowdown on enemies within reach cone.
 
@@ -70,7 +68,7 @@ The blank `phoi` fights like a weak sword: light 9, heavy 20.
 Anvils are solid, visible to all, show the owner's color band. Only the owner can use it.
 
 **Forge stance:** at your anvil press Rèn. Camera blends to an over-the-anvil view; you are vulnerable.
-Moving the stick or pressing Lướt exits instantly (0.2 s blend). Getting hit kicks you out and costs 0.2 heat.
+Moving the stick or pressing Nhảy or Trượt exits instantly (0.2 s blend). Getting hit kicks you out and costs 0.2 heat.
 
 **Heat (nhiệt) 0–1.** Hold Nung (the same button while in stance) to push the blade into the anvil's brazier:
 +0.55/s. Heat decays 0.05/s, each strike costs 0.12. The blade glows with real blackbody steps (LOOK §5).
@@ -119,7 +117,7 @@ Forms change at the milestones below. Each form adds its passive (passives stack
 | giao_sat | Giáo sắt | Thương | 3 | — |
 | thuong_thep | Thương thép | Thương | 6 | hits at max reach +25% |
 | kich | Kích | Thương | 10 | heavy sweep arc 220° |
-| dai_dao | Đại đao | Thương | 14 | dash attack lunge +50% |
+| dai_dao | Đại đao | Thương | 14 | slide attack lunge +50% |
 | tram_ma_dao | Trảm mã đao | Thương | 18 | heavy pulls target 2 m toward you |
 
 Data shape (`shared/src/data/weapons.ts`): `{ id, name, family, minLevel, stats, passives: PassiveId[], model: id }`.
@@ -133,12 +131,12 @@ studded → half plate → full plate (LOOK §4).
 Module slots open at armor +3 and +7. Modules come from the relic draft and persist for the match:
 | id | Name | Effect |
 |---|---|---|
-| phan_luc | Bộ phản lực | +1 air dash and 0.6 s hover (hold Nhảy in air) |
+| phan_luc | Bộ phản lực | +1 air jump (double jump) and 0.6 s hover (hold Nhảy in air) |
 | sung_may_vai | Súng máy vai | auto-fires an explosive bolt at the nearest visible enemy every 6 s (8 dmg + knockback) |
 | no_vai | Nỏ vai | tap Đổi twice to fire a bolt (14 dmg, 3 per life) — weak late, useful early |
 | banh_lan | Bánh lăn gót | +12% ground speed, slides last 50% longer |
 | khien_tay | Khiên tay | block arc 180°, parry window +40 ms |
-| binh_no | Bình nổ | dashing drops a bomb (1.2 s fuse, 18 dmg, 3 per round) |
+| binh_no | Bình nổ | starting a slide drops a bomb (1.2 s fuse, 18 dmg, 3 per round) |
 Modules render as attachments on armor sockets (back, shoulders, forearm, heels).
 
 ## 8. Between rounds: relics and anti-snowball

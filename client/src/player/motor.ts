@@ -33,47 +33,35 @@ export function stepMove(s: MoveState, input: MoveInput, dt: number, kin: Kinema
   s.sinceWall += dt;
   s.clinging = false;
 
-  // dash: any time, ground or air, if a pip is there
-  if (input.dashPressed && s.stamina >= M.dash.cost && s.dashT <= 0) {
-    s.stamina -= M.dash.cost;
-    s.dashT = M.dash.durS;
-    s.iframe = M.dash.iframeS;
-    s.dashGround = s.grounded || s.coyote > 0;
-    if (hasWish) s.dashDir.copy(wish).normalize(); else s.dashDir.set(fwdX, 0, fwdZ);
-    if (s.sliding) endSlide(s);
-    s.slamming = false;
-    s.events.push({ k: 'dash', dir: s.dashDir.clone() });
-  }
-
   // slide on the ground while held; a fresh press in the air is a slam
-  if (input.slideHeld && s.grounded && !s.sliding && s.dashT <= 0) {
+  if (!input.slideHeld) s.slideLock = false;
+  s.slideCd = Math.max(0, s.slideCd - dt);
+  if (input.slideHeld && s.grounded && !s.sliding && !s.slideLock && s.slideCd <= 0) {
     s.sliding = true; s.slideT = 0;
     const sp = Math.hypot(s.vel.x, s.vel.z);
     if (hasWish) s.slideDir.copy(wish).normalize();
     else if (sp > 1) s.slideDir.set(s.vel.x / sp, 0, s.vel.z / sp);
     else s.slideDir.set(fwdX, 0, fwdZ);
     s.events.push({ k: 'slide', on: true });
-  } else if (input.slidePressed && !s.grounded && s.coyote <= 0 && !s.slamming && s.dashT <= 0) {
+  } else if (input.slidePressed && !s.grounded && s.coyote <= 0 && !s.slamming) {
     s.slamming = true;
     s.events.push({ k: 'slamstart' });
   }
   if (s.sliding && !input.slideHeld && kin.fits(s.pos, M.body.height)) endSlide(s);
+  // a slide never lasts past maxS: stand up (when there is room) even with the button held
+  if (s.sliding && s.slideT >= M.slide.maxS && kin.fits(s.pos, M.body.height)) { endSlide(s); s.slideLock = true; }
 
-  // jump: dash-jump > ground (coyote, bounce, slide-jump) > wall jump; otherwise the press stays buffered
+  // jump: ground (coyote, bounce, slide-jump) > wall jump; otherwise the press stays buffered
   if (s.jumpBuf > 0) tryJump(s);
 
   // velocity per mode; gravity is split around the move (exact v²/2g apex at any tick rate)
   let fall = false, cling = false;
-  if (s.dashT > 0) {
-    s.vel.set(s.dashDir.x * M.dash.speed, 0, s.dashDir.z * M.dash.speed);
-    s.dashT -= dt;
-    if (s.dashT <= 0) clampH(s.vel, M.dash.exitSpeed);
-  } else if (s.slamming) {
+  if (s.slamming) {
     s.vel.set(0, -M.slam.speed, 0);
   } else if (s.sliding) {
     s.slideT += dt;
     if (hasWish) steer(s.slideDir, wish, M.slide.steer * dt);
-    const k = Math.min(1, s.slideT / M.slide.decayS);
+    const k = Math.min(1, s.slideT / M.slide.maxS);
     const sp = M.slide.speed + (M.slide.endSpeed - M.slide.speed) * k;
     s.vel.x = s.slideDir.x * sp; s.vel.z = s.slideDir.z * sp;
     if (!s.grounded) { s.vel.y -= M.gravity * dt * 0.5; fall = true; }
@@ -81,7 +69,7 @@ export function stepMove(s: MoveState, input: MoveInput, dt: number, kin: Kinema
     const sp = M.runSpeed * s.speedMul;
     approachH(s.vel, wish.x * sp, wish.z * sp, M.groundAccel * dt * (s.pushT > 0 ? PUSH_CONTROL : 1));
   } else {
-    // strong air control that never bleeds speed gained from dashes or slides
+    // strong air control that never bleeds speed gained from slides
     if (hasWish) {
       const cap = Math.max(M.runSpeed, Math.hypot(s.vel.x, s.vel.z));
       approachH(s.vel, wish.x * cap, wish.z * cap, M.airAccel * dt * (s.pushT > 0 ? PUSH_CONTROL : 1));
@@ -113,21 +101,14 @@ export function stepMove(s: MoveState, input: MoveInput, dt: number, kin: Kinema
     s.coyote = Math.max(0, s.coyote - dt);
     if (s.sliding && s.coyote <= 0) endSlide(s);
   }
-  if (!s.sliding && s.dashT <= 0) s.stamina = Math.min(M.stamina.pips, s.stamina + dt / M.stamina.regenS);
+  if (!s.sliding) s.stamina = Math.min(M.stamina.pips, s.stamina + dt / M.stamina.regenS);
 }
 
 function tryJump(s: MoveState): void {
   const onGround = s.grounded || s.coyote > 0;
-  if (s.dashT > 0 && s.dashGround && onGround && s.stamina >= M.dashJump.cost) {
-    s.stamina -= M.dashJump.cost;
-    s.dashT = 0;
-    s.vel.set(s.dashDir.x * M.dash.speed, M.jumpVel, s.dashDir.z * M.dash.speed);
-    return jumped(s, 'dashjump');
-  }
   if (onGround) {
     const bounce = s.sinceSlam <= M.slam.bounceS;
     const slid = s.sliding;
-    if (s.dashT > 0) { s.dashT = 0; clampH(s.vel, M.dash.exitSpeed); }
     if (slid) endSlide(s);
     s.vel.y = M.jumpVel * (bounce ? M.slam.bounceMul : 1);
     return jumped(s, bounce ? 'bounce' : slid ? 'slidejump' : 'jump');
@@ -139,25 +120,20 @@ function tryJump(s: MoveState): void {
     if (into < 0) { s.vel.x -= n.x * into; s.vel.z -= n.z * into; }
     s.vel.x += n.x * M.wall.jumpOut; s.vel.z += n.z * M.wall.jumpOut;
     s.vel.y = M.wall.jumpUp;
-    s.dashT = 0; s.slamming = false;
+    s.slamming = false;
     s.sinceWall = 1e3;
     return jumped(s, 'walljump');
   }
 }
 
-function jumped(s: MoveState, kind: 'jump' | 'bounce' | 'dashjump' | 'slidejump' | 'walljump'): void {
+function jumped(s: MoveState, kind: 'jump' | 'bounce' | 'slidejump' | 'walljump'): void {
   s.jumpBuf = 0; s.coyote = 0; s.grounded = false; s.sinceSlam = 1e3;
   s.events.push({ k: 'jump', kind });
 }
 
 function endSlide(s: MoveState): void {
-  s.sliding = false;
+  s.sliding = false; s.slideCd = M.slide.cooldownS;
   s.events.push({ k: 'slide', on: false });
-}
-
-function clampH(v: THREE.Vector3, max: number): void {
-  const sp = Math.hypot(v.x, v.z);
-  if (sp > max) { v.x *= max / sp; v.z *= max / sp; }
 }
 
 /** Rotate unit horizontal dir toward target by at most maxAngle radians. */

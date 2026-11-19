@@ -97,6 +97,7 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `shared/src/match/{flow,rules}.ts` RoundFlow (cage/fight/result/end, lives, ring burn, draft, scoring) + pure rules · `shared/src/data/relics.ts` 14 relics + `foldRelics` · `shared/src/unlocks.ts` match-end unlocks · `match/{flow,bots}.test.ts`
 - `client/src/net/net-flow.ts` round machine presentation (HUD, doors, ring, draft, result, end) · `ui/hud/{draft,match-end}.ts` + `styles/match.css` draft cards, banner, end screen · `dev/net-preview.ts`
 - `client/src/render/{dispose,geo/ao-cache}.ts` `disposeTree` (geometry-only; call it on any model you replace/drop), pre-baked vertex AO files `public/ao/*.bin` · `tools/{sweep,leak,aobake}.mjs`
+- `client/src/ui/modal.ts` setModal (hides touch layer while a choice is open) · `ui/menu/lobby-settings.ts` host/read-only match settings grid · `core/slice.ts` yieldTask/settleFrames for sliced scene loads
 
 ## Conventions
 - TypeScript strict, ES modules, npm workspaces: `client/`, `server/`, `shared/`.

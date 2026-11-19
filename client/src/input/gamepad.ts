@@ -4,9 +4,9 @@ import type { Controls } from './controls-settings';
 
 const P = FEEL.input.pad;
 
-/** Standard-mapping button index → action. A jump, B slide, X forge, Y swap, RB dash, LB anvil, RT attack, LT parry. */
+/** Standard-mapping button index → action. A jump, B slide, X forge, Y swap, LB anvil, RT attack, LT parry. */
 export const PAD_BUTTONS: Readonly<Record<number, Button>> = {
-  0: 'jump', 1: 'slide', 2: 'forge', 3: 'swap', 4: 'anvil', 5: 'dash', 6: 'parry', 7: 'attack', 8: 'scoreboard', 9: 'pause', 10: 'slide',
+  0: 'jump', 1: 'slide', 2: 'forge', 3: 'swap', 4: 'anvil', 6: 'parry', 7: 'attack', 8: 'scoreboard', 9: 'pause', 10: 'slide',
 };
 
 /** Radial dead zone + response curve: 0 inside the zone, then a power curve up to 1 at the rim. */

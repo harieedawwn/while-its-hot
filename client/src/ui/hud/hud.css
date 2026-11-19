@@ -52,8 +52,8 @@
 .h-tab svg { width: 16px; height: 16px; vertical-align: -3px; color: var(--steel); margin-right: 6px; }
 
 /* pause: a shutter in the middle, three stamped buttons */
-.p-dim { position: fixed; inset: 0; background: var(--soot); opacity: 0.7; pointer-events: auto; z-index: 5; }
-.p-pause { z-index: 6; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(380px, 80vw); display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
+.p-dim { position: fixed; inset: 0; background: var(--soot); opacity: 0.7; pointer-events: auto; z-index: 8; }
+.p-pause { z-index: 9; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(380px, 80vw); display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
 .p-pause.k-in { animation: p-drop var(--t-drop) var(--drop) both; }
 @keyframes p-drop { from { transform: translate(-50%, -150vh); } to { transform: translate(-50%, -50%); } }
 .p-pause .k-btn { width: 100%; text-align: left; }

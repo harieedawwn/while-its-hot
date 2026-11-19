@@ -23,7 +23,7 @@ export function verticalFov(hfov16x9: number, aspect: number): number {
 }
 
 /**
- * First-person camera feel (LOOK §6): Hor+ FOV with dash/slide kicks, smoothed eye height, strafe/cling/slide
+ * First-person camera feel (LOOK §6): Hor+ FOV with slide widening, smoothed eye height, strafe/cling/slide
  * roll on a spring, landing dip spring, subtle vertical bob, trauma shake (rotation only) and hit-stop.
  * Hit-stop freezes these local animations only; the simulation and look input keep running.
  */
@@ -51,8 +51,6 @@ export class FirstPersonCamera {
   private roll = new Spring(C.rollSpring.k, C.rollSpring.c);
   private land = new Spring(C.land.k, C.land.c);
   private landGain = 1 / unitPeak(C.land.k, C.land.c);
-  private dashT = 1e3;
-  private dashDir = new THREE.Vector3();
   private slideFov = 0;
   private trauma = 0;
   private slideSign = 1;
@@ -77,7 +75,6 @@ export class FirstPersonCamera {
     this.land.kick(-C.land.maxDip * this.landGain);
     return C.land.maxDip;
   }
-  onDash(dir: THREE.Vector3): void { this.dashT = 0; this.dashDir.copy(dir); }
   addTrauma(x: number): void { this.trauma = Math.min(1, this.trauma + x); }
   /** Freeze local animation for ms (clamped to the LOOK §6 range). */
   hitStop(ms: number): void {
@@ -111,13 +108,9 @@ export class FirstPersonCamera {
     }
     const roll = this.roll.step(rollT * D2R, adt);
 
-    // FOV: dash kick (fast in, slow out) + slide widening
-    this.dashT += adt;
-    const K = C.dashKick;
-    const env = this.dashT < K.inS ? 1 - (1 - this.dashT / K.inS) ** 2
-      : this.dashT < K.inS + K.outS ? 1 - smooth((this.dashT - K.inS) / K.outS) : 0;
+    // FOV: slide widening
     this.slideFov = approach(this.slideFov, v.sliding ? C.slideFov : 0, C.fovRate, adt);
-    const h = Math.min(C.hfovMax + K.fov + C.slideFov, Math.max(C.hfovMin, this.hfov) + env * K.fov + this.slideFov);
+    const h = Math.min(C.hfovMax + C.slideFov, Math.max(C.hfovMin, this.hfov) + this.slideFov);
     const vf = verticalFov(h, this.aspect);
     if (Math.abs(vf - this.camera.fov) > 1e-4) { this.camera.fov = vf; }
 
@@ -129,8 +122,7 @@ export class FirstPersonCamera {
     const sx = sh * C.shake.pitch * D2R * noise1(nt, 23);
     const sz = sh * C.shake.roll * D2R * noise1(nt, 37);
 
-    const pull = -K.pull * env;
-    this.camera.position.set(v.pos.x + this.dashDir.x * pull, v.pos.y + this.eye + dip + bob, v.pos.z + this.dashDir.z * pull);
+    this.camera.position.set(v.pos.x, v.pos.y + this.eye + dip + bob, v.pos.z);
     const maxP = C.maxPitch * D2R;
     this.camera.rotation.set(Math.max(-maxP, Math.min(maxP, v.pitch + sx)), v.yaw + sy, roll + sz, 'YXZ');
     this.camera.updateProjectionMatrix();
@@ -138,4 +130,3 @@ export class FirstPersonCamera {
   }
 }
 
-function smooth(x: number): number { const t = Math.min(1, Math.max(0, x)); return t * t * (3 - 2 * t); }

@@ -12,7 +12,7 @@ export class Lobby {
   emptyAt = 0;
   constructor(private token: () => string = () => crypto.randomUUID()) {}
 
-  static load(s: LobbySave, token?: () => string): Lobby { const l = new Lobby(token); Object.assign(l, s); return l; }
+  static load(s: LobbySave, token?: () => string): Lobby { const l = new Lobby(token); Object.assign(l, s); l.settings = sanitizeSettings(s.settings, DEFAULT_SETTINGS); return l; }
   save(): LobbySave { return { code: this.code, phase: this.phase, settings: this.settings, members: this.members, nextId: this.nextId, emptyAt: this.emptyAt }; }
 
   get host(): Member | undefined { return this.members.find((m) => m.online) ?? this.members[0]; }
@@ -23,7 +23,7 @@ export class Lobby {
     const old = token ? this.members.find((m) => m.token === token) : undefined;
     if (old) { old.online = true; old.dropAt = 0; this.emptyAt = 0; return { m: old }; }
     if (this.phase !== 'lobby') return { err: 'started' };
-    if (this.members.length >= BALANCE.net.maxPlayers) return { err: 'full' };
+    if (this.members.length >= this.settings.maxPlayers) return { err: 'full' };
     const m: Member = { id: this.nextId++, name: cleanName(name), color: typeof color === 'number' ? Math.max(0, Math.min(15, color | 0)) : 0, ready: false, token: this.token(), online: true, dropAt: 0, ping: 0 };
     this.members.push(m); this.emptyAt = 0; void now; return { m };
   }
@@ -53,7 +53,9 @@ export class Lobby {
   setReady(id: number, v: boolean): void { const m = this.byId(id); if (m && this.phase === 'lobby') m.ready = !!v; }
   setSettings(id: number, s: Partial<RoomSettings>): ErrCode | null {
     if (this.host?.id !== id) return 'host';
-    this.settings = sanitizeSettings(s ?? {}, this.settings); return null;
+    const n = sanitizeSettings(s ?? {}, this.settings);
+    n.maxPlayers = Math.max(n.maxPlayers, this.members.length); // never below who is already in
+    this.settings = n; return null;
   }
   start(id: number): ErrCode | null {
     if (this.host?.id !== id) return 'host';

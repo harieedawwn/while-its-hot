@@ -14,7 +14,6 @@ export function packLocal(c: Combatant, forging: boolean, out: NetState): NetSta
   if (f.blocking) fl |= FLAG.blocking;
   if (f.parrying) fl |= FLAG.parrying;
   if (forging) fl |= FLAG.forging;
-  if (s.dashT > 0) fl |= FLAG.dashing;
   if (f.swingId & 1) fl |= FLAG.swing;
   if (f.dead) fl |= FLAG.dead;
   out.flags = fl;

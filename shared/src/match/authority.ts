@@ -5,7 +5,7 @@ import type { RandFn } from '../forge/session';
 import { RoundFlow } from './flow';
 import { FLAG, type NetState, type Snapshot } from '../net/codec';
 import type { ForgeOp, MatchClientMsg, MatchServerMsg, Vec3 } from '../net/match-msgs';
-import type { ServerMsg } from '../net/protocol';
+import { rulesOf, type RoomSettings, type ServerMsg } from '../net/protocol';
 import { slamEffects } from '../passives';
 import { SAFE_RESPAWN } from '../world/arenas/foundry';
 import { knockFrom, serverEffects } from './effects';
@@ -36,7 +36,7 @@ export class MatchAuthority {
   private pending: Out[] = [];
 
   /** `skipCage`: dev scenes and tests start straight in the fight (no draft, no countdown). */
-  constructor(ids: readonly number[], truceS: number, private rand: RandFn, now = 0, skipCage = false) {
+  constructor(ids: readonly number[], rules: number | Partial<RoomSettings>, private rand: RandFn, now = 0, skipCage = false) {
     this.now = now;
     const order = SAFE_RESPAWN.map((_, i) => i).sort(() => rand() - 0.5);
     ids.forEach((id, i) => {
@@ -44,7 +44,7 @@ export class MatchAuthority {
       this.players.set(id, newPlayer(id, [x, SPAWN_Y, z], Math.atan2(x, z), rand));
     });
     this.pickups = new Pickups(ids.length, now, rand);
-    const flow = this.flow = new RoundFlow(this.players, truceS, rand, (t, d, by, out) => this.harm(t, d, by, out), (n, out) => this.fightStarts(n, out));
+    const flow = this.flow = new RoundFlow(this.players, rulesOf(rules), rand, (t, d, by, out) => this.harm(t, d, by, out), (n, out) => this.fightStarts(n, out));
     this.ctx = { list: [...this.players.values()], get truceUntil() { return flow.truceUntil(); }, harm: (t, d, by, out) => this.harm(t, d, by, out) };
     flow.start(now, this.pending, skipCage);
   }
@@ -70,7 +70,7 @@ export class MatchAuthority {
     const me = this.players.get(id);
     if (!me) return null;
     return {
-      t: 'match', t0: 0, now: this.now, truce: this.flow.truceEnd, f: this.flow.net(), rows: this.flow.rows(),
+      t: 'match', t0: 0, now: this.now, truce: this.flow.truceEnd, rules: this.flow.rules, f: this.flow.net(), rows: this.flow.rows(),
       players: [...this.players.values()].map((p) => ({ id: p.id, hp: p.hp, alive: p.alive, p: [p.st.x, p.st.y, p.st.z] as Vec3, yaw: p.st.yaw })),
       anvils: [...this.players.values()].filter((p) => p.anvil).map((p) => ({ id: p.id, p: p.anvil!.p, yaw: p.anvil!.yaw })),
       pickups: this.pickups.list.slice(), you: forgeSync(me.forge),
@@ -94,7 +94,6 @@ export class MatchAuthority {
       case 'atk': recordSwing(p, m); break;
       case 'hit': { const t = this.players.get(m.tg); if (t) claimHit(this.ctx, p, t, m, now, out); break; }
       case 'parry': if (p.alive) p.parryAt = m.at; break;
-      case 'dash': if (p.alive) p.dashAt = m.at; break;
       case 'slam': this.slam(p, out); break;
       case 'forge': this.forge(p, m.op, out); break;
       case 'anvil': this.anvil(p, m, out); break;
@@ -166,7 +165,7 @@ export class MatchAuthority {
       if (p.alive) forgeTick(p, dt, out);
       else if (now >= p.spawnAt && this.flow.canRespawn(p)) {
         const s = this.spawnPoint(), yaw = Math.atan2(s[0], s[2]);
-        p.alive = true; p.hp = C.hp; p.parryAt = p.dashAt = -1e9;
+        p.alive = true; p.hp = C.hp; p.parryAt = -1e9;
         Object.assign(p.st, { x: s[0], y: s[1], z: s[2], vx: 0, vy: 0, vz: 0, yaw });
         out.push({ to: 'all', m: { t: 'spawn', id: p.id, p: s, yaw, hp: p.hp } });
       }

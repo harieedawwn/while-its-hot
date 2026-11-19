@@ -4,6 +4,7 @@ import { MODULE_IDS, type ModuleId } from '../data/modules';
 import { foldRelics, isRelic } from '../data/relics';
 import { ForgeSession, type RandFn } from '../forge/session';
 import { forgeSync } from '../forge/sync';
+import type { MatchRules } from '../net/protocol';
 import type { MatchClientMsg, PhaseName, PhaseNet, ScoreNet } from '../net/match-msgs';
 import { FOUNDRY, SPAWN_POINTS } from '../world/arenas/foundry';
 import { leaveStance } from './forge-auth';
@@ -30,7 +31,7 @@ export class RoundFlow {
   private last = 0;
   private lastLead = 0;
 
-  constructor(private players: Map<number, MPlayer>, private truceS: number, private rand: RandFn, private harm: Harm, private onFight: (now: number, out: Out[]) => void) {}
+  constructor(private players: Map<number, MPlayer>, readonly rules: MatchRules, private rand: RandFn, private harm: Harm, private onFight: (now: number, out: Out[]) => void) {}
 
   /** Immune to everything outside the fight, and during the truce. */
   truceUntil(): number { return this.ph === 'fight' ? this.truceEnd : Infinity; }
@@ -56,7 +57,7 @@ export class RoundFlow {
       p.forge = new ForgeSession(this.rand); p.forge.carried = 1;
       p.fx = foldRelics(p.relics);
       this.arm(p);
-      Object.assign(p, { hp: BALANCE.combat.hp, alive: true, lives: M.lives, rKills: 0, rDealt: 0, parryAt: -1e9, dashAt: -1e9, burnT: 0, swings: [], hongRun: 0, ifUntil: 0 });
+      Object.assign(p, { hp: BALANCE.combat.hp, alive: true, lives: this.rules.lives, rKills: 0, rDealt: 0, parryAt: -1e9, burnT: 0, swings: [], hongRun: 0, ifUntil: 0 });
       Object.assign(p.st, { x: c.pos[0], y: c.pos[1], z: c.pos[2], vx: 0, vy: 0, vz: 0, yaw: c.yaw });
       out.push({ to: 'all', m: { t: 'spawn', id: p.id, p: c.pos, yaw: c.yaw, hp: p.hp } });
       out.push({ to: p.id, m: { t: 'fsync', s: forgeSync(p.forge) } });
@@ -115,13 +116,13 @@ export class RoundFlow {
 
   private fight(now: number, out: Out[]): void {
     for (const p of this.players.values()) if (p.offer) this.take(p, p.offer[0], out);
-    this.ph = 'fight'; this.at = now; this.end = now + M.roundS * 1000; this.truceEnd = now + this.truceS * 1000;
+    this.ph = 'fight'; this.at = now; this.end = now + this.rules.roundS * 1000; this.truceEnd = now + this.rules.truce * 1000;
     this.onFight(now, out);
     out.push({ to: 'all', m: { t: 'phase', f: this.net(), rows: this.rows() } });
   }
 
   private burn(now: number, dt: number, out: Out[]): void {
-    const s = this.fightS(now), r = ringRadius(s), c = FOUNDRY.ringCenters[this.ring % FOUNDRY.ringCenters.length];
+    const s = this.fightS(now), r = ringRadius(s, this.rules.ring), c = FOUNDRY.ringCenters[this.ring % FOUNDRY.ringCenters.length];
     for (const p of this.players.values()) {
       const outside = r > 0 && Math.hypot(p.st.x - c[0], p.st.z - c[1]) > r;
       p.forge.mods.heatDecayMul = p.fx.heatDecayMul * (outside ? M.ring.heatMul : 1);
@@ -145,7 +146,7 @@ export class RoundFlow {
       leaveStance(p);
     }
     const w = this.players.get(this.win);
-    if (w) { w.wins++; if (w.wins >= M.winsToWin) this.matchWin = w.id; }
+    if (w) { w.wins++; if (w.wins >= this.rules.rounds) this.matchWin = w.id; }
     this.ph = 'result'; this.at = now; this.end = now + M.resultS * 1000;
     out.push({ to: 'all', m: { t: 'phase', f: this.net(), rows: this.rows() } });
   }

@@ -88,7 +88,7 @@ function attackClip(st: Style, arc: Arc, arcDeg: number, start: VmKey, heavy: bo
 
 export interface VmSet {
   rest: VmKey; block: VmKey; stagger: VmKey; charge: VmKey;
-  light: VmClip[]; dash: VmClip; heavy: VmClip; parry: VmClip;
+  light: VmClip[]; slide: VmClip; heavy: VmClip; parry: VmClip;
 }
 
 /** The viewmodel clips for a weapon (its family moveset and passive-widened arcs). */
@@ -100,12 +100,12 @@ export function vmSet(def: WeaponDef): VmSet {
   });
   const ha = framesOf(fam, 'heavy', 0).arc, hDeg = attackShape(def, 'heavy', 0).arcDeg;
   const charge = arcKey(st, ha, hDeg, 0, 0, { extraDeg: st.antic * 1.7, r: 0.72, back: 0.13 });
-  const da = framesOf(fam, 'dash', 0).arc;
-  const dashStart: VmKey = { ...st.rest, p: [st.rest.p[0] - 0.03, st.rest.p[1] - 0.04, st.rest.p[2] + 0.06] };
+  const da = framesOf(fam, 'slide', 0).arc;
+  const slideStart: VmKey = { ...st.rest, p: [st.rest.p[0] - 0.03, st.rest.p[1] - 0.04, st.rest.p[2] + 0.06] };
   return {
     rest: st.rest, block: st.block, stagger: st.stagger, charge,
     light,
-    dash: attackClip(st, da, attackShape(def, 'dash', 0).arcDeg, dashStart, false),
+    slide: attackClip(st, da, attackShape(def, 'slide', 0).arcDeg, slideStart, false),
     heavy: attackClip(st, ha, hDeg, charge, true),
     parry: clip([
       { ...st.rest, s: 0, ease: 'out' },

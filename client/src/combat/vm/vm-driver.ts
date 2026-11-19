@@ -41,7 +41,7 @@ export class VmDriver {
       case 'windup': case 'active': case 'recover': {
         const fr = f.frames, at = Math.max(0, f.attackT - this.lag);
         const s = at < fr.w ? at / fr.w : at < fr.w + fr.a ? 1 + (at - fr.w) / fr.a : Math.min(3, 2 + (at - fr.w - fr.a) / fr.r);
-        const c: VmClip = f.kind === 'heavy' ? set.heavy : f.kind === 'dash' ? set.dash : set.light[f.combo] ?? set.light[0];
+        const c: VmClip = f.kind === 'heavy' ? set.heavy : f.kind === 'slide' ? set.slide : set.light[f.combo] ?? set.light[0];
         sampleClip(c, s, tg);
         rate = 70;
         break;

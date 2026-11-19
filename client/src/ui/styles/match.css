@@ -4,7 +4,7 @@
 .d-head { font: 800 var(--t-s)/1 var(--f-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--bone); background: var(--soot); padding: 6px 12px 4px; }
 .d-count { font: 900 clamp(48px, 16vh, 96px)/1 var(--f-display); color: var(--bone); text-shadow: 0 3px 0 var(--soot); }
 .d-row { display: flex; gap: 10px; pointer-events: auto; max-width: 100%; }
-.d-card { width: min(210px, 28vw); min-height: 96px; padding: 10px 12px; text-align: left; color: var(--bone); cursor: pointer; display: flex; flex-direction: column; gap: 6px; border: 0; font: inherit; }
+.d-card { width: min(210px, 28vw); min-height: 120px; padding: 10px 12px; text-align: left; color: var(--bone); cursor: pointer; display: flex; flex-direction: column; gap: 6px; border: 0; font: inherit; }
 .d-card:active { transform: translateY(2px); }
 .d-card.is-mod { background: var(--oxide); }
 .d-card .d-key { position: absolute; right: 10px; top: 6px; font: 800 var(--t-xs)/1 var(--f-display); color: var(--bone-dim); }

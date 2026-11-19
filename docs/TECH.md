@@ -58,7 +58,7 @@ friend group (no anti-cheat needed) and it makes melee feel instant.
 - **Melee hits:** the attacker's client sweeps the weapon segment (base→tip, sub-stepped) against remote
   players' hit capsules *at their interpolated (rendered) time* and sends `HitClaim{target, attackId,
   clientTime}`. The server validates: attacker alive and attack active, attack id fresh, target alive, not
-  invulnerable (dash i-frames, frenzy at anvil, truce), distance between server-known positions ≤ reach +
+  invulnerable (frenzy at anvil, truce), distance between server-known positions ≤ reach +
   2.0 m tolerance, rate limit per weapon timing. Then it checks the **target's parry/block**: a parry press is
   successful if its server time is within the parry window around the hit time, widened by the target's
   RTT/2 (max +80 ms). Server applies damage and broadcasts. The attacker plays hit feedback immediately
@@ -76,11 +76,11 @@ friend group (no anti-cheat needed) and it makes melee feel instant.
   forge — to test rooms alone. Run 3 bots + 1 real client.
 
 ## 5. Input
-- One action layer (`input/actions.ts`): `move(x,y)`, `look(dx,dy)`, buttons `attack, parry, jump, dash,
+- One action layer (`input/actions.ts`): `move(x,y)`, `look(dx,dy)`, buttons `attack, parry, jump,
   slide, forge, anvil, swap, pause, scoreboard`. Sources: touch, keyboard+mouse, gamepad (Gamepad API).
 - **Touch defaults** (the common mobile-FPS layout, e.g. CoD Mobile / PUBG Mobile): left half = movement
   stick (floating by default, fixed optional), right half = drag to look (any touch not on a button),
-  right cluster = big Đánh button + Nhảy, Lướt, Trượt, Đỡ around it; Rèn/Đặt đe contextual near the top of
+  right cluster = big Đánh button + Nhảy, Trượt, Đỡ around it; Rèn/Đặt đe contextual near the top of
   the cluster; Đổi and pause top-right. Multi-touch with per-pointer ownership; a finger that starts on a
   button can slide off and still look (CoD-style "fire + aim" with one thumb).
 - Look: sensitivity X/Y separate, acceleration curve off by default, optional gyro aiming (on Android via

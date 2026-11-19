@@ -15,6 +15,7 @@ import { buildFloor } from './floor';
 import { buildFurnace } from './furnace';
 import { buildLandmarks } from './landmarks';
 import { buildShell } from './shell';
+import { CageDoors } from './cages';
 
 /** The arena's collision as the player will meet it (no GL: untextured stand-in materials). */
 const mats = new Map<string, THREE.Material>();
@@ -67,6 +68,17 @@ describe('foundry collision', () => {
       expect(Math.abs(s.pos.y)).toBeLessThan(0.05);
       expect(Math.max(Math.abs(s.pos.x), Math.abs(s.pos.z))).toBeLessThan(FOUNDRY.half - 1);
     }
+  });
+  it('a closed cage door is solid and an open one lets you out', () => {
+    const doors = new CageDoors(lib, world.blockers);
+    const out = (sp: (typeof SPAWN_POINTS)[number]) => walk([sp.pos[0], 0.3, sp.pos[2]], sp.yaw, 1.5);
+    const depth = (p: THREE.Vector3) => Math.max(Math.abs(p.x), Math.abs(p.z));
+    for (const sp of SPAWN_POINTS) expect(depth(out(sp).pos)).toBeGreaterThan(FOUNDRY.half + 0.2);
+    doors.set(0);
+    for (const sp of SPAWN_POINTS) expect(depth(out(sp).pos)).toBeGreaterThan(FOUNDRY.half + 0.2);
+    doors.set(1);
+    for (const sp of SPAWN_POINTS) expect(depth(out(sp).pos)).toBeLessThan(FOUNDRY.half - 1);
+    doors.dispose();
   });
   it('bridges carry you over the channel, open channel drops you in', () => {
     const over = walk([13, 0, -7], Math.PI, 2);

@@ -20,7 +20,7 @@ export class Player {
   yaw: number;
   pitch = 0;
   private prev = new THREE.Vector3();
-  private input: MoveInput = { mx: 0, my: 0, yaw: 0, jumpPressed: false, dashPressed: false, slidePressed: false, slideHeld: false };
+  private input: MoveInput = { mx: 0, my: 0, yaw: 0, jumpPressed: false, slidePressed: false, slideHeld: false };
   private view: ViewState;
   private stepAcc = 0;
   private side: 1 | -1 = 1;
@@ -46,7 +46,7 @@ export class Player {
   tick(dt: number, a: Actions, allow = true): void {
     const i = this.input;
     i.mx = a.move.x; i.my = a.move.y; i.yaw = this.yaw;
-    i.jumpPressed = a.take('jump') && allow; i.dashPressed = a.take('dash') && allow;
+    i.jumpPressed = a.take('jump') && allow;
     i.slidePressed = a.take('slide') && allow; i.slideHeld = a.isHeld('slide') && allow;
     this.tickWith(dt, i);
   }
@@ -60,7 +60,6 @@ export class Player {
       switch (e.k) {
         case 'jump': bus.emit('move:jump', { kind: e.kind }); break;
         case 'land': bus.emit('move:land', { speed: e.speed }); this.stepAcc = FEEL.audio.react.stepLen * 0.5; break;
-        case 'dash': bus.emit('move:dash', { x: e.dir.x, z: e.dir.z }); break;
         case 'slide': bus.emit('move:slide', { on: e.on }); break;
         case 'slamstart': bus.emit('move:slamstart', {}); break;
         case 'slam': bus.emit('move:slam', { x: e.pos.x, y: e.pos.y, z: e.pos.z }); break;

@@ -3,6 +3,7 @@ import { FOUNDRY, wallPoint, wallYaw, type CageDef } from '@wih/shared';
 import * as P from '../../render/geo/procgeo';
 import { flat, mesh } from '../../render/models/kit';
 import type { MaterialLib } from '../../render/materials/library';
+import type { Blocker } from '../../physics/blockers';
 
 /** Door slam timing: seconds from release to fully open (it flies up into the lintel). */
 const OPEN_S = 0.32;
@@ -25,13 +26,18 @@ export class CageDoors {
   private t = 0;     // 0 closed … 1 open
   private target = 0;
   private lift = FOUNDRY.cage.h + 0.4;
+  private blockers: Blocker[] = [];
 
-  constructor(lib: MaterialLib) {
+  /** `blockers` is the CollisionWorld's dynamic list: a closed door is a solid slab, an open one is removed. */
+  constructor(lib: MaterialLib, blockers: Blocker[]) {
     const geo = doorGeo();
     for (const cage of FOUNDRY.cages) {
       const m = mesh(geo.clone(), lib.get('steel'), `cage-door:${cage.id}`);
       m.userData.noCollide = true;
       this.place(m, cage);
+      const ew = cage.side === 'E' || cage.side === 'W';
+      const blk: Blocker = { x: m.position.x, z: m.position.z, r: 0, y: 0, h: FOUNDRY.cage.h, on: true, hx: ew ? 0.12 : FOUNDRY.cage.w / 2, hz: ew ? FOUNDRY.cage.w / 2 : 0.12 };
+      this.blockers.push(blk); blockers.push(blk);
       this.doors.push(m);
       this.group.add(m);
     }
@@ -55,6 +61,7 @@ export class CageDoors {
   private apply(): void {
     const e = 1 - Math.pow(1 - this.t, 3);
     for (const d of this.doors) d.position.y = e * this.lift;
+    for (const b of this.blockers) b.on = this.t < 0.4;
   }
-  dispose(): void { for (const d of this.doors) d.geometry.dispose(); }
+  dispose(): void { for (const d of this.doors) d.geometry.dispose(); for (const b of this.blockers) b.on = false; }
 }

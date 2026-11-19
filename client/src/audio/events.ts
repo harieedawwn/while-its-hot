@@ -37,7 +37,6 @@ export function bindAudio(a: AudioEngine, localId = 0): AudioBinding {
       const hard = e.speed >= R.landHard;
       a.play(hard ? 'land_hard' : 'land_soft', { db: hard ? Math.min(3, (e.speed - R.landHard) * 0.4) : Math.min(0, (e.speed - R.landHard) * 0.6) });
     }),
-    bus.on('move:dash', () => a.play('dash')),
     bus.on('move:slide', (e) => {
       if (e.on) { a.play('slide_start'); loop('slide', 'slide_loop'); }
       else if (loops.slide) { stop('slide', 0.12); a.play('slide_end'); }
@@ -52,7 +51,7 @@ export function bindAudio(a: AudioEngine, localId = 0): AudioBinding {
       const ch = charges.get(e.id); if (ch) { ch.stop(0.04); charges.delete(e.id); }
       const pos = own(e.id) ? undefined : at(e);
       if (e.kind === 'heavy') a.play('heavy_release', { pos });
-      else a.play(SWING[e.family], { pos, pitch: 1 + R.comboPitch * e.combo, db: e.kind === 'dash' ? 2 : 0 });
+      else a.play(SWING[e.family], { pos, pitch: 1 + R.comboPitch * e.combo, db: e.kind === 'slide' ? 2 : 0 });
     }),
     bus.on('combat:hit', (e) => {
       const pos = own(e.attacker) || own(e.target) ? undefined : at(e);

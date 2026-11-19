@@ -9,9 +9,8 @@ export interface GameEvents {
   /** Android back button (Capacitor). Phase 14 opens the pause menu on it. */
   'app:back': Record<string, never>;
   /** Local player movement (player/player.ts). Positions/dirs are world space. */
-  'move:jump': { kind: 'jump' | 'bounce' | 'dashjump' | 'slidejump' | 'walljump' };
+  'move:jump': { kind: 'jump' | 'bounce' | 'slidejump' | 'walljump' };
   'move:land': { speed: number };
-  'move:dash': { x: number; z: number };
   'move:slide': { on: boolean };
   /** A footstep of the local player: raw surface tag of the ground (materials `foot`), alternating side. */
   'move:step': { surface: string; side: 1 | -1; x: number; y: number; z: number };

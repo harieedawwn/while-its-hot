@@ -41,7 +41,7 @@ export const WEAPONS: readonly WeaponDef[] = [
   row('giao_sat', 'thuong', 3),
   row('thuong_thep', 'thuong', 6, ['max_reach_bonus']),
   row('kich', 'thuong', 10, ['sweep_wide']),
-  row('dai_dao', 'thuong', 14, ['dash_lunge_plus']),
+  row('dai_dao', 'thuong', 14, ['slide_lunge_plus']),
   row('tram_ma_dao', 'thuong', 18, ['heavy_pull']),
 ];
 export const WEAPON_IDS: readonly string[] = WEAPONS.map((w) => w.id);

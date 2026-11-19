@@ -1,4 +1,5 @@
 import { MODULE_IDS } from '@wih/shared';
+import { setModal } from '../modal';
 import { el, sfx } from '../kit/dom';
 import { STR } from '../strings.vi';
 import '../styles/match.css';
@@ -48,10 +49,11 @@ export class Draft {
     }
     this.reroll.hidden = rerolls <= 0;
     this.root.hidden = ids.length === 0;
+    setModal('draft', ids.length > 0);
   }
   /** Keyboard 1–3 (dev). Returns true if it picked. */
   keyPick(i: number): boolean { const c = this.row.children[i] as HTMLElement | undefined; if (!c || this.root.hidden) return false; c.click(); return true; }
-  hide(): void { this.root.hidden = true; this.key = ''; }
+  hide(): void { setModal('draft', false); this.root.hidden = true; this.key = ''; }
   get visible(): boolean { return !this.root.hidden; }
-  dispose(): void { this.root.remove(); }
+  dispose(): void { setModal('draft', false); this.root.remove(); }
 }

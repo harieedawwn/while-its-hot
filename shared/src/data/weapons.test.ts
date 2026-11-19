@@ -52,7 +52,7 @@ describe('passive hooks', () => {
     const th = passivesOf(weaponById('kich'));
     expect(applyAttack(th, base, { kind: 'light', combo: 0, dist: 3.1, reach: 3.2 }).dmg).toBeCloseTo(10 * P.maxReach.mul);
     expect(applyAttack(th, base, { kind: 'heavy', combo: 0, dist: 1, reach: 3.2 }).arcDeg).toBe(P.sweepArcDeg);
-    expect(applyAttack(passivesOf(weaponById('dai_dao')), base, { kind: 'dash', combo: 0, dist: 1, reach: 3.2 }).lungeM).toBeCloseTo(3);
+    expect(applyAttack(passivesOf(weaponById('dai_dao')), base, { kind: 'slide', combo: 0, dist: 1, reach: 3.2 }).lungeM).toBeCloseTo(3);
   });
   it('emit hit and slam effects', () => {
     const bua = passivesOf(weaponById('bua_de'));

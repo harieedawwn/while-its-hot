@@ -3,7 +3,10 @@ import type { MatchClientMsg, MatchServerMsg } from './match-msgs';
 
 /** Lobby/control messages are JSON; State/Snapshot are binary (codec.ts). */
 export type RoomPhase = 'lobby' | 'match';
-export interface RoomSettings { truce: number }
+/** Host-chosen match rules (server-validated, see BALANCE.net.choices). ring: 0 chậm · 1 vừa · 2 nhanh. */
+export interface RoomSettings { truce: number; rounds: number; roundS: number; lives: number; ring: number; maxPlayers: number }
+/** What the round machine needs from the settings. */
+export type MatchRules = Omit<RoomSettings, 'maxPlayers'>
 export interface LobbyPlayer { id: number; name: string; color: number; ready: boolean; host: boolean; online: boolean; ping: number }
 
 export type ClientMsg =
@@ -24,7 +27,13 @@ export type ServerMsg =
   | { t: 'start' }
   | MatchServerMsg;
 
-export const DEFAULT_SETTINGS: RoomSettings = { truce: BALANCE.net.truceDefault };
+export const DEFAULT_SETTINGS: RoomSettings = { truce: BALANCE.net.truceDefault, ...BALANCE.net.defaults };
+export const DEFAULT_RULES: MatchRules = { truce: DEFAULT_SETTINGS.truce, rounds: DEFAULT_SETTINGS.rounds, roundS: DEFAULT_SETTINGS.roundS, lives: DEFAULT_SETTINGS.lives, ring: DEFAULT_SETTINGS.ring };
+/** A bare truce length (tests, loopback) or a partial rule set → full rules. */
+export function rulesOf(r?: number | Partial<RoomSettings>): MatchRules {
+  const p = typeof r === 'number' ? { truce: r } : r ?? {};
+  return { ...DEFAULT_RULES, ...sanitizeSettings(p, DEFAULT_SETTINGS) };
+}
 
 export function cleanName(n: unknown): string {
   const s = typeof n === 'string' ? n.replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, BALANCE.net.nameMax) : '';
@@ -40,6 +49,10 @@ export function randomCode(rnd: () => number = Math.random): string {
   return s;
 }
 export function sanitizeSettings(s: Partial<RoomSettings>, cur: RoomSettings): RoomSettings {
-  const truce = (BALANCE.net.truceChoices as readonly number[]).includes(s.truce as number) ? (s.truce as number) : cur.truce;
-  return { truce };
+  const C = BALANCE.net.choices, pick = (list: readonly number[], v: unknown, d: number): number => (list.includes(v as number) ? (v as number) : d);
+  return {
+    truce: pick(BALANCE.net.truceChoices, s.truce, cur.truce),
+    rounds: pick(C.rounds, s.rounds, cur.rounds), roundS: pick(C.roundS, s.roundS, cur.roundS), lives: pick(C.lives, s.lives, cur.lives),
+    ring: pick(C.ring, s.ring, cur.ring), maxPlayers: pick(C.maxPlayers, s.maxPlayers, cur.maxPlayers),
+  };
 }

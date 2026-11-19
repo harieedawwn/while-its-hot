@@ -30,14 +30,13 @@ import type { SceneFactory } from './scenes';
 
 /**
  * Movement test course (phase 02). Keyboard + mouse (click to lock), or `touch=1` for the on-screen controls (`editor=1` opens the layout editor). Dev keys: R respawn, H hit-stop + shake.
- * Params: fov=75..110, bob=0, shake=0..1, and with `t` a scripted run (demo=slide|dash|slam) is replayed
+ * Params: fov=75..110, bob=0, shake=0..1, and with `t` a scripted run (demo=slide|slam) is replayed
  * to time t and frozen, e.g. `t=0.9` = mid-slide. `tp=1` = third person (body + over-the-shoulder camera, `armor=0..10`). `arena=1` runs the same controller in Arena 1 (Xưởng Đúc), spawn `sp=0..5`.
  */
 type Script = (t: number) => Partial<MoveInput>;
 /** Each demo: input over time, and the view yaw it runs with. */
 const DEMOS: Record<string, { yaw: number; input: Script }> = {
   slide: { yaw: 0.42, input: (t) => ({ my: 1, mx: t > 0.5 ? 0.3 : 0, slideHeld: t > 0.4, slidePressed: Math.abs(t - 0.41) < 0.009 }) },
-  dash: { yaw: 0, input: (t) => ({ my: 1, dashPressed: Math.abs(t - 0.5) < 0.009 }) },
   slam: { yaw: 0, input: (t) => ({ my: 0.4, jumpPressed: t < 0.01, slidePressed: Math.abs(t - 0.35) < 0.009, slideHeld: t > 0.35 }) },
 };
 

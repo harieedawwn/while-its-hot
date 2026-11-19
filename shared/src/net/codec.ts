@@ -6,7 +6,7 @@ export interface NetState {
   stamina: number; armor: number; hp: number;
 }
 /** swing = parity of the fighter's swing counter (a new swing with the same anim code still restarts the clip). */
-export const FLAG = { grounded: 1, sliding: 2, blocking: 4, parrying: 8, forging: 16, dashing: 32, swing: 64, dead: 128 } as const;
+export const FLAG = { grounded: 1, sliding: 2, blocking: 4, parrying: 8, forging: 16, swing: 64, dead: 128 } as const;
 export const MSG_STATE = 1, MSG_SNAPSHOT = 2;
 const STATE_BYTES = 32;
 const clampI16 = (v: number) => Math.max(-32768, Math.min(32767, Math.round(v)));

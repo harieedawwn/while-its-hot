@@ -32,14 +32,6 @@ events:
       - {src: "oga_footsteps/**/flac/Fantozzi-Stone*.flac", pick: 3, at: 0.018, dur: 0.3, hp: 50, gain: -3, fade: 0.1}
       - {src: "oga_rpg_pack/**/chainmail*.wav", at: 0.02, dur: 0.35, hp: 1500, gain: -14, fade: 0.15}
       - {synth: thump, at: 0, dur: 0.13, f0: 90, f1: 42, decay: 0.045, gain: -2}
-  dash:                            # air tear (noise burst 120 ms) + cloth flap + gear rattle
-    lufs: -20
-    variants: 3
-    layers:
-      - {synth: noise, at: 0, dur: 0.14, decay: 0.05, hp: 700, lp: 7000, gain: 0, fade_in: 0.01}
-      - {src: "oga_swishes/**/swish-*.wav", pick: 5, pitch: -6, hp: 300, gain: -3, fade: 0.06}
-      - {src: "oga_rpg_pack/**/inventory/cloth*.wav", at: 0.01, dur: 0.25, hp: 200, gain: -6, fade: 0.1}
-      - {src: "oga_rpg_pack/**/chainmail*.wav", at: 0.03, dur: 0.22, hp: 2000, gain: -15, fade: 0.1}
   slide_start:                     # boots bite into the floor
     lufs: -22
     variants: 2

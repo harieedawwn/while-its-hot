@@ -11,7 +11,7 @@ thin arcade bleeps, chimes, rising arpeggios, chiptune, soft "ASMR" taps, long w
    weight (40–90 Hz sine/noise thump with fast pitch drop, ≤ 120 ms). Then a short send to the room reverb.
 3. **Variation:** 3–5 takes per frequent sound (round-robin, never the same take twice in a row),
    ±4% pitch, ±1.5 dB volume. Footsteps: 6+ takes per surface.
-4. **Readability for PvP:** enemy footsteps, enemy dash, enemy anvil strikes and frenzy are positional and
+4. **Readability for PvP:** enemy footsteps, enemy anvil strikes and frenzy are positional and
    audible at gameplay-useful distances. Hearing someone forging 30 m away is information — keep it.
 5. **Mix for phone speakers first, headphones second.** "Đầu ra" setting: Loa điện thoại (default on APK)
    = high-pass 140 Hz + a soft harmonic exciter on the weight layer so bass reads as harmonics; Tai nghe =
@@ -60,7 +60,6 @@ thin arcade bleeps, chimes, rising arpeggios, chiptune, soft "ASMR" taps, long w
 |---|---|
 | footstep (stone, metal grate, wood plank, slag gravel) | real boots, 6 takes/surface, interval from distance travelled, pan ±0.08 alternating |
 | jump / land (soft, hard by fall speed) | cloth + boot scuff / boot thud + body weight layer scaled by impact |
-| dash | short air tear (broadband noise burst, 120 ms) + cloth flap + subtle metal rattle of gear; enemy dash audible 25 m |
 | slide start / loop / end | boot grind on surface (loop with random start offset), pitch follows speed |
 | slam fall / slam land | rising wind loop / huge thud + debris + sub drop, trauma-synced |
 | wall jump / cling | hand slap on metal/stone + grunt-free cloth |
@@ -104,4 +103,4 @@ Music: none in this version (sound design carries the game). The bus exists so m
 
 ## 5. Mix snapshot (starting gains, dB relative to bus)
 parry 0 · kill 0 · strike results −2 · hits −3 · swings −6 · own footsteps −14 · enemy footsteps −10 ·
-dash −8 · ambience bed −20 · emitters −16 · UI −12. Adjust by listening notes, not by guess.
+ambience bed −20 · emitters −16 · UI −12. Adjust by listening notes, not by guess.

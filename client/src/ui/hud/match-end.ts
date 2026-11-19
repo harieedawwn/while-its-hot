@@ -1,3 +1,4 @@
+import { setModal } from '../modal';
 import { type EndRowNet, weaponById } from '@wih/shared';
 import { silhouette } from './silhouettes';
 import { stampedButton } from '../kit/controls';
@@ -29,6 +30,7 @@ export class EndScreen {
 
   show(i: EndInfo): void {
     this.hide();
+    setModal('end', true);
     const r = el('div', 'e-root k-plate');
     r.appendChild(el('div', 'e-title k-display', STR.match.champion(i.name(i.win))));
     const t = el('table', 'e-tab');
@@ -56,5 +58,5 @@ export class EndScreen {
     this.parent.appendChild(r);
     this.root = r;
   }
-  hide(): void { this.root?.remove(); this.root = null; }
+  hide(): void { setModal('end', false); this.root?.remove(); this.root = null; }
 }

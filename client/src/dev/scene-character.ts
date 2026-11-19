@@ -13,7 +13,7 @@ import type { SceneFactory } from './scenes';
 
 /**
  * Character lineup (phase 06). `view=0` the 5 armor tiers, `view=1` the 6 modules on half plate, and
- * `clip=<id>` one character playing a clip: idle run run_b strafe_l strafe_r run_fl sprint jump fall slide dash
+ * `clip=<id>` one character playing a clip: idle run run_b strafe_l strafe_r run_fl sprint jump fall slide
  * slam cling land forge_strike heat_hold block parry hit_f hit_b stagger death. `armor=0..10`, `mods=a,b`,
  * `color=0..5`, `weapon=<id>` in the right hand (attack clips: `clip=atk_sword_light1` etc.). `t` replays the animation to that time and freezes; `cam` overrides the camera.
  */
@@ -23,7 +23,7 @@ const BASE: Record<string, Partial<AnimInput>> = {
   run: { vz: -RUN }, run_b: { vz: RUN }, strafe_l: { vx: -RUN }, strafe_r: { vx: RUN },
   run_fl: { vx: -RUN * 0.707, vz: -RUN * 0.707 }, sprint: { vz: -14 },
   jump: { grounded: false, vy: 8 }, fall: { grounded: false, vy: -8 },
-  slide: { sliding: true, vz: -12 }, dash: { dashing: true, vz: -24 }, slam: { slamming: true, grounded: false, vy: -40 }, cling: { clinging: true, grounded: false },
+  slide: { sliding: true, vz: -12 }, slam: { slamming: true, grounded: false, vy: -40 }, cling: { clinging: true, grounded: false },
 };
 const ACTIONS = ['land', 'forge_strike', 'heat_hold', 'block', 'parry', 'hit_f', 'hit_b', 'stagger', 'death'];
 const MOD_YAW: Record<ModuleId, number> = { phan_luc: 2.5, sung_may_vai: -0.5, no_vai: 0.55, banh_lan: 0.6, khien_tay: 0.7, binh_no: 0.65 };

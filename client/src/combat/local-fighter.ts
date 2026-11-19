@@ -56,17 +56,17 @@ export class LocalFighter {
     const f = this.fin;
     f.attackPressed = a.take('attack'); f.attackHeld = a.isHeld('attack');
     f.parryPressed = a.take('parry'); f.parryHeld = a.isHeld('parry');
-    f.sinceDash = this.c.sinceDash;
+    f.sinceSlide = this.c.sinceSlide;
     this.c.tick(dt, f);
   }
 
-  /** Scripted intent (demos, tests). sinceDash is filled in. */
-  tickWith(dt: number, i: Omit<FighterInput, 'sinceDash'>): void {
-    Object.assign(this.fin, i, { sinceDash: this.c.sinceDash });
+  /** Scripted intent (demos, tests). sinceSlide is filled in. */
+  tickWith(dt: number, i: Omit<FighterInput, 'sinceSlide'>): void {
+    Object.assign(this.fin, i, { sinceSlide: this.c.sinceSlide });
     this.c.tick(dt, this.fin);
   }
 
-  /** Can the body take jump/dash/slide presses right now. */
+  /** Can the body take jump/slide presses right now. */
   get canAct(): boolean { const p = this.c.fighter.phase; return p !== 'stagger' && p !== 'dead'; }
 
   /** Look input in radians after aim-assist slowdown; pulls toward the target when the player acts. */

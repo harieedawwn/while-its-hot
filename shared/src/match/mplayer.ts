@@ -29,7 +29,6 @@ export interface MPlayer {
   /** The last two swings (the claim may arrive after the next one started). */
   swings: SwingRec[];
   parryAt: number;
-  dashAt: number;
   burnT: number; burnDps: number; burnBy: number;
   anvil: { p: Vec3; yaw: number } | null;
   /** Damage dealt / kills this match (phase 18 scores rounds from these). */
@@ -55,7 +54,7 @@ export function newPlayer(id: number, p: Vec3, yaw: number, rand: RandFn): MPlay
   forge.carried = 1;
   return {
     id, online: true, hp: BALANCE.combat.hp, alive: true, spawnAt: 0, st: blankState(p, yaw), rtt: 0,
-    forge, stance: false, heating: false, swings: [], parryAt: -1e9, dashAt: -1e9,
+    forge, stance: false, heating: false, swings: [], parryAt: -1e9,
     burnT: 0, burnDps: 0, burnBy: 0, anvil: null, dealt: 0, kills: 0,
     pts: 0, deaths: 0, wins: 0, rKills: 0, rDealt: 0, lives: BALANCE.match.lives,
     relics: [], stacks: 0, best: [0, 0, 0], offer: null, rerolls: 0, offerNo: 0, ifUntil: 0, hongRun: 0, fx: NO_RELIC,

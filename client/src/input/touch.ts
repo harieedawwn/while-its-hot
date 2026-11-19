@@ -1,3 +1,4 @@
+import { MODAL_EVENT } from '../ui/modal';
 import { FEEL } from '../core/feel';
 import type { Actions, Button } from './actions';
 import type { Controls } from './controls-settings';
@@ -8,7 +9,7 @@ import { createView, type View } from './touch-view';
 
 const T = FEEL.input.touch;
 /** Priority when two discs overlap: the big attack button wins. */
-const ORDER: readonly ControlId[] = ['attack', 'jump', 'dash', 'slide', 'parry', 'swap', 'pause', 'forge', 'anvil'];
+const ORDER: readonly ControlId[] = ['attack', 'jump', 'slide', 'parry', 'swap', 'pause', 'forge', 'anvil'];
 
 type Owner =
   | { k: 'stick'; ox: number; oy: number }
@@ -42,6 +43,7 @@ export class TouchControls {
     c.addEventListener('contextmenu', (e) => e.preventDefault());
     addEventListener('resize', this.relayout);
     addEventListener('blur', this.releaseAll);
+    addEventListener(MODAL_EVENT, this.releaseAll);
     this.refresh();
   }
 
@@ -171,6 +173,7 @@ export class TouchControls {
     this.releaseAll();
     removeEventListener('resize', this.relayout);
     removeEventListener('blur', this.releaseAll);
+    removeEventListener(MODAL_EVENT, this.releaseAll);
     this.view.dispose();
   }
 }

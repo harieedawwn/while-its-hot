@@ -17,7 +17,7 @@ const CONTEXTS: Record<string, Step[]> = {
   combat: [[0, 'swing_sword', { pitch: 1 }], [150, 'hit_armor'], [320, 'swing_sword', { pitch: 1.06 }], [470, 'hit_armor'], [640, 'swing_sword', { pitch: 1.12 }], [790, 'hit_flesh'],
     [1500, 'parry'], [2300, 'swing_hammer'], [2520, 'hit_blocked'], [3200, 'kill']],
   forge: [[0, 'anvil_place'], [900, 'strike_dat'], [1700, 'strike_tuyet'], [2500, 'strike_giu'], [3200, 'strike_hong'], [4000, 'quench']],
-  move: [[0, 'footstep_stone'], [330, 'footstep_stone'], [660, 'footstep_stone'], [990, 'footstep_stone'], [1320, 'jump'], [1900, 'land_hard'], [2300, 'dash'], [2700, 'footstep_slag']],
+  move: [[0, 'footstep_stone'], [330, 'footstep_stone'], [660, 'footstep_stone'], [990, 'footstep_stone'], [1320, 'jump'], [1900, 'land_hard'], [2700, 'footstep_slag']],
   space: [[0, 'parry', { pos: at(-6, -8) }], [900, 'parry', { pos: at(6, -8) }], [1800, 'parry', { pos: at(0, -22) }], [2700, 'parry', { pos: at(0, -42) }], [3600, 'parry', { pos: at(0, -14) }]],
   ui: [[0, 'ui_open'], [300, 'ui_tap'], [600, 'ui_notch'], [750, 'ui_notch'], [900, 'ui_notch'], [1200, 'ui_toggle'], [1600, 'ui_back'], [2000, 'ui_error'], [2400, 'ui_close']],
 };

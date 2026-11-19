@@ -9,15 +9,15 @@ export type FighterPhase =
   | 'idle' | 'windup' | 'active' | 'recover' | 'charge'
   | 'parry' | 'parry_recover' | 'block' | 'stagger' | 'flinch' | 'dead';
 
-/** One sim tick of combat intent. sinceDash = 0 while dashing, else seconds since the dash ended. */
+/** One sim tick of combat intent. sinceSlide = 0 while sliding, else seconds since the slide ended. */
 export interface FighterInput {
-  attackPressed: boolean; attackHeld: boolean; parryPressed: boolean; parryHeld: boolean; sinceDash: number;
+  attackPressed: boolean; attackHeld: boolean; parryPressed: boolean; parryHeld: boolean; sinceSlide: number;
 }
-export const NO_FIGHT: FighterInput = { attackPressed: false, attackHeld: false, parryPressed: false, parryHeld: false, sinceDash: 1e3 };
+export const NO_FIGHT: FighterInput = { attackPressed: false, attackHeld: false, parryPressed: false, parryHeld: false, sinceSlide: 1e3 };
 
 export type FighterEvent =
   | { k: 'swing'; kind: AttackKind; combo: number; id: number }
-  /** Push the attacker forward m meters over dur seconds (dash attacks from the press, others on the strike). */
+  /** Push the attacker forward m meters over dur seconds (slide attacks from the press, others on the strike). */
   | { k: 'lunge'; m: number; dur: number }
   | { k: 'charge'; id: number }
   | { k: 'parry' } | { k: 'block'; on: boolean } | { k: 'feint' };
@@ -102,7 +102,7 @@ export class Fighter {
       switch (this.phase) {
         case 'idle':
           if (this.parAge <= buf) { this.startParry(); continue; }
-          if (this.atkAge <= buf) { this.startLight(i.sinceDash); continue; }
+          if (this.atkAge <= buf) { this.startLight(i.sinceSlide); continue; }
           return;
         case 'windup':
           if (this.kind === 'light' && !this.released && this.t >= C.tapS) {
@@ -110,7 +110,7 @@ export class Fighter {
           }
           if (this.t < f.w) return;
           this.t -= f.w; this.phase = 'active'; this.sweep = this.span(0, 0);
-          if (this.kind !== 'dash') this.lunge(f.a + 0.04);
+          if (this.kind !== 'slide') this.lunge(f.a + 0.04);
           continue;
         case 'active': {
           const u0: number = this.sweep ? this.sweep.u0 : Math.max(0, (this.t - dt) / f.a);
@@ -122,7 +122,7 @@ export class Fighter {
           if (this.t >= f.r * 0.5 && this.parAge <= buf) { this.startParry(); continue; }
           if (this.t < f.r) return;
           this.t -= f.r; this.sinceEnd = 0;
-          if (this.atkAge <= buf) { this.startLight(i.sinceDash); continue; }
+          if (this.atkAge <= buf) { this.startLight(i.sinceSlide); continue; }
           this.phase = 'idle'; continue;
         case 'charge': {
           const held = this.t;
@@ -140,7 +140,7 @@ export class Fighter {
           this.phase = 'idle'; this.t = 0; continue;
         case 'block':
           if (!i.parryHeld) { this.phase = 'idle'; this.t = 0; this.events.push({ k: 'block', on: false }); continue; }
-          if (this.atkAge <= buf) { this.events.push({ k: 'block', on: false }); this.startLight(i.sinceDash); continue; }
+          if (this.atkAge <= buf) { this.events.push({ k: 'block', on: false }); this.startLight(i.sinceSlide); continue; }
           return;
         case 'stagger': case 'flinch':
           if (this.t < this.holdS) return;
@@ -172,15 +172,15 @@ export class Fighter {
     this.events.push({ k: 'parry' });
   }
 
-  private startLight(sinceDash: number): void {
+  private startLight(sinceSlide: number): void {
     this.atkAge = 1e3;
     this.released = false;
-    const dash = sinceDash <= C.dash.windowS;
+    const slide = sinceSlide <= C.slideAtk.windowS;
     const chain = this.sinceEnd <= C.comboGapS;
-    this.combo = dash ? 0 : chain ? this.nextCombo : 0;
-    this.kind = dash ? 'dash' : 'light';
+    this.combo = slide ? 0 : chain ? this.nextCombo : 0;
+    this.kind = slide ? 'slide' : 'light';
     this.begin();
-    this.nextCombo = dash ? 1 : (this.combo + 1) % this.def.stats.comboHits;
+    this.nextCombo = slide ? 1 : (this.combo + 1) % this.def.stats.comboHits;
   }
 
   private release(held: number): void {
@@ -194,7 +194,7 @@ export class Fighter {
     this.phase = 'windup'; this.t = 0;
     this.swingId++;
     this.events.push({ k: 'swing', kind: this.kind, combo: this.combo, id: this.swingId });
-    if (this.kind === 'dash') this.lunge(this.frames.w + this.frames.a);
+    if (this.kind === 'slide') this.lunge(this.frames.w + this.frames.a);
   }
 
   private span(u0: number, u1: number): SweepSpan {

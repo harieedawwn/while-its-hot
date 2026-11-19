@@ -16,7 +16,7 @@ export function damageOf(shape: AttackShape, weaponLevel: number, armorLevel: nu
 
 export interface DefenderView {
   x: number; z: number; yaw: number;
-  /** In the parry window / holding block / dash i-frames or other invulnerability. */
+  /** In the parry window / holding block / i-frames or other invulnerability. */
   parrying: boolean; blocking: boolean; immune: boolean;
   stamina: number; armorLevel: number;
   /** Extra block arc (khiên tay: 180°). */

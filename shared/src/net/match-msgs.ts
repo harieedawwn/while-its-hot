@@ -1,3 +1,4 @@
+import type { MatchRules } from './protocol';
 import type { Zone } from '../combat/sweep';
 import type { Family } from '../data/weapons';
 import type { HitResult } from '../combat/damage';
@@ -19,7 +20,7 @@ export type MatchClientMsg =
   | { t: 'atk'; s: number; kind: AttackKind; combo: number; at: number }
   /** The attacker's blade touched tg. at = when (match ms), rt = the render time tg was drawn at (interpolated). */
   | { t: 'hit'; s: number; tg: number; zone: Zone; dist: number; p: Vec3; at: number; rt: number }
-  | { t: 'parry'; at: number } | { t: 'dash'; at: number } | { t: 'slam'; p: Vec3 }
+  | { t: 'parry'; at: number } | { t: 'slam'; p: Vec3 }
   | { t: 'forge'; op: ForgeOp }
   | { t: 'anvil'; act: 'place' | 'lift'; p: Vec3; yaw: number }
   | { t: 'take'; id: number }
@@ -50,7 +51,7 @@ export interface MatchPlayerNet { id: number; hp: number; alive: boolean; p: Vec
 
 export type MatchServerMsg =
   /** Full match state: at match start and on a reconnect. t0 = server epoch ms of match start (the room fills it), now = match ms; truce = ms the truce ends. */
-  | { t: 'match'; t0: number; now: number; truce: number; f: PhaseNet; rows: ScoreNet[]; players: MatchPlayerNet[]; anvils: AnvilNet[]; pickups: PickupNet[]; you: ForgeSync }
+  | { t: 'match'; t0: number; now: number; truce: number; rules: MatchRules; f: PhaseNet; rows: ScoreNet[]; players: MatchPlayerNet[]; anvils: AnvilNet[]; pickups: PickupNet[]; you: ForgeSync }
   /** Damage applied. kn = knockback velocity for the target's own body; st = stagger seconds (0 = flinch unless blocked). */
   | { t: 'dmg'; a: number; tg: number; dmg: number; r: HitKindNet; zone: Zone; kind: AttackKind; hp: number; sc: number; st: number; kn: Vec3; p: Vec3; s: number }
   | { t: 'parried'; a: number; tg: number; st: number; stam: number; p: Vec3; s: number }

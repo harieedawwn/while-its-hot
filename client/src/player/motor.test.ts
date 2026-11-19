@@ -84,51 +84,53 @@ describe('movement integrator', () => {
     expect(n).toBe(0);
   });
 
-  it('dash: 1 pip, ~4 m, i-frames only at the start, no gravity', () => {
-    const kin = world(), s = settled(kin);
-    const z0 = s.pos.z;
-    stepMove(s, input({ dashPressed: true }), DT, kin);
-    expect(s.stamina).toBeCloseTo(2, 1);
-    expect(s.iframe).toBeGreaterThan(0);
-    run(s, kin, M.dash.durS);
-    expect(s.iframe).toBe(0);
-    expect(z0 - s.pos.z).toBeGreaterThan(M.dash.speed * M.dash.durS * 0.9);
-    expect(hspeed(s)).toBeLessThanOrEqual(M.dash.exitSpeed + 1e-6);
-  });
-
-  it('dash-jump costs 2 pips and keeps dash speed in the air (long jump)', () => {
-    const kin = world(), s = settled(kin);
-    stepMove(s, input({ dashPressed: true }), DT, kin);
-    stepMove(s, input(), DT, kin);
-    stepMove(s, input({ jumpPressed: true }), DT, kin);
-    expect(s.events.some((e) => e.k === 'jump' && e.kind === 'dashjump')).toBe(true);
-    expect(s.stamina).toBeLessThan(1.1);
-    run(s, kin, 0.3, { my: 1 });
-    expect(hspeed(s)).toBeGreaterThan(M.dash.speed - 0.5);
-  });
-
   it('stamina regens one pip per regenS, not while sliding', () => {
     const kin = world(), s = settled(kin);
     s.stamina = 0;
     run(s, kin, M.stamina.regenS);
     expect(s.stamina).toBeCloseTo(1, 1);
-    run(s, kin, 1, { slideHeld: true, my: 1 });
+    run(s, kin, 0.5, { slideHeld: true, my: 1 });
     expect(s.sliding).toBe(true);
     expect(s.stamina).toBeCloseTo(1, 1);
   });
 
-  it('slide starts at 14 m/s, decays to 10 over 1.5 s, lowers the hitbox; slide-jump keeps speed', () => {
+  it('slide starts at 14 m/s, eases to run speed over maxS, lowers the hitbox; slide-jump keeps speed', () => {
     const kin = world(), s = settled(kin);
     run(s, kin, 0.3, { my: 1 });
     stepMove(s, input({ my: 1, slideHeld: true, slidePressed: true }), DT, kin);
     expect(s.sliding && s.low).toBe(true);
     expect(hspeed(s)).toBeCloseTo(M.slide.speed, 0);
-    run(s, kin, M.slide.decayS + 0.2, { my: 1, slideHeld: true });
-    expect(hspeed(s)).toBeCloseTo(M.slide.endSpeed, 1);
+    run(s, kin, M.slide.maxS * 0.5, { my: 1, slideHeld: true });
+    expect(hspeed(s)).toBeLessThan(M.slide.speed - 1);
     stepMove(s, input({ my: 1, slideHeld: true, jumpPressed: true }), DT, kin);
     expect(s.events.some((e) => e.k === 'jump' && e.kind === 'slidejump')).toBe(true);
     run(s, kin, 0.2, { my: 1, slideHeld: true });
     expect(hspeed(s)).toBeGreaterThan(M.slide.endSpeed - 0.5);
+  });
+
+  it('a slide ends by itself after maxS even with the button held, then waits the cooldown', () => {
+    const kin = world(), s = settled(kin);
+    run(s, kin, 0.3, { my: 1 });
+    stepMove(s, input({ my: 1, slideHeld: true, slidePressed: true }), DT, kin);
+    run(s, kin, M.slide.maxS + 0.1, { my: 1, slideHeld: true });
+    expect(s.sliding).toBe(false);
+    expect(s.low).toBe(false);
+    expect(hspeed(s)).toBeCloseTo(M.slide.endSpeed, 0);
+    s.pos.set(0, 0.1, 0);
+    run(s, kin, 1, { my: 1, slideHeld: true });
+    expect(s.sliding).toBe(false); // held through: needs a release first
+    s.pos.set(0, 0.1, 0);
+    run(s, kin, 0.05, { my: 1 });
+    stepMove(s, input({ my: 1, slideHeld: true, slidePressed: true }), DT, kin);
+    expect(s.sliding).toBe(true);
+    run(s, kin, M.slide.maxS + 0.1, { my: 1, slideHeld: true });
+    expect(s.sliding).toBe(false);
+    run(s, kin, 0.1, { my: 1 });
+    stepMove(s, input({ my: 1, slideHeld: true, slidePressed: true }), DT, kin);
+    expect(s.sliding).toBe(false); // inside the cooldown
+    run(s, kin, M.slide.cooldownS, { my: 1 });
+    stepMove(s, input({ my: 1, slideHeld: true, slidePressed: true }), DT, kin);
+    expect(s.sliding).toBe(true);
   });
 
   it('slam: 40 m/s down, landing event, bounce jump ×1.5 inside the window', () => {
@@ -199,15 +201,11 @@ describe('movement integrator', () => {
     expect(s.low).toBe(false); // slid out the far side and stood up
   });
 
-  it('a slam from high up does not tunnel through a 0.2 m slab, a dash does not pass a thin wall', () => {
-    const kin = world([[6, 0.2, 6, 0, 3, 0], [6, 4, 0.1, 0, 2, -12]]);
+  it('a slam from high up does not tunnel through a 0.2 m slab', () => {
+    const kin = world([[6, 0.2, 6, 0, 3, 0]]);
     const s = createMoveState([0, 9, 0]);
     stepMove(s, input({ slidePressed: true, slideHeld: true }), DT, kin);
     run(s, kin, 0.5);
     expect(s.pos.y).toBeCloseTo(3.1, 2);
-    const d = settled(kin, [1, 0.5, -8]);
-    stepMove(d, input({ dashPressed: true }), DT, kin);
-    run(d, kin, 0.4, { my: 1 });
-    expect(d.pos.z).toBeGreaterThan(-12);
   });
 });

@@ -49,11 +49,6 @@
   "loop": false,
   "lufs": -26
  },
- "dash": {
-  "n": 3,
-  "loop": false,
-  "lufs": -20
- },
  "death": {
   "n": 1,
   "loop": false,

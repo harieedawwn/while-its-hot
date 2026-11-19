@@ -5,7 +5,7 @@ import { type BonePose, type Clip, type Ease, k } from './types';
 export const CLIP_FAMILY = { kiem: 'sword', bua: 'hammer', thuong: 'polearm' } as const;
 
 /**
- * Third-person attack sets (LOOK §4), one per family: light ×N, heavy charge (held), heavy release, dash.
+ * Third-person attack sets (LOOK §4), one per family: light ×N, heavy charge (held), heavy release, slide.
  * Clip length = the frame data's total, and the strike keys sit exactly at the windup end / active end,
  * so the body hits when the rules hit. Weapon in the right hand (hold: blade forward when the arm hangs,
  * edge down); wrist twist (hand y) turns the blade flat for horizontal cuts. Degrees, see skeleton.ts.
@@ -84,11 +84,11 @@ const STRIKES: Record<WFamily, { light: Strike[]; heavy: Strike; charge: Pose }>
 };
 
 
-function strikeClip(id: string, fam: WFamily, kind: 'light' | 'heavy' | 'dash', combo: number, s: Strike, start: Pose): Clip {
+function strikeClip(id: string, fam: WFamily, kind: 'light' | 'heavy' | 'slide', combo: number, s: Strike, start: Pose): Clip {
   const f = framesOf(fam, kind, combo), T = totalS(f), uw = f.w / T, ua = (f.w + f.a) / T;
   const g = GUARD[fam], r0: V3 = [0, 0, 0], r = s.root ?? [0, -0.03, -0.02];
-  const lean: Pose = kind === 'dash' ? { pelvis: [-14, 0, 0], chest: [-10, 0, 0] } : {};
-  const key = (u: number, p: Pose, root: V3, e: Ease) => k(u, with_(p, kind === 'dash' ? { ...lean, ...pick(p) } : {}), root, e);
+  const lean: Pose = kind === 'slide' ? { pelvis: [-14, 0, 0], chest: [-10, 0, 0] } : {};
+  const key = (u: number, p: Pose, root: V3, e: Ease) => k(u, with_(p, kind === 'slide' ? { ...lean, ...pick(p) } : {}), root, e);
   return {
     id, len: T, loop: false, upper: !s.full,
     keys: [
@@ -101,16 +101,16 @@ function strikeClip(id: string, fam: WFamily, kind: 'light' | 'heavy' | 'dash', 
     ],
   };
 }
-/** Keep the pose's own chest/pelvis when it has them (the dash lean only fills what the strike leaves free). */
+/** Keep the pose's own chest/pelvis when it has them (the slide lean only fills what the strike leaves free). */
 const pick = (p: Pose): Pose => ({ ...(p.pelvis ? { pelvis: p.pelvis } : {}), ...(p.chest ? { chest: p.chest } : {}) });
 
-/** All attack clips: atk_<family>_<light1..3|heavy_charge|heavy_release|dash> (clips/index.ts ATTACK_SLOTS). */
+/** All attack clips: atk_<family>_<light1..3|heavy_charge|heavy_release|slide> (clips/index.ts ATTACK_SLOTS). */
 export function attackClips(): Clip[] {
   const out: Clip[] = [];
   for (const fam of ['kiem', 'bua', 'thuong'] as const) {
     const st = STRIKES[fam], name = CLIP_FAMILY[fam], g = GUARD[fam];
     st.light.forEach((s, i) => out.push(strikeClip(`atk_${name}_light${i + 1}`, fam, 'light', i, s, g)));
-    out.push(strikeClip(`atk_${name}_dash`, fam, 'dash', 0, st.light[0], g));
+    out.push(strikeClip(`atk_${name}_slide`, fam, 'slide', 0, st.light[0], g));
     out.push(strikeClip(`atk_${name}_heavy_release`, fam, 'heavy', 0, st.heavy, st.charge));
     out.push({ id: `atk_${name}_heavy_charge`, len: BALANCE.combat.heavy.minS, loop: false, upper: false,
       keys: [k(0, g, [0, 0, 0], 'out'), k(1, st.charge, [0, -0.08, 0.04])] });

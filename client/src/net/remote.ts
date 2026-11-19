@@ -51,7 +51,6 @@ export class RemotePlayer {
     s.pos.set(st.x, st.y, st.z); s.vel.set(st.vx, st.vy, st.vz);
     s.grounded = (st.flags & FLAG.grounded) !== 0;
     s.sliding = s.low = (st.flags & FLAG.sliding) !== 0;
-    s.dashT = s.iframe = (st.flags & FLAG.dashing) !== 0 ? 0.05 : 0;
     s.stamina = st.stamina;
     this.c.body.yaw = st.yaw; this.c.body.pitch = st.pitch;
     this.c.hp = st.hp; this.c.level = st.level; this.c.armor = st.armor;

@@ -1,4 +1,4 @@
-import { BALANCE, type EndRowNet, foldRelics, type RelicFx, matchUnlocks, type MatchServerMsg, type PhaseNet, ringRadius, type ScoreNet, type Vec3 } from '@wih/shared';
+import { BALANCE, DEFAULT_RULES, type MatchRules, ringSpan, type EndRowNet, foldRelics, type RelicFx, matchUnlocks, type MatchServerMsg, type PhaseNet, ringRadius, type ScoreNet, type Vec3 } from '@wih/shared';
 import { clock } from '../core/clock';
 import { profile, setProfile } from '../core/profile';
 import type { Player } from '../player/player';
@@ -35,6 +35,8 @@ export interface FlowDeps {
  * only presents and pins the player to the cage until the doors open.
  */
 export class NetFlow {
+  /** The room's match rules (from the match init message). */
+  rules: MatchRules = DEFAULT_RULES;
   f: PhaseNet = { ph: 'cage', n: 0, at: 0, end: 0, truce: 0, ring: 0, win: 0 };
   rows: ScoreNet[] = [];
   relics: string[] = [];
@@ -131,11 +133,11 @@ export class NetFlow {
     else if (f.ph === 'fight') {
       const tl = this.truceLeft(now);
       roundS = tl > 0 ? tl : Math.max(0, (f.end - now) / 1000);
-      ringS = s < M.ring.startS ? M.ring.startS - s : Math.max(0, M.ring.closedS - s);
-      const r = ringRadius(s), key = Math.round(r * 4);
+      ringS = s < M.ring.startS ? M.ring.startS - s : Math.max(0, M.ring.startS + ringSpan(this.rules.ring) - s);
+      const r = ringRadius(s, this.rules.ring), key = Math.round(r * 4);
       if (key !== this.ringKey) { this.ringKey = key; this.d.arena.setRing(f.ring, r); }
     }
-    return { ...base, roundS, ringS, lives: me ? { left: me.lives, max: M.lives } : null };
+    return { ...base, roundS, ringS, lives: me ? { left: me.lives, max: this.rules.lives } : null };
   }
 
   keyPick(i: number): boolean { return this.draft.keyPick(i); }

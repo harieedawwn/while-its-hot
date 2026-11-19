@@ -10,6 +10,7 @@ import { RegionBatch } from '../region-batch';
 import { buildCatwalks } from './catwalks';
 import { PAL, type Ctx } from './ctx';
 import { CageDoors } from './cages';
+import { yieldTask } from '../../core/slice';
 import { buildCrane } from './crane';
 import { buildFloor } from './floor';
 import { buildFurnace } from './furnace';
@@ -50,8 +51,10 @@ export interface FoundryView {
 export async function createFoundry(rig: LightRig, seed = 1): Promise<FoundryView> {
   const [lib] = await Promise.all([MaterialLib.load(rig, SURFACES), preloadAO('foundry')]);
   const c: Ctx = { lib, seed, b: new RegionBatch(FOUNDRY.half, REGION), pal: PAL };
-  buildFloor(c); buildShell(c); buildFurnace(c); buildCatwalks(c); buildCrane(c); buildLandmarks(c);
+  // one builder per slice: the page can paint between them (transition cover) instead of freezing for the whole build
+  for (const build of [buildFloor, buildShell, buildFurnace, buildCatwalks, buildCrane, buildLandmarks]) { build(c); await yieldTask(); }
   const statics = c.b.build();
+  await yieldTask();
   bakeAO(statics.filter((m) => m.material !== lib.get('glow')), { rays: 6, dist: 2.2, strength: 0.7, key: 'foundry' });
 
   const root = new THREE.Group();
@@ -59,7 +62,7 @@ export async function createFoundry(rig: LightRig, seed = 1): Promise<FoundryVie
   const world = CollisionWorld.fromMeshes(statics);
 
   const molten = new Molten(rig, lib.get('coal'));
-  const doors = new CageDoors(lib);
+  const doors = new CageDoors(lib, world.blockers);
   const ring = new FireRing(rig);
   root.add(molten.sheet, molten.crust, doors.group, ring.mesh);
   addLights(rig);

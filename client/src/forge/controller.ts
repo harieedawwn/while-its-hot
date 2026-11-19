@@ -122,7 +122,7 @@ export class ForgeController {
 
   private stanceTick(dt: number, a: Actions, forgePress: boolean, swapPress: boolean): void {
     const { session, hud } = this.d;
-    if (Math.hypot(a.move.x, a.move.y) > S.exitStick || a.take('dash') || a.take('jump') || a.take('slide')) { this.leave(); return; }
+    if (Math.hypot(a.move.x, a.move.y) > S.exitStick || a.take('jump') || a.take('slide')) { this.leave(); return; }
     a.take('attack');
     this.setHeating(a.isHeld('attack') && !hud.picking);
     const link = this.d.link;

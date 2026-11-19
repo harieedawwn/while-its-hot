@@ -10,18 +10,18 @@ const step01 = (v: number, [a, b]: readonly [number, number]) => smooth((v - a) 
 /** What the animator needs from the body each frame. Velocity is world-space; yaw is the facing (radians). */
 export interface AnimInput {
   vx: number; vy: number; vz: number; yaw: number;
-  grounded: boolean; sliding: boolean; dashing: boolean; slamming: boolean; clinging: boolean;
+  grounded: boolean; sliding: boolean; slamming: boolean; clinging: boolean;
 }
-export const IDLE_INPUT: AnimInput = { vx: 0, vy: 0, vz: 0, yaw: 0, grounded: true, sliding: false, dashing: false, slamming: false, clinging: false };
+export const IDLE_INPUT: AnimInput = { vx: 0, vy: 0, vz: 0, yaw: 0, grounded: true, sliding: false, slamming: false, clinging: false };
 
-export type BaseState = 'ground' | 'jump' | 'fall' | 'slide' | 'dash' | 'slam' | 'cling';
+export type BaseState = 'ground' | 'jump' | 'fall' | 'slide' | 'slam' | 'cling';
 export interface PlayOpts { fadeIn?: number; fadeOut?: number; speed?: number; loop?: boolean; hold?: boolean; }
 
 interface Action { c: Compiled; t: number; speed: number; loop: boolean; hold: boolean; fadeIn: number; fadeOut: number; w: number; done: boolean; }
 
 /**
  * Blends clips into one pose (LOOK §4): a base layer chosen by body state (ground = idle ↔ 8-direction run
- * blend ↔ sprint lean; air/slide/dash/slam/cling = their clip, crossfaded), and one action layer on top
+ * blend ↔ sprint lean; air/slide/slam/cling = their clip, crossfaded), and one action layer on top
  * (forge, heat-hold, block, parry, hit-react, stagger, death, attacks) that may cover the whole body or
  * only the upper half. All blending is per-bone on flat arrays: no allocation per frame.
  */
@@ -100,7 +100,6 @@ export class Animator {
     if (i.slamming) return 'slam';
     if (i.clinging) return 'cling';
     if (i.sliding) return 'slide';
-    if (i.dashing) return 'dash';
     if (!i.grounded) return i.vy > A.jumpVy ? 'jump' : 'fall';
     return 'ground';
   }

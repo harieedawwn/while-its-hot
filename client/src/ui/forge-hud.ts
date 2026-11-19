@@ -1,3 +1,4 @@
+import { setModal } from './modal';
 import { BALANCE, FAMILIES, type Family } from '@wih/shared';
 import { HEAT_HEX, heatStep } from '../render/heat';
 import { FORGE_CSS } from './forge-hud-css';
@@ -105,6 +106,7 @@ export class ForgeHud {
   /** The +3 family pick: three stamped tags, the default pre-highlighted, `secs` to choose. 1/2/3 keys and taps work. */
   openPick(def: Family, secs: number, onPick: (f: Family) => void): void {
     this.closePick();
+    setModal('pick', true);
     const p = (this.pick = el('div', 'fh-pick', this.root));
     p.style.setProperty('--pick', `${secs}s`);
     const tags = el('div', 'fh-tags', p);
@@ -123,6 +125,7 @@ export class ForgeHud {
     addEventListener('keydown', this.onKey);
   }
   closePick(): void {
+    setModal('pick', false);
     this.pick?.remove(); this.pick = null;
     if (this.onKey) { removeEventListener('keydown', this.onKey); this.onKey = null; }
   }

@@ -8,7 +8,7 @@ import type { AttackKind } from '../passives';
  * local hit prediction read the same getters (parrying, blocking, dead) as for local fighters.
  */
 export const PHASES: readonly FighterPhase[] = ['idle', 'windup', 'active', 'recover', 'charge', 'parry', 'parry_recover', 'block', 'stagger', 'flinch', 'dead'];
-const KINDS: readonly AttackKind[] = ['light', 'heavy', 'dash'];
+const KINDS: readonly AttackKind[] = ['light', 'heavy', 'slide'];
 
 export function animCode(f: Pick<Fighter, 'phase' | 'kind' | 'combo'>): number {
   return (Math.max(0, PHASES.indexOf(f.phase)) << 4) | (Math.max(0, KINDS.indexOf(f.kind)) << 2) | (f.combo & 3);

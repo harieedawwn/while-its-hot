@@ -1,5 +1,5 @@
 /** One action layer for every input source (TECH §5). Sources write; gameplay reads once per sim tick. */
-export type Button = 'attack' | 'parry' | 'jump' | 'dash' | 'slide' | 'forge' | 'anvil' | 'swap' | 'pause' | 'scoreboard';
+export type Button = 'attack' | 'parry' | 'jump' | 'slide' | 'forge' | 'anvil' | 'swap' | 'pause' | 'scoreboard';
 
 export class Actions {
   /** Movement stick, x = right, y = forward, length ≤ 1. Sources set it each frame. */

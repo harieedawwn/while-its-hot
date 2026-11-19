@@ -4,16 +4,15 @@ import { BALANCE } from '@wih/shared';
 /** One sim tick of intent. mx = strafe right, my = forward (stick or WASD, length ≤ 1). Edges are per tick. */
 export interface MoveInput {
   mx: number; my: number; yaw: number;
-  jumpPressed: boolean; dashPressed: boolean; slidePressed: boolean; slideHeld: boolean;
+  jumpPressed: boolean; slidePressed: boolean; slideHeld: boolean;
 }
-export const NO_INPUT: MoveInput = { mx: 0, my: 0, yaw: 0, jumpPressed: false, dashPressed: false, slidePressed: false, slideHeld: false };
+export const NO_INPUT: MoveInput = { mx: 0, my: 0, yaw: 0, jumpPressed: false, slidePressed: false, slideHeld: false };
 
-export type JumpKind = 'jump' | 'bounce' | 'dashjump' | 'slidejump' | 'walljump';
+export type JumpKind = 'jump' | 'bounce' | 'slidejump' | 'walljump';
 /** What happened this tick; the controller turns these into bus events (camera, audio, VFX listen). */
 export type MoveEvent =
   | { k: 'jump'; kind: JumpKind }
   | { k: 'land'; speed: number }
-  | { k: 'dash'; dir: THREE.Vector3 }
   | { k: 'slide'; on: boolean }
   | { k: 'slamstart' }
   | { k: 'slam'; pos: THREE.Vector3 };
@@ -28,10 +27,11 @@ export interface MoveState {
   jumpBuf: number;
   /** Stamina in pips (fractional while regenerating). */
   stamina: number;
-  dashT: number; dashDir: THREE.Vector3; dashGround: boolean;
-  /** Seconds of i-frames left (combat reads `iframe > 0`). */
+  /** Seconds of invulnerability left (combat reads `iframe > 0`; stance exit, relics). */
   iframe: number;
   sliding: boolean; slideT: number; slideDir: THREE.Vector3;
+  /** Seconds until the next slide may start; slideLock = a timed-out slide must be released first. */
+  slideCd: number; slideLock: boolean;
   slamming: boolean;
   /** Seconds since the last slam landing (bounce window). */
   sinceSlam: number;
@@ -51,8 +51,8 @@ export function createMoveState(pos: THREE.Vector3Tuple = [0, 0, 0]): MoveState 
     pos: new THREE.Vector3(...pos), vel: new THREE.Vector3(),
     grounded: false, groundN: new THREE.Vector3(0, 1, 0),
     coyote: 0, jumpBuf: 0, stamina: BALANCE.move.stamina.pips,
-    dashT: 0, dashDir: new THREE.Vector3(0, 0, -1), dashGround: false, iframe: 0,
-    sliding: false, slideT: 0, slideDir: new THREE.Vector3(0, 0, -1),
+    iframe: 0,
+    sliding: false, slideT: 0, slideDir: new THREE.Vector3(0, 0, -1), slideCd: 0, slideLock: false,
     slamming: false, sinceSlam: 1e3,
     wallJumps: 0, sinceWall: 1e3, wallN: new THREE.Vector3(),
     clinging: false, low: false, speedMul: 1, pushT: 0, events: [],

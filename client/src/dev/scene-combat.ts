@@ -33,7 +33,7 @@ import { disposeTree } from '../render/dispose';
  * Melee test (phase 08): a corner of Arena 1 with training dummies (idle, block, parry, counter, move).
  * KB+mouse or `touch=1` (aim assist on with touch, `aim=0|1` to force). Q cycles the player's weapon form.
  * Params: `weapon=<id>` `level=0..20` `dw=<dummy weapon>` `modes=a,b,..` `tp=1` third person.
- * Frozen shots: `demo=light1|light2|light3|heavy|charge|dash|parry|riposte|block&t=<s>` replays a scripted
+ * Frozen shots: `demo=light1|light2|light3|heavy|charge|slide|parry|riposte|block&t=<s>` replays a scripted
  * run to t (after a settle) and freezes; `cam` overrides the camera. R resets, `window.__combat` = counters.
  */
 const ORIGIN = new THREE.Vector3(-18, 0.05, -17);

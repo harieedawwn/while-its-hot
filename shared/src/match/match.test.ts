@@ -56,11 +56,7 @@ describe('match authority: hits', () => {
     expect(parryOk(0, 160 + 59, 120, 0.16)).toBe(true);
     expect(parryOk(0, -100, 400, 0.16)).toBe(false); // slack caps at 80 ms
   });
-  it('dash i-frames and the truce make the target immune', () => {
-    const m = setup();
-    m.msg(2, { t: 'dash', at: 1000 + W }, 1000);
-    m.msg(1, atk(1, 1000), 1000);
-    expect(m.msg(1, hit(1, 2, 1000 + W + 20), 1000 + W + 20)[0].m).toMatchObject({ why: 'immune' });
+  it('the truce makes the target immune', () => {
     const t = setup(30);
     t.msg(1, atk(1, 1000), 1000);
     expect(t.msg(1, hit(1, 2, 1000 + W + 20), 1000 + W + 20)[0].m).toMatchObject({ why: 'immune' });

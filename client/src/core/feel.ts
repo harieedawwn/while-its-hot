@@ -42,7 +42,6 @@ export const FEEL = {
     bob: { amp: 0.015, stride: 2.4 },
     strafeRoll: 1.2, clingRoll: 4, slideRoll: 2,
     rollSpring: { k: 140, c: 24 },
-    dashKick: { fov: 7, inS: 0.06, outS: 0.25, pull: 0.06 },
     slideFov: 4, fovRate: 18,
     /** Landing dip: spring impulse scaled by fall speed between minSpeed and fullSpeed; slam = full + trauma. */
     land: { maxDip: 0.18, minSpeed: 4, fullSpeed: 28, k: 170, c: 21, slamTrauma: 0.5 },
@@ -76,7 +75,7 @@ export const FEEL = {
     /** Ground speed range over which the sprint lean fades in (above run speed). */
     sprintBlend: [9.6, 14] as readonly [number, number],
     /** Crossfade seconds into each base state. */
-    fade: { ground: 0.14, jump: 0.05, fall: 0.18, slide: 0.08, dash: 0.04, slam: 0.05, cling: 0.1 },
+    fade: { ground: 0.14, jump: 0.05, fall: 0.18, slide: 0.08, slam: 0.05, cling: 0.1 },
     /** Default action fade in/out (block, parry, hit-react, forge loops). */
     actionIn: 0.07, actionOut: 0.14,
     /** A landing at least this fast (m/s) plays the land clip; the clip is slowed down for soft landings. */
@@ -203,7 +202,7 @@ export const FEEL = {
     /** Ambience duck under big events: dB and seconds (AUDIO §1.6). */
     duck: { db: -4, s: 0.4 },
     /** Mix snapshot (AUDIO §5), dB. Catalog rows pick one of these keys. */
-    mix: { parry: 0, kill: 0, strike: -2, hit: -3, swing: -6, footOwn: -14, footEnemy: -10, dash: -8, ambience: -20, emitter: -16, ui: -12, move: -10 } as Record<string, number>,
+    mix: { parry: 0, kill: 0, strike: -2, hit: -3, swing: -6, footOwn: -14, footEnemy: -10, ambience: -20, emitter: -16, ui: -12, move: -10 } as Record<string, number>,
     /** audio/events.ts: a footstep every stepLen m of ground travel; landings above landHard m/s are heavy; slide loop rate
      *  at 0 and at slideFast m/s; slam wind rises to slamRate over slamRise s; heat swell time constant s; combo pitch step. */
     react: { stepLen: 1.25, landHard: 9, slideRate: [0.85, 1.15], slideFast: 14, slamRate: 1.5, slamRise: 0.8, heatTau: 0.35, comboPitch: 0.05 },

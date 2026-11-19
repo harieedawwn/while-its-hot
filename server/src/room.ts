@@ -5,7 +5,7 @@ import { Lobby, type LobbySave } from './lobby';
 import type { Env } from './worker';
 
 interface Att { id: number }
-const MATCH_MSGS: ReadonlySet<string> = new Set(['atk', 'hit', 'parry', 'dash', 'slam', 'forge', 'anvil', 'take', 'draft']);
+const MATCH_MSGS: ReadonlySet<string> = new Set(['atk', 'hit', 'parry', 'slam', 'forge', 'anvil', 'take', 'draft']);
 /** Seeded per room (mulberry32): forge rolls and spawns come from the room, never from a client. */
 function roomRand(seed: number): () => number {
   let s = seed >>> 0;
@@ -60,7 +60,7 @@ export class Room extends DurableObject<Env> {
 
   private startMatch(): void {
     this.t0 = Date.now();
-    this.match = new MatchAuthority(this.lobby.members.map((m) => m.id), this.lobby.settings.truce, roomRand(this.t0 ^ this.lobby.code.charCodeAt(0) * 7919), 0);
+    this.match = new MatchAuthority(this.lobby.members.map((m) => m.id), this.lobby.settings, roomRand(this.t0 ^ this.lobby.code.charCodeAt(0) * 7919), 0);
     for (const m of this.lobby.members) if (!m.online) this.match.setOnline(m.id, false);
     for (const w of this.ctx.getWebSockets()) this.sendInit(w);
     this.startTick();

@@ -80,7 +80,7 @@ async function boot(): Promise<void> {
     const info = renderer.info;
     window.__stats = { calls: info.render.calls, tris: info.render.triangles, programs: info.programs?.length ?? 0, frameMs: performance.now() - t0, geos: info.memory.geometries, textures: info.memory.textures };
     wipe.afterRender(renderer.domElement);
-    if (scene.ready && !window.__ready) { window.__ready = true; native.firstFrame(); app.markReady(); }
+    if (scene.ready && !pipeline.warming && !window.__ready) { window.__ready = true; native.firstFrame(); app.markReady(); }
   };
   requestAnimationFrame(step);
   await app.load(params.scene);

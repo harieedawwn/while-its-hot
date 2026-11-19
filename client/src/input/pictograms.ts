@@ -4,7 +4,6 @@ import type { ControlId } from './touch-layout';
 const P: Partial<Record<ControlId, string>> = {
   attack: '<path d="M12 2.5 14 14h-4zM7 14h10M12 14v6.5"/><path d="M10.5 20.5h3"/>',
   jump: '<path d="M12 20V5M6 11l6-6 6 6"/>',
-  dash: '<path d="M4 8h5M2 12h8M4 16h5"/><path d="M12 6l6 6-6 6M17 6l5 6-5 6"/>',
   slide: '<path d="M3 8l14 6"/><path d="M12 19h9M17 15l4 4-4 4" transform="translate(0 -3)"/><path d="M3 20h10"/>',
   parry: '<path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z"/><path d="M12 7v10"/>',
   forge: '<path d="M4 9h11v4H4zM15 10h5M9.5 13v8"/><path d="M7 21h5"/>',

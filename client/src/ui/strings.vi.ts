@@ -16,7 +16,11 @@ export const STR = {
     truce: 'Hưu chiến', seconds: (n: number) => (n === 0 ? 'Không' : `${n} giây`), ping: (ms: number) => `${ms} ms`,
     waiting: 'Đang chờ người chơi', offline: 'Mất kết nối',
     err: { full: 'Phòng đã đầy', started: 'Trận đã bắt đầu', closed: 'Phòng đã đóng', bad: 'Chưa thể bắt đầu', notfound: 'Không có phòng này', host: 'Chỉ chủ phòng', net: 'Không kết nối được' },
-    retry: 'Đang nối lại',
+    retry: 'Đang nối lại', count: (n: number, max: number) => `${n}/${max}`,
+    set: {
+      rounds: 'Thắng để vô địch', roundS: 'Thời gian vòng', lives: 'Số mạng', truce: 'Hưu chiến', ring: 'Vòng lửa', maxPlayers: 'Số người tối đa',
+      ringNames: ['Chậm', 'Vừa', 'Nhanh'], rounds_n: (n: number) => `${n} vòng`, time: (s: number) => `${s / 60 | 0}:${String(s % 60).padStart(2, '0')}`,
+    },
   },
   /** Settings ledger (phase 13 has the first rows; phase 14 fills it). */
   settings: {
@@ -62,7 +66,7 @@ export const STR = {
       heavy_launch: 'Đòn nặng hất tung đối thủ',
       max_reach_bonus: 'Tầm đâm xa hơn',
       sweep_wide: 'Quét rộng hơn',
-      dash_lunge_plus: 'Lướt rồi đâm xa hơn',
+      slide_lunge_plus: 'Trượt rồi đâm xa hơn',
       heavy_pull: 'Đòn nặng kéo đối thủ lại',
       none: 'Không có nội tại',
     } as Record<string, string>,

@@ -60,7 +60,7 @@ It is NOT neon, NOT bloom, NOT "everything glows", NOT a pile of flat primitive 
 - Armor tiers and modules attach to named sockets: `head, chest, back, shoulder_l/r, forearm_l/r,
   thigh_l/r, heel_l/r, hip`. Changing armor = swap socket children, never touch the base body.
 - Animation: keyframe clips as data (`player/character/clips/*.ts`, bone rotations + root offset, cubic
-  easing), blended by an animator: idle, run (8-dir blend), sprint-lean, jump/fall/land, dash, slide,
+  easing), blended by an animator: idle, run (8-dir blend), sprint-lean, jump/fall/land, slide,
   slam, wall-cling, forge-strike loop, heat-hold, block, parry, 3 attack sets × (light ×3, heavy charge,
   heavy release), hit-react (front/back), stagger, death (collapse into rigid physics-lite tumble).
 - Local player in first person sees only the viewmodel (arms + weapon). Third-person option shows the body.
@@ -76,7 +76,6 @@ down it as they cool. This is the game's signature color logic — use it, don't
   long phones get no unfair advantage. Viewmodel uses its own camera at 62° vertical (never distorts).
 - Head bob: very subtle vertical only (amplitude 0.015 m at run, setting can disable). No roll bob.
 - Strafe roll: ±1.2° toward strafe direction, spring-smoothed. Wall cling roll ±4°.
-- Dash: FOV +7° kick in 0.06 s, back over 0.25 s; tiny backward-forward camera pull.
 - Slide: eye drops to 0.9 m over 0.12 s with a 2° roll; FOV +4°.
 - Landing: spring dip scaled by fall speed (max 0.18 m), viewmodel dips more than the camera.
 - Slam landing: hard dip + trauma 0.5.
@@ -86,7 +85,7 @@ down it as they cool. This is the game's signature color logic — use it, don't
 - Hit-stop: freeze local animation 50–90 ms on landed hits/parries (never freezes the network clock).
 - Viewmodel: spring lag on look (stiffness 220, damping 22), sway with movement, recoil kick on heavy,
   idle breathing 0.004 m. Attack animations drive the viewmodel arms with anticipation → strike → follow-through.
-- Mouse/keyboard dev controls: WASD, mouse look (pointer lock), Space jump, Shift dash, Ctrl slide/slam,
+- Mouse/keyboard dev controls: WASD, mouse look (pointer lock), Space jump, Shift or Ctrl slide/slam,
   LMB attack, RMB parry/block, E forge/interact, F place anvil, Q swap, Tab scoreboard.
 
 ## 7. VFX (phase 10) — few, physical, deliberate

@@ -1,4 +1,4 @@
-import { decodeState, encodeSnapshot, MatchAuthority, MSG_STATE, NetBot, PLAYER_COLORS, type ClientMsg, type LobbyPlayer, type MatchClientMsg, type Out, type ServerMsg, type Vec3 } from '@wih/shared';
+import { decodeState, encodeSnapshot, DEFAULT_SETTINGS, MatchAuthority, MSG_STATE, NetBot, PLAYER_COLORS, type ClientMsg, type LobbyPlayer, type MatchClientMsg, type Out, type ServerMsg, type Vec3 } from '@wih/shared';
 import type { SockLike } from './link-sim';
 
 /**
@@ -55,7 +55,7 @@ export class Loopback {
     const rand = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
     for (let i = 0; i < n; i++) players.push({ id: ME + 1 + i, name: `Bot ${i + 1}`, color: (color + 1 + i) % PLAYER_COLORS.length, ready: true, host: false, online: true, ping: 0 });
     this.toClient({ t: 'welcome', id: ME, token: 'loop', code: 'LOOP' });
-    this.toClient({ t: 'lobby', phase: 'match', players, settings: { truce: this.o.truce } });
+    this.toClient({ t: 'lobby', phase: 'match', players, settings: { ...DEFAULT_SETTINGS, truce: this.o.truce } });
     this.toClient({ t: 'start' });
     this.t0 = Date.now();
     const auth = this.auth = new MatchAuthority(players.map((p) => p.id), this.o.truce, rand, 0, !!this.o.skipCage);

@@ -16,6 +16,18 @@ describe('round rules', () => {
     expect(burnDps(M.ring.startS)).toBe(6);
     expect(burnDps(M.ring.startS + 25)).toBe(10);
   });
+  it('ring speed scales the closing time', () => {
+    const span = M.ring.closedS - M.ring.startS;
+    expect(ringRadius(M.ring.startS + span * 0.65, 2)).toBe(M.ring.minR);
+    expect(ringRadius(M.ring.startS + span * 0.65, 1)).toBeGreaterThan(M.ring.minR);
+    expect(ringRadius(M.ring.closedS, 0)).toBeGreaterThan(M.ring.minR);
+  });
+  it('the round machine uses the room rules', () => {
+    const a = new MatchAuthority([1, 2], { lives: 1, rounds: 2, roundS: 120, truce: 0 }, rng(), 0, true);
+    expect(a.flow.rules).toMatchObject({ lives: 1, rounds: 2, roundS: 120 });
+    expect(a.init(1)).toMatchObject({ rules: { lives: 1, rounds: 2, roundS: 120 } });
+    expect(a.flow.end).toBe(120_000);
+  });
   it('winner: kills, then lives, then damage', () => {
     const r = (id: number, kills: number, lives: number, dealt: number) => ({ id, kills, lives, dealt, online: true });
     expect(roundWinner([r(1, 2, 1, 0), r(2, 1, 3, 99)]).win).toBe(1);

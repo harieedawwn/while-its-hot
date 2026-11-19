@@ -9,13 +9,13 @@ type V3 = [number, number, number];
 
 /**
  * Movement test course (phase 02), an industrial yard. Spawn faces −Z:
- * center = stairs (0.3 m risers) to platform A, 11 m dash gap over a slag bed, platform B;
+ * center = stairs (0.3 m risers) to platform A, 7.5 m gap over a slag bed (needs a slide-jump), platform B;
  * right = ramps 20°/35°/45°/55° to a 2.4 m deck; far right = slam pad + 3 m ledge (bounce only);
  * left = wall-jump shaft (2.6 m wide) to a 5 m ledge; front left = 1.2 m slide tunnel.
  */
 export const COURSE = {
   spawn: [0, 0, 14] as V3,
-  stepH: 0.3, platH: 1.5, gap: [-15, -4] as [number, number],
+  stepH: 0.3, platH: 1.5, gap: [-11.5, -4] as [number, number],
   rampTop: 2.4, rampDeg: [20, 35, 45, 55],
   shaft: { x0: -11.3, x1: -8.7, z0: -10, z1: -4, wallH: 7.5, ledgeH: 5 },
   slam: { ledgeH: 3 },

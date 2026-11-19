@@ -79,7 +79,6 @@ export class NetMatch {
     this.offs = [
       bus.on('combat:swing', (e) => { if (e.id === 0) this.send({ t: 'atk', s: lc.fighter.swingId, kind: e.kind, combo: e.combo, at: this.simMs }); }),
       bus.on('combat:guard', (e) => { if (e.id === 0 && e.act === 'parry') this.send({ t: 'parry', at: this.simMs }); }),
-      bus.on('move:dash', () => this.send({ t: 'dash', at: this.simMs })),
       bus.on('move:slam', (e) => this.send({ t: 'slam', p: [e.x, e.y, e.z] })),
       bus.on('forge:anvil', (e) => {
         if (e.owner !== 0 || e.act === 'placed') return;
@@ -114,7 +113,7 @@ export class NetMatch {
   private onMsg(m: MatchServerMsg): void {
     switch (m.t) {
       case 'match': {
-        this.t0 = m.t0; this.truce = m.truce; this.started = true;
+        this.t0 = m.t0; this.truce = m.truce; this.d.flow.rules = m.rules; this.started = true;
         const me = m.players.find((p) => p.id === this.me);
         if (me) this.d.spawned(me.p, me.yaw);
         for (const a of m.anvils) if (a.id !== this.me) this.anvils.place(a.id, a.p, a.yaw, true);

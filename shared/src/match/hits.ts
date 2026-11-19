@@ -38,11 +38,6 @@ export function parryOk(pressAt: number, hitAt: number, rtt: number, windowS: nu
   return d >= -slack && d <= windowS * 1000 + slack;
 }
 
-/** Inside the dash i-frames at either the hit time or the time the attacker saw the target. */
-export function dodged(t: MPlayer, at: number, rt: number): boolean {
-  const end = t.dashAt + BALANCE.move.dash.iframeS * 1000;
-  return (at >= t.dashAt && at <= end) || (rt >= t.dashAt && rt <= end);
-}
 
 /** Why a claim is refused, or null. `now` = server match ms on arrival. */
 export function checkClaim(a: MPlayer, t: MPlayer, m: HitMsg, now: number): string | null {
@@ -64,7 +59,7 @@ export function defenderView(t: MPlayer, m: HitMsg, now: number, truceUntil: num
     x: t.st.x, z: t.st.z, yaw: t.st.yaw,
     parrying: parryOk(t.parryAt, m.at, t.rtt, parryWindow(passivesOf(def), C.parry.windowS)),
     blocking: (t.st.flags & FLAG.blocking) !== 0,
-    immune: dodged(t, m.at, m.rt) || (t.stance && t.forge.immune) || now < truceUntil || now < t.ifUntil,
+    immune: (t.stance && t.forge.immune) || now < truceUntil || now < t.ifUntil,
     stamina: t.st.stamina, armorLevel: t.forge.armor,
   };
 }

@@ -1,8 +1,8 @@
 import { FEEL } from '../core/feel';
 
 /** Touch layout model (TECH §5, LOOK §8): pure data + geometry, no DOM. Sizes are "design px" at a 360 px tall safe rect. */
-export type ControlId = 'stick' | 'attack' | 'jump' | 'dash' | 'slide' | 'parry' | 'forge' | 'anvil' | 'swap' | 'pause';
-export const CONTROL_IDS: readonly ControlId[] = ['stick', 'attack', 'jump', 'dash', 'slide', 'parry', 'forge', 'anvil', 'swap', 'pause'];
+export type ControlId = 'stick' | 'attack' | 'jump' | 'slide' | 'parry' | 'forge' | 'anvil' | 'swap' | 'pause';
+export const CONTROL_IDS: readonly ControlId[] = ['stick', 'attack', 'jump', 'slide', 'parry', 'forge', 'anvil', 'swap', 'pause'];
 /** Forge and anvil only show when the game says so (contextual); the editor always shows them. */
 export const CONTEXTUAL: readonly ControlId[] = ['forge', 'anvil'];
 
@@ -13,13 +13,12 @@ export interface Circle { cx: number; cy: number; r: number }
 const T = FEEL.input.touch;
 
 const c = (ax: 'l' | 'r', ay: 't' | 'b', dx: number, dy: number, size: number, opacity = 0.9): Ctl => ({ ax, ay, dx, dy, size, opacity });
-/** Right thumb: big attack with jump / parry / dash / slide on an arc; left thumb: stick; top corner: swap, pause. */
+/** Right thumb: big attack with jump / parry / slide on an arc; left thumb: stick; top corner: swap, pause. */
 export const DEFAULT_LAYOUT: Layout = {
   stick: c('l', 'b', 104, 100, 128, 0.8),
   attack: c('r', 'b', 82, 88, 88),
   jump: c('r', 'b', 180, 62, 56),
   parry: c('r', 'b', 152, 138, 56),
-  dash: c('r', 'b', 84, 172, 56),
   slide: c('r', 'b', 224, 122, 56),
   forge: c('r', 'b', 84, 250, 52),
   anvil: c('r', 'b', 160, 210, 52),

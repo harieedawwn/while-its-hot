@@ -1,6 +1,7 @@
 import type * as THREE from 'three';
 import { GamePause, PLAY_SCENES } from './pause';
 import { bus } from '../core/events';
+import { settleFrames, yieldTask } from '../core/slice';
 import { readParams, type Params } from '../dev/params';
 import { DEFAULT_SCENE, SCENES, type Scene } from '../dev/scenes';
 import type { Pipeline } from '../render/pipeline';
@@ -49,7 +50,9 @@ export class Director {
     this.name = id;
     const w = this.host.clientWidth, h = this.host.clientHeight;
     this.pipeline.resize(w, h);
+    await yieldTask();
     const mod = await SCENES[id]();
+    await yieldTask();
     const s = await mod.default({ renderer: this.renderer, pipeline: this.pipeline, params: this.params, width: w, height: h, app: this });
     const ready = new Promise<void>((r) => { this.firstReady = r; });
     this.scene = s;
@@ -61,7 +64,8 @@ export class Director {
   /** Change scene through a transition. `origin` = CSS px where the wipe starts (the tapped element). */
   async go(name: string, kind: WipeKind, extra: Record<string, string> = {}, origin: [number, number] | null = null): Promise<void> {
     const from = this.name;
-    await getTransition().run(kind, origin, () => this.load(name, extra));
+    // the cover runs on its own clock and stays shut until the next scene has drawn 2 smooth frames
+    await getTransition().run(kind, origin, async () => { await this.load(name, extra); await settleFrames(); });
     this.cameFromMenu = from === MENU_SCENE || (this.cameFromMenu && name !== MENU_SCENE);
   }
 

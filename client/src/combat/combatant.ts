@@ -16,8 +16,8 @@ export class Combatant {
   armor: number;
   team: number;
   blockArcDeg?: number;
-  /** Seconds since the last dash ended (0 while dashing): the dash-attack window. */
-  sinceDash = 1e3;
+  /** Seconds since the last slide ended (0 while sliding): the slide-attack window. */
+  sinceSlide = 1e3;
   /** Targets already hit by swing `hitSwing` (one hit per target per swing). */
   readonly hitSet = new Set<number>();
   hitSwing = -1;
@@ -48,7 +48,7 @@ export class Combatant {
   /** Combat intent for this tick; call before the body's movement tick. */
   tick(dt: number, i: FighterInput): void {
     const s = this.body.s;
-    this.sinceDash = s.dashT > 0 ? 0 : this.sinceDash + dt;
+    this.sinceSlide = s.sliding ? 0 : this.sinceSlide + dt;
     this.fighter.tick(dt, i);
     s.speedMul = this.fighter.speedMul;
     if (this.burnT > 0) { this.burnT -= dt; this.hp -= this.burnDps * dt; }
@@ -79,7 +79,7 @@ export class Combatant {
 }
 
 /** Fighter input from button states (local player) — kept here so dummies and players share the shape. */
-export function fighterInput(out: FighterInput, attackPressed: boolean, attackHeld: boolean, parryPressed: boolean, parryHeld: boolean, sinceDash: number): FighterInput {
-  out.attackPressed = attackPressed; out.attackHeld = attackHeld; out.parryPressed = parryPressed; out.parryHeld = parryHeld; out.sinceDash = sinceDash;
+export function fighterInput(out: FighterInput, attackPressed: boolean, attackHeld: boolean, parryPressed: boolean, parryHeld: boolean, sinceSlide: number): FighterInput {
+  out.attackPressed = attackPressed; out.attackHeld = attackHeld; out.parryPressed = parryPressed; out.parryHeld = parryHeld; out.sinceSlide = sinceSlide;
   return out;
 }

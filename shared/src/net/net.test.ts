@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { decodeSnapshot, decodeState, encodeSnapshot, encodeState, FLAG, type NetState } from './codec';
 import { ClockSync } from './clock';
-import { cleanName, normalizeCode, randomCode, sanitizeSettings, validCode } from './protocol';
+import { DEFAULT_SETTINGS, rulesOf, cleanName, normalizeCode, randomCode, sanitizeSettings, validCode } from './protocol';
 
 const st: NetState = { x: 12.5, y: 3.25, z: -40.125, vx: 4.5, vy: -9.75, vz: 0, yaw: 1.2, pitch: -0.6, anim: 7, animT: 0.431, flags: FLAG.grounded | FLAG.blocking, weapon: 9, level: 4, stamina: 2.5, armor: 3, hp: 77 };
 const near = (a: NetState, b: NetState) => {
@@ -34,6 +34,13 @@ describe('protocol', () => {
   });
   it('names and settings', () => {
     expect(cleanName('  <b>Hùng</b>  ')).toBe('bHùng/b'); expect(cleanName(5)).toBe('Thợ rèn');
-    expect(sanitizeSettings({ truce: 60 }, { truce: 30 }).truce).toBe(60); expect(sanitizeSettings({ truce: 7 }, { truce: 30 }).truce).toBe(30);
+    expect(sanitizeSettings({ truce: 60 }, DEFAULT_SETTINGS).truce).toBe(60); expect(sanitizeSettings({ truce: 7 }, DEFAULT_SETTINGS).truce).toBe(30);
+  });
+  it('match settings accept only the allowed choices', () => {
+    const s = sanitizeSettings({ rounds: 5, roundS: 240, lives: 1, ring: 2, maxPlayers: 4 }, DEFAULT_SETTINGS);
+    expect(s).toMatchObject({ rounds: 5, roundS: 240, lives: 1, ring: 2, maxPlayers: 4, truce: 30 });
+    const bad = sanitizeSettings({ rounds: 99, roundS: -1, lives: 'x' as unknown as number, ring: 7, maxPlayers: 1 }, s);
+    expect(bad).toEqual(s);
+    expect(rulesOf(0).truce).toBe(0); expect(rulesOf(0).lives).toBe(3);
   });
 });

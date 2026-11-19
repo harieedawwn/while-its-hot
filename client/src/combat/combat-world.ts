@@ -48,7 +48,7 @@ export class CombatWorld {
         }
         case 'lunge': {
           const sp = e.m / e.dur, fx = -Math.sin(c.yaw), fz = -Math.cos(c.yaw);
-          // never slow a body that already moves faster along the lunge (dash attacks keep the dash)
+          // never slow a body that already moves faster along the lunge (slide attacks keep the slide)
           const along = s.vel.x * fx + s.vel.z * fz;
           if (along < sp) pushMove(s, fx * sp, fz * sp, e.dur);
           break;

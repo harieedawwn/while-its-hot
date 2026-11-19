@@ -26,6 +26,8 @@ describe('lobby', () => {
   it('host-only settings; empty room dies after 5 min', () => {
     const l = mk(); const a = (l.join('A', 0, undefined, 0) as any).m, b = (l.join('B', 0, undefined, 0) as any).m;
     expect(l.setSettings(b.id, { truce: 0 })).toBe('host'); expect(l.setSettings(a.id, { truce: 0 })).toBeNull(); expect(l.settings.truce).toBe(0);
+    l.setSettings(a.id, { maxPlayers: 2 }); expect(l.join('C', 0, undefined, 0)).toEqual({ err: 'full' });
+    expect(l.setSettings(a.id, { maxPlayers: 2 })).toBeNull(); l.settings.maxPlayers = 6;
     l.drop(a.id, 10); l.drop(b.id, 20); expect(l.isDead(299_000)).toBe(false); expect(l.isDead(10 + 300_000)).toBe(false); expect(l.isDead(20 + 300_000)).toBe(true);
   });
 });

@@ -24,7 +24,7 @@ export class FighterAnim {
     switch (p) {
       case 'windup':
         if (f.kind === 'heavy') a.play(attackId(fam, 'heavy_release'), { fadeIn: 0.03 });
-        else if (f.kind === 'dash') a.play(attackId(fam, 'dash'), { fadeIn: 0.03 });
+        else if (f.kind === 'slide') a.play(attackId(fam, 'slide'), { fadeIn: 0.03 });
         else a.play(attackId(fam, `light${f.combo + 1}` as 'light1'), { fadeIn: 0.05 });
         break;
       case 'charge': a.play(attackId(fam, 'heavy_charge'), { hold: true, fadeIn: 0.08 }); break;

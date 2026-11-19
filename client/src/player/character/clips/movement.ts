@@ -3,14 +3,6 @@ import { type Clip, k } from './types';
 /** Movement states (held while the state lasts; the animator crossfades in/out). */
 export const MOVEMENT: Clip[] = [
   {
-    // low horizontal lunge, arms trailing
-    id: 'dash', len: 0.3, loop: false,
-    keys: [
-      k(0, { pelvis: [-26, 0, 0], chest: [-18, 0, 0], head: [26, 0, 0], arm_l: [-62, 0, -14], fore_l: [24, 0, 0], arm_r: [-58, 0, 14], fore_r: [28, 0, 0], thigh_r: [48, 0, 2], shin_r: [-10, 0, 0], thigh_l: [-48, 0, -2], shin_l: [-62, 0, 0], foot_l: [-30, 0, 0] }, [0, -0.1, -0.1], 'out'),
-      k(1, { pelvis: [-34, 0, 0], chest: [-22, 0, 0], head: [32, 0, 0], arm_l: [-72, 0, -16], fore_l: [20, 0, 0], arm_r: [-66, 0, 16], fore_r: [24, 0, 0], thigh_r: [52, 0, 2], shin_r: [-8, 0, 0], thigh_l: [-52, 0, -2], shin_l: [-66, 0, 0], foot_l: [-30, 0, 0] }, [0, -0.14, -0.12]),
-    ],
-  },
-  {
     // sitting low, lead leg forward, trailing leg tucked, torso back, one hand dragging
     id: 'slide', len: 0.25, loop: false,
     keys: [

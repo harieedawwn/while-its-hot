@@ -32,27 +32,25 @@ describe('course reach', () => {
     expect(top).toBeGreaterThan(5.2);
   });
 
-  it('the 11 m gap between 1.5 m platforms needs a dash-jump', () => {
-    const kin = world([[4, 1.5, 20, 0, 0.75, 10], [4, 1.5, 6, 0, 0.75, -14]]);
-    const cross = (mode: 'dashjump' | 'jump' | 'jumpdash') => {
+  it('the 7.5 m gap between 1.5 m platforms needs a slide-jump', () => {
+    const kin = world([[4, 1.5, 20, 0, 0.75, 10], [4, 1.5, 6, 0, 0.75, -10.5]]);
+    const cross = (mode: 'slidejump' | 'jump') => {
       const s = createMoveState([0, 1.6, 8]);
       let jumpedAt = -1;
       for (let i = 0; i < 400; i++) {
         const inp: MoveInput = { ...NO_INPUT, my: 1 };
-        if (mode === 'dashjump') {
-          if (s.pos.z < 3.4 && s.dashT <= 0 && jumpedAt < 0 && s.stamina >= 3) inp.dashPressed = true;
-          if (s.dashT > 0 && s.pos.z < 0.4) inp.jumpPressed = true;
+        if (mode === 'slidejump') {
+          if (s.pos.z < 3.2 && jumpedAt < 0) { inp.slideHeld = true; inp.slidePressed = true; }
+          if (s.sliding && s.pos.z < 0.4) inp.jumpPressed = true;
         } else if (s.pos.z < 0.6 && jumpedAt < 0) inp.jumpPressed = true;
-        if (mode === 'jumpdash' && jumpedAt >= 0 && i - jumpedAt === 12) inp.dashPressed = true;
         stepMove(s, inp, DT, kin);
         if (jumpedAt < 0 && s.events.some((e) => e.k === 'jump')) jumpedAt = i;
-        if (jumpedAt >= 0 && s.events.some((e) => e.k === 'land')) return s.pos.y > 1.4 && s.pos.z < -11;
+        if (jumpedAt >= 0 && s.events.some((e) => e.k === 'land')) return s.pos.y > 1.4 && s.pos.z < -7.8;
       }
       return false;
     };
-    expect(cross('dashjump')).toBe(true);
+    expect(cross('slidejump')).toBe(true);
     expect(cross('jump')).toBe(false);
-    expect(cross('jumpdash')).toBe(false);
   });
 
   it('a slam bounce clears the 3 m ledge, a plain jump does not', () => {

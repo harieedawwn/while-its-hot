@@ -30,7 +30,6 @@ export const EVENTS: Record<string, EventDef> = {
   jump: mv('move', 4, { sfx: 'jump', secs: 0.6 }),
   land_soft: mv('move', 4, { sfx: 'land', opts: { vol: 0.6 }, secs: 0.6 }),
   land_hard: mv('move', 3, { sfx: 'land', secs: 0.8 }),
-  dash: mv('dash', 4),
   slide_start: mv('move', 2), slide_loop: mv('move', 2, undefined, { loop: true }), slide_end: mv('move', 2),
   slam_fall: mv('move', 1, undefined, { loop: true }), slam_land: mv('strike', 2, { sfx: 'explosion', opts: { vol: 0.6 }, secs: 2 }),
   walljump: mv('move', 3), cling: mv('move', 3),

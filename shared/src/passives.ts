@@ -7,7 +7,7 @@ import { BALANCE } from './balance';
  */
 const PB = BALANCE.weapons.passive;
 
-export type AttackKind = 'light' | 'heavy' | 'dash';
+export type AttackKind = 'light' | 'heavy' | 'slide';
 /** What the attacker is doing when the hit lands. combo = 0-based index inside the light chain. */
 export interface AttackCtx { kind: AttackKind; combo: number; dist: number; reach: number; }
 /** The attack as combat resolves it. Base values come from the family moveset (phase 08). */
@@ -25,7 +25,7 @@ export type HitEffect =
 export interface ForgeOdds { tuyet: number; dat: number; giu: number; hong: number; }
 
 export interface PassiveHooks {
-  /** Damage, arc, lunge, stagger and block interaction of one attack (light/heavy/dash). */
+  /** Damage, arc, lunge, stagger and block interaction of one attack (light/heavy/slide). */
   modifyAttack?(a: AttackShape, c: AttackCtx): void;
   modifyParryWindow?(s: number): number;
   /** Extra effects on the target when an attack connects. */
@@ -55,7 +55,7 @@ export const PASSIVES = {
   },
   max_reach_bonus: { modifyAttack: (a, c) => { if (c.dist >= c.reach * PB.maxReach.frac) a.dmg *= PB.maxReach.mul; } },
   sweep_wide: { modifyAttack: (a, c) => { if (heavy(c)) a.arcDeg = Math.max(a.arcDeg, PB.sweepArcDeg); } },
-  dash_lunge_plus: { modifyAttack: (a, c) => { if (c.kind === 'dash') a.lungeM *= PB.lungeMul; } },
+  slide_lunge_plus: { modifyAttack: (a, c) => { if (c.kind === 'slide') a.lungeM *= PB.lungeMul; } },
   heavy_pull: { onHit: (c, out) => { if (heavy(c)) out.push({ type: 'pull', m: PB.pullM }); } },
 } as const satisfies Record<string, PassiveHooks>;
 export type PassiveId = keyof typeof PASSIVES;
