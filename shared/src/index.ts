@@ -14,3 +14,8 @@ export * from './training';
 export * from './net/protocol';
 export * from './net/codec';
 export * from './net/clock';
+export * from './net/match-msgs';
+export * from './match/anim-code';
+export * from './match/authority';
+export * from './forge/sync';
+export * from './net/bot';

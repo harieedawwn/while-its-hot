@@ -40,7 +40,8 @@ export const FOUNDRY = {
     { id: 2, pos: [21, -16] as V2, yaw: -Math.PI / 2 },
     { id: 3, pos: [-21, 16] as V2, yaw: Math.PI / 2 },
   ],
-  rack: { w: 2.4, slots: 2 },
+  /** slotY = where a blank lies on a rack's cradles. */
+  rack: { w: 2.4, slots: 2, slotY: 0.47 },
   /** Fire ring centers; one is picked per round (GDD §3). */
   ringCenters: [[0, 0], [-9, 7], [9, -7]] as readonly V2[],
   /** Landmarks. */

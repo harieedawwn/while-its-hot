@@ -1,6 +1,7 @@
 import { BALANCE, ClockSync } from '@wih/shared';
-import type { ClientMsg, ErrCode, LobbyPlayer, RoomPhase, RoomSettings, ServerMsg } from '@wih/shared';
+import type { ClientMsg, ErrCode, LobbyPlayer, MatchServerMsg, RoomPhase, RoomSettings, ServerMsg } from '@wih/shared';
 import { loadJson, saveJson } from '../core/store';
+import { NO_SIM, simulate, type LinkSim, type SockLike } from './link-sim';
 
 export interface RoomView { phase: RoomPhase; players: LobbyPlayer[]; settings: RoomSettings }
 export interface RoomHandlers {
@@ -10,7 +11,10 @@ export interface RoomHandlers {
   /** Link state: 'up' once welcomed, 'retry' while reconnecting, 'down' when given up. */
   link(s: 'up' | 'retry' | 'down'): void;
   binary?(b: ArrayBuffer): void;
+  /** Match messages (match-msgs.ts) once the match runs. */
+  match?(m: MatchServerMsg): void;
 }
+export interface RoomOpts { sim?: LinkSim; socket?: (url: string) => SockLike }
 const TOKENS = 'wih.room.tokens';
 
 export async function createRoom(base: string): Promise<string> {
@@ -26,9 +30,14 @@ export async function roomExists(base: string, code: string): Promise<boolean> {
 export class RoomClient {
   readonly clock = new ClockSync();
   id = 0; view: RoomView | null = null;
-  private ws: WebSocket | null = null;
+  private ws: SockLike | null = null;
   private timer = 0; private retries = 0; private closed = false; private lastUp = 0;
-  constructor(private base: string, readonly code: string, private who: { name: string; color: number }, private h: RoomHandlers) {}
+  /** Match messages that came while nobody listened (between the lobby's `start` and the match scene). */
+  private queue: MatchServerMsg[] = [];
+  drain(): MatchServerMsg[] { const q = this.queue; this.queue = []; return q; }
+  /** The match scene swaps these in when it takes the room over from the lobby. */
+  h: RoomHandlers;
+  constructor(private base: string, readonly code: string, private who: { name: string; color: number }, h: RoomHandlers, private o: RoomOpts = {}) { this.h = h; }
 
   get rtt(): number { return this.clock.rtt; }
   private token(): string | undefined { return loadJson<Record<string, string>>(TOKENS, {})[this.code]; }
@@ -36,7 +45,8 @@ export class RoomClient {
 
   connect(): void {
     if (this.closed) return;
-    const ws = new WebSocket(`${this.base.replace(/^http/, 'ws')}/room/${this.code}/ws`);
+    const url = `${this.base.replace(/^http/, 'ws')}/room/${this.code}/ws`;
+    const ws = simulate(this.o.socket ? this.o.socket(url) : (new WebSocket(url) as unknown as SockLike), this.o.sim ?? NO_SIM);
     ws.binaryType = 'arraybuffer'; this.ws = ws;
     ws.onopen = () => this.send({ t: 'hello', name: this.who.name, color: this.who.color, token: this.token() });
     ws.onmessage = (e) => {
@@ -47,6 +57,7 @@ export class RoomClient {
       else if (m.t === 'pong') { this.clock.add(m.c, m.s, Date.now()); this.send({ t: 'rtt', v: Math.round(this.clock.rtt) }); }
       else if (m.t === 'start') this.h.start();
       else if (m.t === 'err') { if (m.code === 'full' || m.code === 'started' || m.code === 'closed') this.closed = true; this.h.err(m.code); }
+      else if (this.h.match) this.h.match(m); else if (this.queue.length < 64) this.queue.push(m);
     };
     ws.onclose = () => {
       clearInterval(this.timer);

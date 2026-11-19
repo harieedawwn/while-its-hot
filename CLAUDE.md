@@ -88,6 +88,9 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 
 - `shared/src/net/{protocol,codec,clock}.ts` lobby msgs, binary State/Snapshot, clock sync · `server/src/{worker,room,lobby}.ts` routes, Room DO, pure roster rules · `wrangler.jsonc` · `tools/netbot.mjs`
 - `client/src/net/{config,client}.ts` server URL, RoomClient + `room.current` · `ui/menu/lobby-screen.ts` + `styles/lobby.css` Chơi mạng lobby
+- `shared/src/match/{authority,mplayer,hits,effects,forge-auth,pickups,anim-code}.ts` server MatchAuthority, player record, hit-claim checks, passive effects, server forge rolls, blanks, anim byte · `net/{match-msgs,bot}.ts` · `forge/sync.ts`
+- `client/src/net/{net-match,net-combat,net-forge,net-anvils,pickups}.ts` match session + uplink, predicted hits/verdicts, server-rolled forging, others' anvils, blanks
+- `client/src/net/{remote,remotes,interp,pack,link-sim,loopback,net-debug}.ts` remote player, roster, snapshot interp, local State, lag sim, in-process room, dev overlay · `dev/scene-net.ts` (`net`)
 
 ## Conventions
 - TypeScript strict, ES modules, npm workspaces: `client/`, `server/`, `shared/`.

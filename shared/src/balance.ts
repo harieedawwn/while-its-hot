@@ -154,5 +154,19 @@ export const BALANCE = {
     maxPlayers: 6, codeLen: 4, codeAlphabet: 'ABCDEFGHJKLMNPQRSTUVWXYZ',
     tickHz: 20, reconnectS: 30, emptyRoomS: 300, pingEveryS: 2, clockKeep: 5,
     nameMax: 16, truceChoices: [0, 30, 60], truceDefault: 30, roundsToWin: 3,
+    /** Remote players (TECH §4): buffer = 2 × jitter + base, clamped; extrapolate at most extrapMs, then freeze. */
+    interp: { baseMs: 50, minMs: 80, maxMs: 200, startMs: 100, extrapMs: 100, jitterK: 0.1 },
+    /**
+     * Server checks of a hit claim (TECH §4). reachTol = extra meters between server-known positions; the swing's
+     * hit must land inside its active frames ± early/lateMs; claims older than maxAgeMs are stale; an attack may not
+     * start sooner than rateMul × the previous swing's length; the parry window widens by min(parryMaxMs, rtt/2).
+     */
+    auth: { reachTol: 2, earlyMs: 60, lateMs: 160, maxAgeMs: 1000, rateMul: 0.6, parryMaxMs: 80, anvilTol: 1.5, pickupTol: 1, strikeTolS: 0.15 },
+  },
+  /** Match rules that phase 17 enforces on the server (GDD §3). Rounds/lives/scoring arrive in phase 18. */
+  match: {
+    respawnS: 4, deathLevelLoss: 2, maxCarry: 2,
+    /** Blanks: one per player + 1 on the pedestal at the start; rackEach more on the side racks every rackEveryS. */
+    rackEveryS: 40, rackEach: 2, maxLying: 11, pickupR: 1.6,
   },
 } as const;

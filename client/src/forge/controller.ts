@@ -1,5 +1,5 @@
 import type * as THREE from 'three';
-import { BALANCE, type Family, NO_FIGHT, type ForgeSession, type StrikeResult } from '@wih/shared';
+import { BALANCE, type Family, type ForgeOp, NO_FIGHT, type ForgeSession, type StrikeResult, type Timing } from '@wih/shared';
 import type { LocalFighter } from '../combat/local-fighter';
 import { bus } from '../core/events';
 import { FEEL } from '../core/feel';
@@ -22,7 +22,10 @@ export interface ForgeDeps {
   loadModel(id: string): Promise<THREE.Object3D>;
   /** Armor level or modules changed (refresh the third-person body, if any). */
   onArmor?(level: number): void;
+  /** Online: the server rolls strikes (results come back through `reveal`) and hears every predicted op. */
+  link?: ForgeLink;
 }
+export interface ForgeLink { op(o: Exclude<ForgeOp, { k: 'strike' }>): void; strike(timing: Timing): void }
 
 /**
  * The local smith's forging loop (GDD §6, §7): place/lift the anvil, enter and leave the stance, heat (hold
@@ -70,6 +73,7 @@ export class ForgeController {
   enter(): boolean {
     if (this.inStance || !this.d.anvil.inReach(this.d.player.s.pos) || !this.d.lf.canAct) return false;
     this.inStance = true;
+    this.d.link?.op({ k: 'stance', on: true });
     this.d.player.s.vel.set(0, this.d.player.s.vel.y, 0);
     bus.emit('forge:stance', { on: true, owner: this.d.lf.c.id });
     return true;
@@ -78,6 +82,7 @@ export class ForgeController {
   leave(): void {
     if (!this.inStance) return;
     this.inStance = false; this.d.session.endFrenzy(); this.d.hud.closePick(); this.pickT = 0;
+    this.d.link?.op({ k: 'stance', on: false }); this.d.stage.lower();
     this.setHeating(false); this.d.lf.c.invuln = false;
     bus.emit('forge:stance', { on: false, owner: this.d.lf.c.id });
   }
@@ -85,6 +90,7 @@ export class ForgeController {
   private setHeating(on: boolean): void {
     if (on === this.heating) return;
     this.heating = on; this.d.stage.setNung(on);
+    this.d.link?.op({ k: 'heat', on });
     bus.emit('forge:heating', { on });
   }
 
@@ -103,7 +109,7 @@ export class ForgeController {
     if (this.inStance) this.stanceTick(dt, a, forgePress, swapPress);
     else {
       if (forgePress) this.enter();
-      if (swapPress) { session.swapSlot(); void this.syncWeapon(true); }
+      if (swapPress) { session.swapSlot(); this.d.link?.op({ k: 'swap' }); void this.syncWeapon(true); }
       session.tick(dt, false);
     }
     if (this.inStance) { lf.tickWith(dt, NO_FIGHT); player.tickWith(dt, { ...NO_INPUT, yaw: player.yaw }); }
@@ -119,13 +125,20 @@ export class ForgeController {
     if (Math.hypot(a.move.x, a.move.y) > S.exitStick || a.take('dash') || a.take('jump') || a.take('slide')) { this.leave(); return; }
     a.take('attack');
     this.setHeating(a.isHeld('attack') && !hud.picking);
-    if (swapPress && !hud.picking) { session.toggleTarget(); this.d.stage.setTarget(session.target); }
-    if (a.take('parry') && session.activateFrenzy()) bus.emit('forge:frenzy', { on: true });
-    if (forgePress && session.canStrike) this.report(session.strike(), false);
+    const link = this.d.link;
+    if (swapPress && !hud.picking) { session.toggleTarget(); link?.op({ k: 'target' }); this.d.stage.setTarget(session.target); }
+    if (a.take('parry') && session.activateFrenzy()) { link?.op({ k: 'frenzy' }); bus.emit('forge:frenzy', { on: true }); }
+    if (forgePress && session.canStrike) {
+      if (!link) this.report(session.strike(), false);
+      else { this.d.stage.raise(); link.strike(session.timingNow()); session.cooldown = F.strike.cadenceS * session.mods.cadenceMul; }
+    }
     const wasFrenzy = session.frenzy;
     for (const r of session.tick(dt, this.heating)) this.report(r, true);
     if (wasFrenzy && !session.frenzy) bus.emit('forge:frenzy', { on: false });
   }
+
+  /** Online: the server's roll for one of our strikes (or a frenzy auto-strike) arrived; the hammer falls now. */
+  reveal(r: StrikeResult, auto: boolean): void { if (this.inStance || auto) this.report(r, auto); }
 
   private report(r: StrikeResult, auto: boolean): void {
     const { session, stage, hud, anvil, lf } = this.d;
@@ -148,6 +161,7 @@ export class ForgeController {
     const form = this.d.session.pickFamily(f);
     this.pickT = 0; this.d.hud.closePick();
     if (!form) return;
+    this.d.link?.op({ k: 'pick', f });
     bus.emit('forge:evolve', { form: form.id, family: f });
     void this.syncWeapon(true);
   }

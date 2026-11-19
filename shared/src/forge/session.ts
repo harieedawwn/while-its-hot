@@ -33,6 +33,10 @@ export function moduleSlots(armorLevel: number): number { return F.moduleSlotAt.
 export class ForgeSession {
   blades: [Blade, Blade] = [newBlade(), newBlade()];
   slot = 0;
+  /** Blades carried (online you start with one; a picked-up blank adds the second, GDD §3). */
+  carried = 2;
+  /** false on a networked client: frenzy auto-strikes are rolled by the server, not predicted. */
+  autoStrike = true;
   armor = 0;
   modules: ModuleId[] = [];
   target: ForgeTarget = 'blade';
@@ -63,7 +67,7 @@ export class ForgeSession {
   get form(): WeaponDef { return bladeForm(this.blade); }
   get passives() { return passivesOf(this.form); }
 
-  swapSlot(): void { this.slot = 1 - this.slot; }
+  swapSlot(): void { if (this.carried > 1) this.slot = 1 - this.slot; }
   toggleTarget(): void { this.target = this.target === 'blade' ? 'armor' : 'blade'; }
 
   /** Equip a module into a free slot (relic draft, phase 18). */
@@ -89,6 +93,7 @@ export class ForgeSession {
     const out: StrikeResult[] = [];
     if (this.frenzyT > 0) {
       this.frenzyT = Math.max(0, this.frenzyT - dt);
+      if (!this.autoStrike) return out;
       this.autoT -= dt;
       while (this.autoT <= 0 && this.pendingPick === null && this.frenzyT > 0) { this.autoT += F.strike.cadenceS * F.frenzy.cadenceMul * this.mods.cadenceMul; out.push(this.strike('auto')); }
       if (this.autoT < -1) this.autoT = 0;

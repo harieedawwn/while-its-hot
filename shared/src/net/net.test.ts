@@ -3,13 +3,14 @@ import { decodeSnapshot, decodeState, encodeSnapshot, encodeState, FLAG, type Ne
 import { ClockSync } from './clock';
 import { cleanName, normalizeCode, randomCode, sanitizeSettings, validCode } from './protocol';
 
-const st: NetState = { x: 12.5, y: 3.25, z: -40.125, vx: 4.5, vy: -9.75, vz: 0, yaw: 1.2, pitch: -0.6, anim: 7, animT: 0.431, flags: FLAG.grounded | FLAG.blocking, weapon: 9, level: 4 };
+const st: NetState = { x: 12.5, y: 3.25, z: -40.125, vx: 4.5, vy: -9.75, vz: 0, yaw: 1.2, pitch: -0.6, anim: 7, animT: 0.431, flags: FLAG.grounded | FLAG.blocking, weapon: 9, level: 4, stamina: 2.5, armor: 3, hp: 77 };
 const near = (a: NetState, b: NetState) => {
   for (const k of ['x', 'y', 'z'] as const) expect(a[k]).toBeCloseTo(b[k], 4);
   for (const k of ['vx', 'vy', 'vz'] as const) expect(Math.abs(a[k] - b[k])).toBeLessThan(0.01);
   expect(Math.abs(a.yaw - b.yaw)).toBeLessThan(0.001); expect(Math.abs(a.pitch - b.pitch)).toBeLessThan(0.001);
   expect(Math.abs(a.animT - b.animT)).toBeLessThan(0.002);
-  expect([a.anim, a.flags, a.weapon, a.level]).toEqual([b.anim, b.flags, b.weapon, b.level]);
+  expect([a.anim, a.flags, a.weapon, a.level, a.armor, a.hp]).toEqual([b.anim, b.flags, b.weapon, b.level, b.armor, b.hp]);
+  expect(a.stamina).toBeCloseTo(b.stamina, 2);
 };
 describe('codec', () => {
   it('state round trip', () => { near(decodeState(encodeState(st))!, st); });

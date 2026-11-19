@@ -36,6 +36,7 @@ export const SCENES: Record<string, () => Promise<{ default: SceneFactory }>> = 
   hud: () => import('./scene-hud'),
   transition: () => import('./scene-transition'),
   training: () => import('./scene-training'),
+  net: () => import('./scene-net'),
 };
 /** No `scene=`: the app starts at the title / main menu. */
 export const DEFAULT_SCENE = 'ui-menu';

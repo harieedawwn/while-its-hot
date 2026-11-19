@@ -27,8 +27,12 @@ export interface GameEvents {
   /** Forging (forge/*). act: place/placed/lift = anvil; owner = combatant id. */
   'forge:anvil': { act: 'place' | 'placed' | 'lift'; x: number; y: number; z: number; owner: number };
   'forge:stance': { on: boolean; owner: number };
-  /** One strike: outcome, the level after it, and the world point of the anvil face. heat = 0..1 at the blow. */
-  'forge:strike': { outcome: 'tuyet' | 'dat' | 'giu' | 'hong'; perfect: boolean; auto: boolean; target: 'blade' | 'armor'; level: number; refused: boolean; broke: boolean; heat: number; x: number; y: number; z: number };
+  /**
+   * One strike: outcome, the level after it, and the world point of the anvil face. heat = 0..1 at the blow.
+   * owner = combatant id (absent = the local smith); fallS = seconds until the hammer lands (absent = a full fall;
+   * online the result arrives part-way through the swing).
+   */
+  'forge:strike': { outcome: 'tuyet' | 'dat' | 'giu' | 'hong'; perfect: boolean; auto: boolean; target: 'blade' | 'armor'; level: number; refused: boolean; broke: boolean; heat: number; x: number; y: number; z: number; owner?: number; fallS?: number };
   'forge:evolve': { form: string; family: Family };
   'forge:frenzy': { on: boolean };
   'forge:heating': { on: boolean };

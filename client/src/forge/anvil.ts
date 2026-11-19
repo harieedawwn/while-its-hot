@@ -69,7 +69,11 @@ export class Anvil {
     const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
     const x = feet.x + fx * A.placeDist, z = feet.z + fz * A.placeDist;
     const hit = this.world.raycast(new THREE.Vector3(x, feet.y + 1.2, z), new THREE.Vector3(0, -1, 0), 3);
-    const y = hit ? hit.point.y : feet.y;
+    return this.placeAt(x, hit ? hit.point.y : feet.y, z, yaw);
+  }
+
+  /** Place at an exact floor point (a remote player's anvil, as the server relays it). */
+  placeAt(x: number, y: number, z: number, yaw: number): boolean {
     if (!this.rule.place()) return false;
     this.yaw = yaw; this.pos.set(x, y, z);
     this.root.position.copy(this.pos); this.root.rotation.y = yaw;

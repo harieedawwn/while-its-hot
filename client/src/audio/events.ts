@@ -80,10 +80,10 @@ export function bindAudio(a: AudioEngine, localId = 0): AudioBinding {
     }),
     bus.on('forge:stance', (e) => { if (!e.on && own(e.owner)) stop('heat', 0.4); }),
     bus.on('forge:strike', (e) => {
-      const pos = at(e);
+      const pos = at(e), mine = !e.owner || own(e.owner);
       if (e.refused) a.play('strike_refused', { pos });
-      else if (e.broke) { a.play('gay', { pos }); a.duck(); buzz('medium'); }
-      else { a.play(STRIKE[e.outcome], { pos, db: e.auto ? -3 : 0 }); buzz('light'); }
+      else if (e.broke) { a.play('gay', { pos }); if (mine) { a.duck(); buzz('medium'); } }
+      else { a.play(STRIKE[e.outcome], { pos, db: e.auto ? -3 : 0 }); if (mine) buzz('light'); }
     }),
     // UI: dry tactile clicks; the menu's select is a real hammer on the anvil; transitions (AUDIO §3)
     bus.on('ui:sound', (e) => a.play(`ui_${e.id}`)),

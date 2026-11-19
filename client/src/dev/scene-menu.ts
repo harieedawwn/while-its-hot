@@ -62,7 +62,7 @@ const make: SceneFactory = async ({ pipeline, params, width, height, app }) => {
   const ctx = { layer, smithy, machine, app, turntable };
   const tabId = params.get('tab');
   const tab = TABS.find((t) => t === tabId) ?? 'gfx';
-  machine.add('title', new TitleScreen(ctx)).add('menu', new MenuScreen(ctx)).add('armory', new ArmoryScreen(ctx, params.get('sel') ?? undefined)).add('online', new LobbyScreen(layer, () => void machine.go('menu', 'quench'), params.get('code') ?? undefined)).add('settings', new SettingsScreen(layer, () => void machine.go('menu', 'quench'), tab));
+  machine.add('title', new TitleScreen(ctx)).add('menu', new MenuScreen(ctx)).add('armory', new ArmoryScreen(ctx, params.get('sel') ?? undefined)).add('online', new LobbyScreen(layer, () => void machine.go('menu', 'quench'), params.get('code') ?? undefined, () => void ctx.app.go('net', 'stamp'))).add('settings', new SettingsScreen(layer, () => void machine.go('menu', 'quench'), tab));
   const start = params.get('screen');
   const first = start === 'menu' || start === 'settings' || start === 'armory' || start === 'online' ? start : 'title';
   if (first === 'settings' || first === 'armory') await machine.go('menu', 'cut');
