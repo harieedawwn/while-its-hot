@@ -25,8 +25,10 @@
     <step n="6">Update TASK.md: set the phase status to DONE (or PARTIAL with exactly what remains), and add
       2 to 4 lines to the Phase log: what now exists, decisions the next phase must know, anything the user
       should test. Update the code map in CLAUDE.md (one line per new module).</step>
-    <step n="7">Commit with message `phase NN: <short title>` and push. Never commit secrets, shots/, or
-      downloaded raw audio.</step>
+    <step n="7">Commit with message `phase NN: <short title>`, push your branch, then also update main:
+      `git push origin HEAD:main` (if rejected: `git fetch origin main && git merge --no-edit origin/main`,
+      then push both again). main is what the next session starts from. Every push rebuilds the APK.
+      Never commit secrets, shots/, or downloaded raw audio.</step>
     <step n="8">Reply with the report below and stop. Do not start the next phase.</step>
   </loop>
 
@@ -46,7 +48,8 @@
     Phase NN — tên phase: XONG | DỞ (còn: ...)
     Đã làm: 1–3 dòng, cụ thể.
     Đã kiểm: typecheck/test/build + những cảnh đã chụp và kết quả.
-    Cần bạn: (chỉ khi có) các bước cụ thể, ví dụ cài APK mới từ Release "latest" và thử gì.
+    APK: https://github.com/harieedawwn/while-its-hot/releases/download/latest/while-its-hot.apk (có sau ~3 phút) — thử gì.
+    Cần bạn: (chỉ khi có) các bước cụ thể.
     Tiếp theo: Phase MM — tên phase — chọn model: <model trong TASK.md> · effort: <effort trong TASK.md>.
     Rồi gõ /clear và dán lại prompt này.
   </report>

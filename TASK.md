@@ -128,7 +128,7 @@ Read: LOOK §5, §7. CLAUDE.md rule on events.
 - `fx` scene: buttons/URL to trigger each effect; `?fx=evolve&t=0.2` freezes mid-effect.
 Shots: `fx` (evolve mid, sparks mid, break mid, parry). Done when effects are few, physical, and in budget.
 
-### Phase 11 — Audio A: engine, sources, pipeline · `TODO` · Sonnet 5.5 · high
+### Phase 11 — Audio A: engine, sources, pipeline · `TODO` · Sonnet 5.5 · medium
 Read: AUDIO §1, §2.
 - Runtime engine (buses, compressor/limiter, generated IR reverbs, 3D panner + distance/occlusion filter,
   voice limits, round-robin, output mode phone/headphones), unlock, settings volumes.
@@ -138,7 +138,7 @@ Read: AUDIO §1, §2.
 - `audition` scene listing every event in AUDIO §3 (missing ones marked).
 Done when the engine plays sourced test sounds in the audition scene and check.py runs.
 
-### Phase 12 — Audio B: design and mix every sound · `TODO` · Opus 5.5 · high
+### Phase 12 — Audio B: design and mix every sound · `TODO` · Opus 5.5 · medium
 Read: AUDIO (all), `docs/AUDIO_NOTES.md` if it exists.
 - Write recipes for every row in AUDIO §3 (layers, EQ, saturation, weight layer, takes), render, check,
   iterate with the spectrogram sheet. Wire `audio/events.ts` for every gameplay event that exists.
@@ -146,7 +146,7 @@ Read: AUDIO (all), `docs/AUDIO_NOTES.md` if it exists.
 - Mix snapshot from AUDIO §5. Ducking. Phone speaker mode.
 Done when every row exists, check.py passes, and the log tells the user exactly what to listen to on the phone.
 
-### Phase 13 — UI A: design system, main menu, transitions · `TODO` · Opus 5.5 · high
+### Phase 13 — UI A: design system, main menu, transitions · `TODO` · Opus 5.5 · medium
 Read: LOOK §8, §9, §10. If skills `frontend-design` or `web-ui-multidevice` are available, load them.
 - Fonts self-hosted (Big Shoulders Display, Be Vietnam Pro; latin + vietnamese subsets; verify the
   vietnamese subset exists), tokens.css, components (stamped button, tag strip, ledger row, notched slider,
@@ -156,7 +156,7 @@ Read: LOOK §8, §9, §10. If skills `frontend-design` or `web-ui-multidevice` a
 Shots: `ui-menu`, `transition&t=0.15`. Done when the menu looks designed (not a template) on 16:9 and 21:9
 and diacritics never clip.
 
-### Phase 14 — UI B: settings, armory, HUD, pause · `TODO` · Sonnet 5.5 · high
+### Phase 14 — UI B: settings, armory, HUD, pause · `TODO` · Sonnet 5.5 · medium
 Read: LOOK §8, §10. TECH §5 (settings list). GDD §9.
 - Settings ledger with all settings (graphics, audio, controls incl. layout editor entry, view, profile:
   name + color), live apply, persistence.
@@ -172,7 +172,7 @@ Read: GDD §9, §10.
 - APK now opens to the title/menu.
 Shots: `training` (2 cams). Done when the yard is complete offline in the APK.
 
-### Phase 16 — Server: rooms, protocol, clock, deploy · `TODO` · Sonnet 5.5 · high
+### Phase 16 — Server: rooms, protocol, clock, deploy · `TODO` · Sonnet 5.5 · medium
 Read: TECH §1, §4 (rooms, protocol, clock), §7 (deploy).
 - Worker routes + Room DO (SQLite-backed class, `locationHint: "apac"`), create/join by code, host
   handling, reconnect tokens, lobby hibernation, match tick, empty-room alarm.
@@ -190,7 +190,7 @@ Read: TECH §4 (all). GDD §3 (lives/respawn), §5.
 Done when 2 browser clients + 2 netbots fight and forge with 150 ms simulated latency and it still feels fair;
 log the tuning.
 
-### Phase 18 — Match flow · `TODO` · Sonnet 5.5 · high
+### Phase 18 — Match flow · `TODO` · Sonnet 5.5 · medium
 Read: GDD §3, §8.
 - Cages + countdown, doors, blank spawns, truce, fire ring (server-driven), lives, round end rules,
   scoring incl. bounty, slow-mo end + scoreboard, relic draft UI and rules, notoriety, match end screen,

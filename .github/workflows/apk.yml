@@ -1,7 +1,7 @@
 name: apk
 on:
   push:
-    branches: [main]
+    branches: ['**']
     paths: [client/**, shared/**, android/**, capacitor.config.json, package.json, package-lock.json, .github/workflows/apk.yml]
   workflow_dispatch:
 concurrency: { group: apk, cancel-in-progress: true }
