@@ -4,6 +4,8 @@ import type { Kinematics } from './kinematics';
 import { wishDir, type MoveInput, type MoveState } from './move-state';
 
 const M = BALANCE.move;
+/** Fraction of ground/air acceleration left while a combat push (lunge, knockback) carries the body. */
+const PUSH_CONTROL = BALANCE.combat.pushControl;
 const wish = new THREE.Vector3();
 const tmp = new THREE.Vector3();
 
@@ -26,6 +28,7 @@ export function stepMove(s: MoveState, input: MoveInput, dt: number, kin: Kinema
 
   s.jumpBuf = input.jumpPressed ? M.jumpBufferS : Math.max(0, s.jumpBuf - dt);
   s.iframe = Math.max(0, s.iframe - dt);
+  s.pushT = Math.max(0, s.pushT - dt);
   s.sinceSlam += dt;
   s.sinceWall += dt;
   s.clinging = false;
@@ -75,12 +78,13 @@ export function stepMove(s: MoveState, input: MoveInput, dt: number, kin: Kinema
     s.vel.x = s.slideDir.x * sp; s.vel.z = s.slideDir.z * sp;
     if (!s.grounded) { s.vel.y -= M.gravity * dt * 0.5; fall = true; }
   } else if (s.grounded) {
-    approachH(s.vel, wish.x * M.runSpeed, wish.z * M.runSpeed, M.groundAccel * dt);
+    const sp = M.runSpeed * s.speedMul;
+    approachH(s.vel, wish.x * sp, wish.z * sp, M.groundAccel * dt * (s.pushT > 0 ? PUSH_CONTROL : 1));
   } else {
     // strong air control that never bleeds speed gained from dashes or slides
     if (hasWish) {
       const cap = Math.max(M.runSpeed, Math.hypot(s.vel.x, s.vel.z));
-      approachH(s.vel, wish.x * cap, wish.z * cap, M.airAccel * dt);
+      approachH(s.vel, wish.x * cap, wish.z * cap, M.airAccel * dt * (s.pushT > 0 ? PUSH_CONTROL : 1));
     }
     s.vel.y -= M.gravity * dt * 0.5;
     fall = true;

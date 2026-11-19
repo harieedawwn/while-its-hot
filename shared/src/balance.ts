@@ -58,7 +58,69 @@ export const BALANCE = {
       lungeMul: 1.5,
       pullM: 2,
       /** bua_de: the target is launched upward; the shockwave only pushes (no damage) everyone else near. */
-      launch: { upVel: 9, shockR: 2.5, shockPush: 6 },
+      launch: { upVel: 9, push: 2, shockR: 2.5, shockPush: 6 },
+    },
+  },
+  /**
+   * Melee (GDD §5). Seconds, meters, m/s, degrees. Frame data per family: w = windup, a = active, r = recover;
+   * a light swing's w+a+r equals the family's comboS (the chain rhythm of GDD §5). Arcs are in the attacker's
+   * view frame: slash = blade sweeps from→to degrees (+ = right / up) in a plane rolled by `roll`; thrust =
+   * blade extends from→to (fraction of reach) straight ahead.
+   */
+  combat: {
+    hp: 100,
+    /** Attack still held this long into a windup turns it into a heavy charge (≤ every light windup). */
+    tapS: 0.1,
+    /** A press this long before a swing ends is buffered into the next combo hit. */
+    bufferS: 0.22,
+    /** After a light ends, the chain continues if the next press comes within this. */
+    comboGapS: 0.32,
+    heavy: { minS: 0.45, maxS: 1.0 },
+    parry: { windowS: 0.16, recoverS: 0.34, staggerS: 0.6, stamina: 1, frontDeg: 100 },
+    block: { reduce: 0.7, stamina: 1, slow: 0.4, frontDeg: 80, guardBreakS: 0.7, knockMul: 0.35 },
+    dash: { windowS: 0.25, lungeM: 2, dmgMul: 1.2 },
+    /** Armor: +3% reduction per level, max 30% (GDD §7). */
+    armor: { perLevel: 0.03, max: 0.3 },
+    /** Any hit interrupts a windup or charge; light hits flinch this long. */
+    flinchS: 0.2,
+    /** Move speed multipliers while charging / swinging a heavy. Blocking uses block.slow. */
+    slow: { charge: 0.8, heavy: 0.55, stagger: 0.45, flinch: 0.7 },
+    /** Slam landing pushes bodies within BALANCE.move.slam.knockR at this speed (no damage without slam_aoe). */
+    slamKnock: 7, slamLift: 3,
+    /** Seconds a dummy (or later: a player) lies dead before standing up again. */
+    respawnS: 2.5,
+    /** Knockback pushes are applied with weak ground control for this long. */
+    pushS: 0.16,
+    /** Fraction of move acceleration kept while pushed. */
+    pushControl: 0.12,
+    /** Hit capsules on a 1.8 m body (scaled with posture height), y from the feet. Same damage everywhere. */
+    capsules: { head: { y0: 1.52, y1: 1.7, r: 0.15 }, torso: { y0: 0.95, y1: 1.42, r: 0.3 }, legs: { y0: 0.12, y1: 0.92, r: 0.22 } },
+    /** Blade segment starts this far from the eye; sub-steps keep the tip travel ≤ maxStepM. */
+    sweep: { baseM: 0.3, maxStepM: 0.12, pitchMaxDeg: 40, eyeDrop: 0.12 },
+    family: {
+      kiem: {
+        light: [
+          { w: 0.11, a: 0.09, r: 0.18, arc: { kind: 'slash', from: 62, to: -58, roll: 14 }, knock: 2.2, lungeM: 0.3 },
+          { w: 0.11, a: 0.09, r: 0.18, arc: { kind: 'slash', from: -60, to: 60, roll: 16 }, knock: 2.2, lungeM: 0.3 },
+          { w: 0.11, a: 0.09, r: 0.18, arc: { kind: 'slash', from: 52, to: -40, roll: 62 }, knock: 3.5, lungeM: 0.4 },
+        ],
+        heavy: { w: 0.1, a: 0.12, r: 0.34, arc: { kind: 'thrust', from: 0.35, to: 1, roll: 0 }, knock: 5, lungeM: 1.3, staggerS: 0.3 },
+      },
+      bua: {
+        light: [
+          { w: 0.22, a: 0.12, r: 0.28, arc: { kind: 'slash', from: 58, to: -50, roll: 32 }, knock: 4, lungeM: 0.3 },
+          { w: 0.22, a: 0.12, r: 0.28, arc: { kind: 'slash', from: -54, to: 52, roll: 28 }, knock: 4.5, lungeM: 0.3 },
+        ],
+        heavy: { w: 0.15, a: 0.12, r: 0.45, arc: { kind: 'slash', from: 70, to: -36, roll: 88 }, knock: 7, lungeM: 0.6, staggerS: 0.6, breaksBlock: true },
+      },
+      thuong: {
+        light: [
+          { w: 0.12, a: 0.1, r: 0.2, arc: { kind: 'thrust', from: 0.4, to: 1, roll: 0 }, knock: 2.5, lungeM: 0.25 },
+          { w: 0.12, a: 0.1, r: 0.2, arc: { kind: 'slash', from: 50, to: -50, roll: -6 }, knock: 3, lungeM: 0.2 },
+          { w: 0.12, a: 0.1, r: 0.2, arc: { kind: 'thrust', from: 0.4, to: 1, roll: 0 }, knock: 4, lungeM: 0.35 },
+        ],
+        heavy: { w: 0.13, a: 0.16, r: 0.36, arc: { kind: 'slash', from: 80, to: -80, roll: -4 }, knock: 6, lungeM: 0.5, staggerS: 0.3 },
+      },
     },
   },
 } as const;

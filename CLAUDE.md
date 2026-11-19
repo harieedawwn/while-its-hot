@@ -61,6 +61,11 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `shared/src/data/weapons.ts` 16 forms, formFor/passivesOf · `shared/src/passives.ts` passive hook registry + folds
 - `client/src/weapons/{wkit,shapes,palette,tassel,weapon}.ts` one-mesh builder + atlas UVs/heatMask, blade loft/profile/wrap, colors, tassel, build/load(GLB)/setHeat · `weapons/models/*.ts` 16 builders + index
 - `client/src/dev/scene-weapons.ts` rack / `?weapon=&heat=` close-up · `tools/weapon-atlas.mjs` → `public/tex/weapon.png`
+- `shared/src/combat/{frames,fighter,damage,sweep}.ts` frame data + attack shapes, melee state machine, hit/defense rules, blade sweep vs hit capsules
+- `client/src/combat/{combatant,combat-world,resolver}.ts` body+fighter+hp, per-tick sweeps/events/lunges, HitClaim + LocalResolver + passive effects
+- `client/src/combat/{local-fighter,aim-assist,combat-feel,fighter-anim,dummy}.ts` local player melee kit, touch aim assist, hit-stop/trauma, fighter → TP clips, training dummy AI
+- `client/src/combat/vm/{vm-pose,vm-clips,vm-driver,vm-arms}.ts` FP pose keys, per-family FP attack sets from the sweep arcs, fighter → viewmodel, FP forearms
+- `client/src/player/character/clips/attacks.ts` TP attack clips · `dev/{scene-combat,combat-demo}.ts` combat scene + scripted demos
 - `client/src/ui/strings.vi.ts` all Vietnamese text · `tools/shot.mjs` screenshots · `tools/audio/*` audio checks
 
 ## Conventions

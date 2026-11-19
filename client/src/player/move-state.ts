@@ -41,6 +41,8 @@ export interface MoveState {
   clinging: boolean;
   /** Low capsule (sliding, or no room to stand up). */
   low: boolean;
+  /** Combat writes these: ground speed multiplier (block, charge) and seconds of weak control after a push. */
+  speedMul: number; pushT: number;
   events: MoveEvent[];
 }
 
@@ -53,8 +55,15 @@ export function createMoveState(pos: THREE.Vector3Tuple = [0, 0, 0]): MoveState 
     sliding: false, slideT: 0, slideDir: new THREE.Vector3(0, 0, -1),
     slamming: false, sinceSlam: 1e3,
     wallJumps: 0, sinceWall: 1e3, wallN: new THREE.Vector3(),
-    clinging: false, low: false, events: [],
+    clinging: false, low: false, speedMul: 1, pushT: 0, events: [],
   };
+}
+
+/** Combat push (lunge, knockback): set the horizontal velocity and weaken ground control for s seconds. */
+export function pushMove(st: MoveState, vx: number, vz: number, s: number, vy = 0): void {
+  st.vel.x = vx; st.vel.z = vz;
+  if (vy > 0) { st.vel.y = vy; st.grounded = false; }
+  st.pushT = Math.max(st.pushT, s);
 }
 
 /** Capsule height for the current posture. */

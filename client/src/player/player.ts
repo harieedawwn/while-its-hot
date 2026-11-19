@@ -23,7 +23,8 @@ export class Player {
   private input: MoveInput = { mx: 0, my: 0, yaw: 0, jumpPressed: false, dashPressed: false, slidePressed: false, slideHeld: false };
   private view: ViewState;
 
-  constructor(world: CollisionWorld, spawn: THREE.Vector3Tuple, yaw = 0) {
+  /** emit = false for bodies that are not the local player (dummies): their moves stay off the bus. */
+  constructor(world: CollisionWorld, spawn: THREE.Vector3Tuple, yaw = 0, private emit = true) {
     this.s = createMoveState(spawn);
     this.kin = new Kinematics(world);
     this.yaw = yaw;
@@ -37,11 +38,12 @@ export class Player {
     this.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, this.pitch + dy));
   }
 
-  tick(dt: number, a: Actions): void {
+  /** allow = false while staggered or dead: the presses are swallowed, the stick still steers (at speedMul). */
+  tick(dt: number, a: Actions, allow = true): void {
     const i = this.input;
     i.mx = a.move.x; i.my = a.move.y; i.yaw = this.yaw;
-    i.jumpPressed = a.take('jump'); i.dashPressed = a.take('dash');
-    i.slidePressed = a.take('slide'); i.slideHeld = a.isHeld('slide');
+    i.jumpPressed = a.take('jump') && allow; i.dashPressed = a.take('dash') && allow;
+    i.slidePressed = a.take('slide') && allow; i.slideHeld = a.isHeld('slide') && allow;
     this.tickWith(dt, i);
   }
 
@@ -49,6 +51,7 @@ export class Player {
   tickWith(dt: number, input: MoveInput): void {
     this.prev.copy(this.s.pos);
     stepMove(this.s, input, dt, this.kin);
+    if (!this.emit) return;
     for (const e of this.s.events) {
       switch (e.k) {
         case 'jump': bus.emit('move:jump', { kind: e.kind }); break;

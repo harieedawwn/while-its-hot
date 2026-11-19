@@ -54,7 +54,7 @@ export class Animator {
     return true;
   }
   /** Fade the action layer out (or drop it instantly with fade 0). */
-  stop(fadeOut = A.actionOut): void { if (this.act) { this.act.loop = false; this.act.hold = false; this.act.done = true; this.act.fadeOut = fadeOut; if (fadeOut <= 0) this.act = null; } }
+  stop(fadeOut: number = A.actionOut): void { if (this.act) { this.act.loop = false; this.act.hold = false; this.act.done = true; this.act.fadeOut = fadeOut; if (fadeOut <= 0) this.act = null; } }
   get action(): string | null { return this.act?.c.id ?? null; }
 
   /** The land clip, shorter and lighter for soft landings. */

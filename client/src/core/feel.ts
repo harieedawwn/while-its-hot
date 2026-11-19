@@ -83,6 +83,21 @@ export const FEEL = {
     jumpVy: 1.5,
   },
 
+  /** Melee feel (LOOK §6): hit-stop by damage, trauma, viewmodel kicks. Rules live in BALANCE.combat. */
+  combat: {
+    /** Hit-stop ms scales from minMs at dmgLo to maxMs at dmgHi (FEEL.camera.hitStop range). */
+    dmgLo: 9, dmgHi: 45,
+    parryStopMs: 90,
+    trauma: { hit: 0.12, heavy: 0.32, hurt: 0.3, hurtHeavy: 0.55, parry: 0.22, parried: 0.45, blocked: 0.14 },
+    /** Viewmodel kick (0..1) on landing a hit / being blocked / being parried. */
+    kick: { hit: 0.35, heavy: 0.9, blocked: 0.6, parried: 1 },
+    /** Visual swing time owed after a hit-stop is paid back at this extra speed (1 = double speed). */
+    catchUp: 1,
+  },
+
+  /** Aim assist (GDD §5): touch default on. Magnetism toward the best target in the reach cone, slower look on it. */
+  aim: { coneDeg: 18, extraM: 0.8, slow: 0.3, pullRate: 1.4, pitchRate: 0.8, snapDeg: 6 },
+
   /** Third-person camera option (over the shoulder, collision-aware). */
   thirdPerson: {
     dist: 2.7, shoulder: 0.42, pivotY: 1.55,

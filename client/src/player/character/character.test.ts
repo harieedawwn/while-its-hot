@@ -48,9 +48,10 @@ describe('geometry', () => {
 describe('clips', () => {
   const need = ['idle', 'run_f', 'run_b', 'strafe_l', 'strafe_r', 'sprint_lean', 'jump', 'fall', 'land', 'dash', 'slide', 'slam', 'cling',
     'forge_strike', 'heat_hold', 'block', 'parry', 'hit_f', 'hit_b', 'stagger', 'death'];
-  it('has every clip of LOOK §4 and the 15 attack slots', () => {
+  it('has every clip of LOOK §4 and every attack slot (hammer chains 2 lights)', () => {
     for (const id of need) expect(hasClip(id), id).toBe(true);
-    expect(ATTACK_SLOTS).toHaveLength(15);
+    expect(ATTACK_SLOTS).toHaveLength(18);
+    for (const id of ATTACK_SLOTS) expect(hasClip(id), id).toBe(id !== 'atk_hammer_light3');
     expect(clipIds().length).toBeGreaterThanOrEqual(need.length);
   });
   it('looping clips close: u=0 and u=1 give the same pose', () => {

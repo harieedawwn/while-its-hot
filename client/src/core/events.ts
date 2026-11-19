@@ -1,3 +1,8 @@
+import type { AttackKind, Family, Zone } from '@wih/shared';
+
+/** Hit results the bus carries (parries have their own event). */
+export type HitKind = 'hit' | 'blocked' | 'guardbreak' | 'pierced';
+
 /** Tiny typed event bus. Gameplay emits; audio and VFX subscribe. Add event types to GameEvents as phases need them. */
 export interface GameEvents {
   'app:pause': { paused: boolean };
@@ -10,6 +15,13 @@ export interface GameEvents {
   'move:slide': { on: boolean };
   'move:slamstart': Record<string, never>;
   'move:slam': { x: number; y: number; z: number };
+  /** Melee (combat/*). ids are combatant ids; points are world space. */
+  'combat:swing': { id: number; kind: AttackKind; combo: number; family: Family; x: number; y: number; z: number };
+  'combat:charge': { id: number };
+  'combat:guard': { id: number; act: 'parry' | 'block_on' | 'block_off' | 'feint' };
+  'combat:hit': { attacker: number; target: number; dmg: number; zone: Zone; kind: AttackKind; result: HitKind; x: number; y: number; z: number };
+  'combat:parry': { parrier: number; attacker: number; x: number; y: number; z: number };
+  'combat:kill': { target: number; by: number };
   /** Requests from gameplay to the local camera (combat emits these on hits/parries). */
   'cam:trauma': { amount: number };
   'cam:hitstop': { ms: number };

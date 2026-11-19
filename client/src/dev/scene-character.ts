@@ -1,5 +1,8 @@
 import * as THREE from 'three';
-import { MODULE_IDS, PLAYER_COLORS, type ModuleId } from '@wih/shared';
+import { MODULE_IDS, PLAYER_COLORS, WEAPON_IDS, type ModuleId } from '@wih/shared';
+import { gripInHand } from '../combat/dummy';
+import { hasClip } from '../player/character/clips';
+import { loadWeapon } from '../weapons/weapon';
 import { type AnimInput, IDLE_INPUT } from '../player/character/animator';
 import { Character } from '../player/character/character';
 import { LightRig } from '../render/lights';
@@ -12,7 +15,7 @@ import type { SceneFactory } from './scenes';
  * Character lineup (phase 06). `view=0` the 5 armor tiers, `view=1` the 6 modules on half plate, and
  * `clip=<id>` one character playing a clip: idle run run_b strafe_l strafe_r run_fl sprint jump fall slide dash
  * slam cling land forge_strike heat_hold block parry hit_f hit_b stagger death. `armor=0..10`, `mods=a,b`,
- * `color=0..5`. `t` replays the animation to that time and freezes; `cam` overrides the camera.
+ * `color=0..5`, `weapon=<id>` in the right hand (attack clips: `clip=atk_sword_light1` etc.). `t` replays the animation to that time and freezes; `cam` overrides the camera.
  */
 const RUN = 9;
 const BASE: Record<string, Partial<AnimInput>> = {
@@ -33,7 +36,7 @@ const make: SceneFactory = async ({ pipeline, params, width, height }) => {
   rig.setDir([0.4, 0.8, -0.5], '#c4ccd6', 1.5);
   rig.setFog('#1a100c', 9, 26);
   scene.background = rig.fogColor;
-  const lib = await MaterialLib.load(rig, ['concrete', 'slag', 'cloth', 'steel']);
+  const lib = await MaterialLib.load(rig, ['concrete', 'slag', 'cloth', 'steel', 'forged']);
 
   const clip = params.get('clip');
   const view = Math.round(num(params, 'view', 0));
@@ -77,9 +80,12 @@ const make: SceneFactory = async ({ pipeline, params, width, height }) => {
   if (c && c.length >= 5) { camera.position.set(c[0], c[1], c[2]); camera.rotation.set(c[4], c[3], 0, 'YXZ'); }
   else { camera.position.set(...(c ? [c[0], c[1], c[2]] as THREE.Vector3Tuple : cam.pos)); camera.lookAt(...cam.look); }
 
+  const wid = params.get('weapon');
+  if (wid && WEAPON_IDS.includes(wid)) for (const ch of chars) ch.c.hold.hand_r.add(gripInHand(await loadWeapon(wid, { lib })));
   const inputFor = (): AnimInput => ({ ...IDLE_INPUT, ...(clip ? BASE[clip] : {}) });
   const input = inputFor();
-  for (const ch of chars) if (clip && ACTIONS.includes(clip)) ch.c.anim.play(clip, { loop: clip !== 'death' && clip !== 'land', hold: clip === 'death' });
+  const isAction = (id: string) => ACTIONS.includes(id) || (id.startsWith('atk_') && hasClip(id));
+  for (const ch of chars) if (clip && isAction(clip)) ch.c.anim.play(clip, { loop: clip !== 'death' && clip !== 'land' && !clip.startsWith('atk_'), hold: clip === 'death' || clip.startsWith('atk_') });
   const STEP = 1 / 60;
   const advance = (ch: (typeof chars)[number], dt: number) => ch.c.anim.update(dt, input);
   const frozen = params.t !== null;
