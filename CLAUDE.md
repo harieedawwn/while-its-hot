@@ -86,6 +86,9 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `shared/src/training.ts` rack offers, caps, DPS window, yard modes · `client/src/training/{boards,yard}.ts` canvas signs, yard props/stations · `dev/scene-training.ts` Luyện tập yard (`training`)
 - `client/src/ui/strings.vi.ts` all Vietnamese text · `tools/shot.mjs` screenshots · `tools/audio/*` audio checks
 
+- `shared/src/net/{protocol,codec,clock}.ts` lobby msgs, binary State/Snapshot, clock sync · `server/src/{worker,room,lobby}.ts` routes, Room DO, pure roster rules · `wrangler.jsonc` · `tools/netbot.mjs`
+- `client/src/net/{config,client}.ts` server URL, RoomClient + `room.current` · `ui/menu/lobby-screen.ts` + `styles/lobby.css` Chơi mạng lobby
+
 ## Conventions
 - TypeScript strict, ES modules, npm workspaces: `client/`, `server/`, `shared/`.
 - Units: meters, seconds, radians. +Y up. Player eye height 1.62 m.

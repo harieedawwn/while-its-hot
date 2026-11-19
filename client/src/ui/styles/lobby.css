@@ -1,0 +1,15 @@
+/* Lobby (phase 16): entry panel + roster ledger. Flat, stamped, no gradients. */
+.m-lob { left: calc(var(--sl) + 14px); top: calc(var(--st) + 10px); bottom: calc(var(--sb) + 10px); width: min(640px, calc(88vw - var(--sl))); }
+.m-lob .k-body { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+.m-lob .k-field { font: 800 var(--t-l)/1 var(--f-display); letter-spacing: 0.3em; text-transform: uppercase; text-align: center; }
+.m-lob .m-acts, .m-lob .m-wait, .m-lob .k-seg { flex: none; }
+.m-lob .m-acts { display: flex; gap: 10px; flex-wrap: wrap; }
+.m-lob .m-acts .k-btn { flex: 1 1 8em; }
+.m-code { flex: none; font: 900 var(--t-l)/1 var(--f-display); letter-spacing: 0.2em; border: 4px solid var(--bone); padding: 0.05em 0.2em 0.02em 0.3em; align-self: flex-start; }
+.m-roster { flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; border-top: var(--rule) solid var(--steel); }
+.m-pl { display: grid; grid-template-columns: 14px 1fr auto auto; align-items: center; gap: 12px; min-height: 44px; padding: 3px 4px; border-bottom: var(--rule) solid var(--steel); font: 600 var(--t-s)/1.3 var(--f-text); }
+.m-pl i { width: 14px; height: 14px; display: block; }
+.m-pl.is-off { color: var(--ash); }
+.m-pl .m-tag { font: 800 var(--t-xs)/1 var(--f-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--iron-hot); }
+.m-pl .m-ms { color: var(--bone-dim); min-width: 4.5em; text-align: right; }
+.m-wait { color: var(--bone-dim); font: 600 var(--t-s)/1.4 var(--f-text); }

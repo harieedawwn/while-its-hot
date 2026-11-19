@@ -150,4 +150,9 @@ export const BALANCE = {
       },
     },
   },
+  net: {
+    maxPlayers: 6, codeLen: 4, codeAlphabet: 'ABCDEFGHJKLMNPQRSTUVWXYZ',
+    tickHz: 20, reconnectS: 30, emptyRoomS: 300, pingEveryS: 2, clockKeep: 5,
+    nameMax: 16, truceChoices: [0, 30, 60], truceDefault: 30, roundsToWin: 3,
+  },
 } as const;

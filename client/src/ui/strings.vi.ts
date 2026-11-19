@@ -9,6 +9,15 @@ export const STR = {
     /** Toast for a door that is not built yet (server arrives in phase 16, armory in 14). */
     closed: 'Chưa mở',
   },
+  /** Online lobby (phase 16). */
+  lobby: {
+    title: 'Chơi mạng', create: 'Tạo phòng', join: 'Vào phòng', code: 'Mã phòng', codeHint: 'ABCD', enter: 'Vào',
+    room: 'Phòng', ready: 'Sẵn sàng', notReady: 'Hủy sẵn sàng', start: 'Bắt đầu', host: 'Chủ phòng', leave: 'Rời phòng',
+    truce: 'Hưu chiến', seconds: (n: number) => (n === 0 ? 'Không' : `${n} giây`), ping: (ms: number) => `${ms} ms`,
+    waiting: 'Đang chờ người chơi', offline: 'Mất kết nối',
+    err: { full: 'Phòng đã đầy', started: 'Trận đã bắt đầu', closed: 'Phòng đã đóng', bad: 'Chưa thể bắt đầu', notfound: 'Không có phòng này', host: 'Chỉ chủ phòng', net: 'Không kết nối được' },
+    retry: 'Đang nối lại',
+  },
   /** Settings ledger (phase 13 has the first rows; phase 14 fills it). */
   settings: {
     tabs: { gfx: 'Hình ảnh', audio: 'Âm thanh', controls: 'Điều khiển', view: 'Góc nhìn', profile: 'Hồ sơ' },

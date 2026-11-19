@@ -1,2 +1,15 @@
-{ "name": "@wih/server", "private": true, "version": "0.0.0", "type": "module",
-  "scripts": { "typecheck": "tsc -p .", "dev": "echo \"server arrives in phase 16\"" } }
+{
+  "name": "@wih/server",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261119.1",
+    "wrangler": "4.165.0"
+  }
+}

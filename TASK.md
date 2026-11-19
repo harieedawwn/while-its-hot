@@ -172,7 +172,7 @@ Read: GDD §9, §10.
 - APK now opens to the title/menu.
 Shots: `training` (2 cams). Done when the yard is complete offline in the APK.
 
-### Phase 16 — Server: rooms, protocol, clock, deploy · `TODO` · Sonnet 5.5 · medium
+### Phase 16 — Server: rooms, protocol, clock, deploy · `PARTIAL` · Sonnet 5.5 · medium
 Read: TECH §1, §4 (rooms, protocol, clock), §7 (deploy).
 - Worker routes + Room DO (SQLite-backed class, `locationHint: "apac"`), create/join by code, host
   handling, reconnect tokens, lobby hibernation, match tick, empty-room alarm.
@@ -180,6 +180,7 @@ Read: TECH §1, §4 (rooms, protocol, clock), §7 (deploy).
 - Lobby UI (Tạo phòng / Vào phòng / code entry / ready list / host settings). `tools/netbot.mjs`.
 - `deploy.yml` + ask the user for the Cloudflare token (once), deploy, test bots against production.
 Done when 3 netbots + 1 client sit in a lobby on the deployed Worker with stable ping.
+REMAINING (needs the user): set secrets `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`, run deploy, put the real workers.dev URL in `client/src/net/config.ts` `DEPLOY_URL`, then `node tools/netbot.mjs --host <url> --n 3` against production.
 
 ### Phase 17 — Netplay: players, hits, authority · `TODO` · Opus 5.5 · high
 Read: TECH §4 (all). GDD §3 (lives/respawn), §5.
@@ -282,4 +283,5 @@ Done when the sim results are in the log and the APK release is current.
 - Phase 15: `?scene=training` (menu Luyện tập → stamp cut → it; pause works there). Foundry NW corner: 3 dummies, your anvil with caps = `profile.bestLevel` (the phase-09 refused strike applies), weapon rack of `rackOffers(profile)`, armor stand, lever board (Đứng yên/Đỡ đòn/Phản đòn/Di chuyển), chalkboard (last hit + 5 s DPS) — all painted canvas signs (`training/{boards,yard}.ts`), rules in `shared/src/training.ts` (+test). Rèn (E / touch Rèn button) near a station cycles it; at the anvil it forges as before. HUD is live there (`hud.set` each frame, no timer/lives).
 - Decisions: the movement course is Arena 1's own wall-jump shafts + crane tower (no separate geometry); the armor stand cycles tiers 0–10 freely, modules wait for phase 18's draft (profile has no drafted list yet); profile stays localStorage only (Android WebView persists it, Capacitor Preferences not needed); the 'attack' dummy mode is not on the lever (Phản đòn covers it). Menu "Kho vũ khí" unchanged.
 - Test on the phone: Luyện tập → walk to the board row north of the dummies, tap Rèn at rack/armor/lever; hit dummies and read the chalkboard; place the anvil (Đe) and strike past +3 — it must refuse; the APK already opens to the menu.
-
+- Phase 16 (PARTIAL): `shared/src/net/{protocol,codec,clock}.ts` (+test): JSON lobby msgs, binary 33-byte State / Snapshot, ClockSync (5 lowest-RTT median), `BALANCE.net`. `server/src/{worker,room,lobby}.ts` + `wrangler.jsonc`: POST /room -> code, /room/CODE/ws, /exists; Room DO (SQLite class, hibernating lobby, 30 s reconnect token, host handoff, 5 min empty alarm, 20 Hz snapshot relay once a match starts); `Lobby` is pure and unit-tested. Verified locally with `wrangler dev` + `tools/netbot.mjs` (3 bots, match start, snapshots, ping ~2 ms).
+- Client: `net/{config,client}.ts` (RoomClient, `room.current` shared with the match), `ui/menu/lobby-screen.ts` + `lobby.css` (menu -> Chơi mạng: Tạo phòng / code field / roster / Sẵn sàng / host truce 0-30-60 / Bắt đầu; scene `ui-menu&screen=online&code=XXXX&server=URL`). `start` message is received but no match scene yet (phase 17/18). `.github/workflows/deploy.yml` skips deploy until the token secret exists. Dev: `npm run dev:server` + `?server=http://127.0.0.1:8787`.
