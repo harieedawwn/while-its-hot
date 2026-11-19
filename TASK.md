@@ -251,7 +251,7 @@ Read: TECH §5. LOOK §8 ("Touch buttons" and palette only). Code map lines for 
 - Tests for pointer ownership with 4 simultaneous pointers.
 Shots: `movement&touch=1` and the layout editor, `phones`. Done when all presets work and nothing overlaps on 16:9 and 21:9.
 
-### Phase 23 — App icon and splash · `TODO` · Sonnet 5.5 · medium
+### Phase 23 — App icon and splash · `DONE` · Sonnet 5.5 · medium
 Read: LOOK §1, §5. TECH §6 (splash).
 - `?scene=icon`: a cinematic in-engine render built for the icon: the anvil close-up, a blade at forging heat
   on it, hammer frozen mid-strike with a few sparks, one strong warm key light from the blade/brazier,
@@ -363,3 +363,5 @@ Done when the APK built by CI shows the new icon and splash.
 - Pointer ownership moved to pure `input/touch-router.ts` (any pointer count, per-button hold count, stick owned by one pointer, everything else looks, button finger slides into look) with `touch-router.test.ts` (4 simultaneous pointers). Factory presets `two/three/four` live in `input/touch-presets.ts` (claw: Nhảy+Trượt top-left, Đánh+Đỡ top-right; 3 ngón: Đánh top-left); tests check no overlap for every preset and its mirror at 16:9..21:9 and 4:3.
 - Layout store v2 (`wih.touch.layout.v2`, v1 slots migrate as 2 ngón): 3 custom slots, each remembers its base preset; editor = slots + Mẫu 2/3/4 ngón (loads into the active slot) + Lưới, Đảo tay (mirror), Đặt lại hết, per-control Cỡ/Độ mờ/Đặt lại nút; panel auto-docks top/bottom/middle where it covers least and goes see-through while dragging. `?preset=two|three|four` previews a preset unsaved in any touch scene.
 - Test on phone: 4 ngón with both index fingers on the top corners while moving and looking; hold Đánh for a heavy (rim fills, turns orange); slide and watch the Trượt rim; hold the scoreboard button in Chơi mạng.
+- Phase 23: `?scene=icon` (`dev/scene-icon.ts`; params weapon/heat/fov/cam) = anvil + hot kiem_tho + hammer mid-strike + sparks, one warm key, black around; shot.mjs got an `icon` device (1024², `res=native` added per device via `q`). Capture is committed as `tools/icon-src.png`; `node tools/icon-gen.mjs` (sharp) writes adaptive foreground (soot keyed to alpha), monochrome, legacy square/round mipmaps, `#050302` background color and every splash.png (art at 62 % on soot black) into `android/`. Re-run both after changing the scene.
+- Test on phone after CI: new launcher icon (also themed icon on Android 13+) and the splash before the first frame.

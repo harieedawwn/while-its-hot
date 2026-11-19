@@ -36,6 +36,7 @@ const DEVICES = {
   phone195: { w: 780,  h: 360, touch: true,  note: '19.5:9 phone' },
   tablet43: { w: 1024, h: 768, touch: true,  note: '4:3 tablet' },
   desktop:  { w: 1280, h: 720, touch: false, note: 'dev desktop' },
+  icon:     { w: 1024, h: 1024, touch: false, note: 'app icon source (square, native res)', q: 'res=native' },
 };
 const PRESETS = { phones: ['old16x9', 'phone20', 'long21'], all: Object.keys(DEVICES) };
 const devArg = opt('--devices', 'phones');
@@ -125,7 +126,7 @@ for (const id of devices) {
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + (e.stack || e.message).split('\n').slice(0, 3).join(' | ')));
   page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text().slice(0, 300)); });
-  const url = base + (base.includes('?') ? '&' : '?') + query;
+  const url = base + (base.includes('?') ? '&' : '?') + query + (d.q ? '&' + d.q : '');
   const t0 = Date.now();
   let ready = false;
   try {
