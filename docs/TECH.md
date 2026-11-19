@@ -29,7 +29,7 @@ client/  src/{app,core,render,world,player,combat,forge,weapons,armor,fx,audio,i
 server/  src/{worker.ts, room.ts, rules/*.ts}   wrangler.jsonc
 shared/  src/{balance.ts, data/*, passives.ts, forge.ts, damage.ts, rng.ts, net/{protocol.ts,codec.ts}}
 android/ (Capacitor project; native tweaks in MainActivity)
-tools/   shot.mjs, texbake.mjs, netbot.mjs, audio/{fetch.mjs,design.py,check.py,recipes.yaml,sources.json}
+tools/   shot.mjs, texbake.mjs, netbot.mjs, audio/{fetch.mjs,design.py,check.py,recipes/*.yaml,sources.json}
 kit/     vendored helpers (procgeo, sfx engine) — moved into client in phase 00
 ```
 `client/src/app/` owns the screen state machine: `Boot → Title → Menu → {Training | Lobby → Match} ↔ Settings`.

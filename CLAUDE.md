@@ -74,7 +74,8 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/fx/{fx-world,fx-bind,fx-layer,fx-settings}.ts` pools + recipes, bus → effects + ring embers/tint, per-scene FX bundle with trails, Máu setting · `dev/{scene-fx,fx-demo}.ts` fx bench
 - `client/src/world/foundry/flame-atlas.ts` 4-frame flame atlas for the fire ring cards (`ring.ts`)
 - `client/src/audio/{graph,reverb,settings}.ts` AudioContext + buses/glue/limiter/phone stage/generated reverbs, IR maker, saved volumes+output · `audio/{engine,bank,voices,spatial,catalog}.ts` play/loop facade, manifest+takes+synth fallback, voice stealing, 3D+air filter, event catalog (AUDIO §3)
-- `tools/audio/{fetch.mjs,sources.json,design.py,recipes.yaml,check.py}` CC0 fetch, recipe renderer → `client/public/sfx/`, loudness/chime checker + spectrogram sheet · `dev/scene-audition.ts` · `client/public/sfx/CREDITS.md`
+- `tools/audio/{fetch.mjs,sources.json,design.py,recipes/*.yaml,check.py}` CC0 fetch, recipe renderer → `client/public/sfx/`, loudness/chime checker + spectrogram sheet · `dev/scene-audition.ts` · `client/public/sfx/CREDITS.md`
+- `client/src/audio/{events,haptics,ambience,places,scene-audio}.ts` bus → sounds+haptics, Capacitor haptics, beds/emitters/one-shots, per-place ambience defs, per-scene audio glue (listener, occlusion ray)
 - `client/src/ui/strings.vi.ts` all Vietnamese text · `tools/shot.mjs` screenshots · `tools/audio/*` audio checks
 
 ## Conventions

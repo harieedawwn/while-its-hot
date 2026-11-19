@@ -1,0 +1,93 @@
+# World emitters, match flow, ambience (AUDIO §3). Beds are loops (8-10 s, seamless crossfade); one-shots are positional.
+events:
+  fire_ring:                       # positional roaring wall: fire recording + low roar + crackle
+    lufs: -22
+    loop: 0.6
+    layers:
+      - {src: "oga_fire/fire.wav", start: 0.0, dur: 6.0, hp: 50, gain: 0}
+      - {synth: bed, at: 0, dur: 6.0, hp: 40, lp: 350, gain: -4}
+      - {synth: crackle, at: 0, dur: 6.0, rate: 16, hp: 1200, gain: -9}
+  fire_inside:                     # inside the flames: close, brighter, sizzle
+    lufs: -26
+    loop: 0.5
+    layers:
+      - {src: "oga_fire/fire.wav", start: 6.0, dur: 5.0, hp: 120, gain: 0}
+      - {synth: bed, at: 0, dur: 5.0, hp: 2500, lp: 9000, gain: -12}
+      - {synth: crackle, at: 0, dur: 5.0, rate: 30, hp: 2000, gain: -6}
+  molten:                          # molten channel: slow gloops + low rumble
+    lufs: -26
+    loop: 0.6
+    layers:
+      - {synth: bed, at: 0, dur: 7.0, hp: 30, lp: 140, gain: 0}
+      - {synth: bubbles, at: 0, dur: 7.0, rate: 3, lp: 600, gain: -3}
+      - {src: "oga_sfx100_2/**/sfx100v2_loop_water_02.ogg", start: 0.0, dur: 3.5, pitch: -12, lp: 700, gain: -6, fade: 0.3}
+  amb_oneshot:                     # distant foundry one-shots (clanks, chains, falling iron); played far away by the ambience
+    lufs: -22
+    variants: 6
+    layers:
+      - {src: ["oga_mechanical/clank1.wav", "oga_rpg80/chain_03.ogg", "oga_metal_wood/metal_falling_01.ogg", "oga_breaking/**/bfh1_metal_falling_01.ogg", "oga_mechanical/rattle1.wav", "oga_sfx100/metal_12.ogg"], dur: 1.4, hp: 120, lp: 3500, gain: 0, fade: 0.4}
+  cage_tick:                       # countdown: mechanical ratchet tick per second (not a beep)
+    lufs: -17
+    expect: -18
+    squash: 6
+    variants: 3
+    layers:
+      - {src: "oga_mechanical/lightclunk*.wav", dur: 0.14, hp: 250, gain: 0, fade: 0.05}
+      - {src: "oga_metal_wood/metal_spring_01.ogg", at: 0.01, dur: 0.08, hp: 1500, gain: -10, fade: 0.04}
+      - {synth: thump, at: 0, dur: 0.06, f0: 120, f1: 80, decay: 0.02, gain: -10}
+  cage_open:                       # massive iron gate slam + chain run
+    lufs: -14
+    expect: -15
+    squash: 8
+    layers:
+      - {src: "oga_chain_winch/**/winch - Marker #9.wav", dur: 1.6, hp: 200, gain: -6, fade: 0.5}
+      - {src: "oga_iron_door/*.ogg", at: 0.9, hp: 40, gain: 0, fade: 0.3}
+      - {src: "oga_sfx100/slam_02.ogg", at: 0.9, lp: 2500, gain: -4, fade: 0.2}
+      - {synth: thump, at: 0.9, dur: 0.45, f0: 80, f1: 30, drop: 0.07, decay: 0.16, gain: -1}
+  truce_horn:                      # one deep metal drone (1.5 s), a struck iron mass pitched down, not a fanfare
+    lufs: -17
+    layers:
+      - {src: "oga_metal_impact/bong1.wav", dur: 0.72, pitch: -14, lp: 900, gain: 0, fade: 0.6}
+      - {synth: thump, at: 0, dur: 1.5, f0: 58, f1: 46, drop: 0.5, decay: 0.6, gain: -5}
+      - {synth: noise, at: 0, dur: 1.4, decay: 0.5, hp: 60, lp: 300, gain: -10}
+  round_win:                       # heavy stamp + short low metal swell
+    lufs: -15
+    layers:
+      - {src: "oga_sfx100/slam_02.ogg", dur: 0.5, hp: 40, gain: 0, fade: 0.15}
+      - {synth: thump, at: 0, dur: 0.3, f0: 90, f1: 38, decay: 0.1, gain: -2}
+      - {src: "oga_metal_impact/bong1.wav", at: 0.05, dur: 0.75, pitch: -7, lp: 1800, gain: -6, fade: 0.5, fade_in: 0.25}
+  round_lose:                      # same, darker
+    lufs: -16
+    layers:
+      - {src: "oga_sfx100/slam_02.ogg", dur: 0.5, hp: 40, lp: 1200, gain: 0, fade: 0.15}
+      - {synth: thump, at: 0, dur: 0.35, f0: 70, f1: 30, decay: 0.13, gain: -2}
+      - {src: "oga_metal_impact/bong1.wav", at: 0.05, dur: 0.6, pitch: -12, lp: 420, gain: -6, fade: 0.6, fade_in: 0.3}
+  match_win:                       # bigger stamp + quench hiss
+    lufs: -14
+    layers:
+      - {src: "oga_sfx100/slam_02.ogg", dur: 0.5, hp: 35, gain: 0, fade: 0.15}
+      - {src: "oga_hammer_anvil/forger_0.ogg", dur: 0.35, hp: 150, gain: -5, fade: 0.2}
+      - {synth: thump, at: 0, dur: 0.45, f0: 90, f1: 30, drop: 0.07, decay: 0.15, gain: 0}
+      - {src: "oga_steam/steam hisses - Marker #1.wav", at: 0.25, dur: 1.1, hp: 500, gain: -6, fade: 0.5, fade_in: 0.05}
+  amb_foundry:                     # room tone: low roar + distant machinery (one-shots come from amb_oneshot / steam_vent)
+    lufs: -30
+    loop: 1.0
+    layers:
+      - {src: "oga_dungeon_amb/*.ogg", start: 20.0, dur: 10.0, hp: 30, lp: 1500, gain: -2}
+      - {src: "oga_sfx100_2/**/sfx100v2_loop_machine_01.ogg", at: 0, dur: 7.5, lp: 800, gain: -6, fade: 1.0, fade_in: 1.0}
+      - {synth: bed, at: 0, dur: 10.0, hp: 30, lp: 180, gain: -4}
+      - {src: "oga_fire/fire.wav", at: 0, start: 10.0, dur: 10.0, lp: 1200, gain: -10}
+  amb_yard:                        # open-air dusk: light wind, a forge far off
+    lufs: -30
+    loop: 1.0
+    layers:
+      - {synth: bed, at: 0, dur: 10.0, hp: 200, lp: 1400, gain: -6}
+      - {src: "oga_whoosh/*.wav", at: 1.0, dur: 4.5, hp: 150, lp: 3000, gain: -6, fade: 1.5, fade_in: 1.5}
+      - {src: "oga_hammer_anvil/forger_0.ogg", at: 2.0, dur: 1.2, lp: 1200, gain: -14, fade: 0.5}
+      - {src: "oga_hammer_anvil/forger_0.ogg", at: 6.5, start: 0.58, dur: 1.2, lp: 1200, gain: -16, fade: 0.5}
+  menu_smithy:                     # brazier crackle bed
+    lufs: -30
+    loop: 0.8
+    layers:
+      - {src: "oga_fire/fire.wav", start: 2.0, dur: 8.0, hp: 80, gain: 0}
+      - {synth: crackle, at: 0, dur: 8.0, rate: 12, hp: 1500, gain: -8}

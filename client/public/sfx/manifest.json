@@ -1,4 +1,79 @@
 {
+ "amb_foundry": {
+  "n": 1,
+  "loop": true,
+  "lufs": -30
+ },
+ "amb_oneshot": {
+  "n": 6,
+  "loop": false,
+  "lufs": -22
+ },
+ "amb_yard": {
+  "n": 1,
+  "loop": true,
+  "lufs": -30
+ },
+ "anvil_lift": {
+  "n": 1,
+  "loop": false,
+  "lufs": -21
+ },
+ "anvil_place": {
+  "n": 2,
+  "loop": false,
+  "lufs": -16
+ },
+ "bolt": {
+  "n": 2,
+  "loop": false,
+  "lufs": -18
+ },
+ "bomb": {
+  "n": 1,
+  "loop": false,
+  "lufs": -14
+ },
+ "cage_open": {
+  "n": 1,
+  "loop": false,
+  "lufs": -14
+ },
+ "cage_tick": {
+  "n": 3,
+  "loop": false,
+  "lufs": -17
+ },
+ "cling": {
+  "n": 2,
+  "loop": false,
+  "lufs": -26
+ },
+ "dash": {
+  "n": 3,
+  "loop": false,
+  "lufs": -20
+ },
+ "death": {
+  "n": 1,
+  "loop": false,
+  "lufs": -22
+ },
+ "fire_inside": {
+  "n": 1,
+  "loop": true,
+  "lufs": -26
+ },
+ "fire_ring": {
+  "n": 1,
+  "loop": true,
+  "lufs": -22
+ },
+ "footstep_metal": {
+  "n": 6,
+  "loop": false,
+  "lufs": -24
+ },
  "footstep_slag": {
   "n": 6,
   "loop": false,
@@ -9,15 +84,95 @@
   "loop": false,
   "lufs": -24
  },
+ "footstep_wood": {
+  "n": 6,
+  "loop": false,
+  "lufs": -24
+ },
+ "frenzy_end": {
+  "n": 1,
+  "loop": false,
+  "lufs": -21
+ },
+ "frenzy_loop": {
+  "n": 1,
+  "loop": true,
+  "lufs": -21
+ },
+ "frenzy_start": {
+  "n": 1,
+  "loop": false,
+  "lufs": -16
+ },
+ "gay": {
+  "n": 2,
+  "loop": false,
+  "lufs": -14
+ },
  "heat_loop": {
   "n": 1,
   "loop": true,
   "lufs": -22
  },
+ "heavy_charge": {
+  "n": 1,
+  "loop": true,
+  "lufs": -26
+ },
+ "heavy_release": {
+  "n": 3,
+  "loop": false,
+  "lufs": -17
+ },
+ "hit_armor": {
+  "n": 4,
+  "loop": false,
+  "lufs": -16
+ },
  "hit_blocked": {
   "n": 3,
   "loop": false,
   "lufs": -17
+ },
+ "hit_flesh": {
+  "n": 4,
+  "loop": false,
+  "lufs": -17
+ },
+ "jump": {
+  "n": 3,
+  "loop": false,
+  "lufs": -25
+ },
+ "kill": {
+  "n": 2,
+  "loop": false,
+  "lufs": -14
+ },
+ "land_hard": {
+  "n": 3,
+  "loop": false,
+  "lufs": -19
+ },
+ "land_soft": {
+  "n": 3,
+  "loop": false,
+  "lufs": -24
+ },
+ "match_win": {
+  "n": 1,
+  "loop": false,
+  "lufs": -14
+ },
+ "menu_smithy": {
+  "n": 1,
+  "loop": true,
+  "lufs": -30
+ },
+ "molten": {
+  "n": 1,
+  "loop": true,
+  "lufs": -26
  },
  "parry": {
   "n": 3,
@@ -29,29 +184,159 @@
   "loop": false,
   "lufs": -15
  },
+ "round_lose": {
+  "n": 1,
+  "loop": false,
+  "lufs": -16
+ },
+ "round_win": {
+  "n": 1,
+  "loop": false,
+  "lufs": -15
+ },
+ "shoulder_gun": {
+  "n": 2,
+  "loop": false,
+  "lufs": -15
+ },
+ "slam_fall": {
+  "n": 1,
+  "loop": true,
+  "lufs": -24
+ },
+ "slam_land": {
+  "n": 2,
+  "loop": false,
+  "lufs": -14
+ },
+ "slide_end": {
+  "n": 2,
+  "loop": false,
+  "lufs": -24
+ },
+ "slide_loop": {
+  "n": 1,
+  "loop": true,
+  "lufs": -25
+ },
+ "slide_start": {
+  "n": 2,
+  "loop": false,
+  "lufs": -22
+ },
+ "stagger": {
+  "n": 3,
+  "loop": false,
+  "lufs": -17
+ },
  "steam_vent": {
   "n": 3,
   "loop": false,
   "lufs": -20
  },
  "strike_dat": {
-  "n": 1,
+  "n": 2,
   "loop": false,
   "lufs": -15
+ },
+ "strike_giu": {
+  "n": 2,
+  "loop": false,
+  "lufs": -17
  },
  "strike_hong": {
   "n": 1,
   "loop": false,
   "lufs": -17
  },
+ "strike_refused": {
+  "n": 1,
+  "loop": false,
+  "lufs": -21
+ },
+ "strike_tuyet": {
+  "n": 2,
+  "loop": false,
+  "lufs": -14
+ },
+ "swap_weapon": {
+  "n": 4,
+  "loop": false,
+  "lufs": -21
+ },
  "swing_hammer": {
   "n": 3,
+  "loop": false,
+  "lufs": -19
+ },
+ "swing_polearm": {
+  "n": 4,
   "loop": false,
   "lufs": -20
  },
  "swing_sword": {
-  "n": 4,
+  "n": 5,
+  "loop": false,
+  "lufs": -20
+ },
+ "truce_horn": {
+  "n": 1,
+  "loop": false,
+  "lufs": -17
+ },
+ "ui_back": {
+  "n": 2,
+  "loop": false,
+  "lufs": -30
+ },
+ "ui_close": {
+  "n": 1,
+  "loop": false,
+  "lufs": -27
+ },
+ "ui_error": {
+  "n": 1,
+  "loop": false,
+  "lufs": -27
+ },
+ "ui_notch": {
+  "n": 3,
+  "loop": false,
+  "lufs": -30
+ },
+ "ui_open": {
+  "n": 1,
+  "loop": false,
+  "lufs": -26
+ },
+ "ui_select": {
+  "n": 2,
+  "loop": false,
+  "lufs": -24
+ },
+ "ui_tap": {
+  "n": 3,
+  "loop": false,
+  "lufs": -28
+ },
+ "ui_toggle": {
+  "n": 2,
+  "loop": false,
+  "lufs": -28
+ },
+ "walljump": {
+  "n": 3,
   "loop": false,
   "lufs": -22
+ },
+ "wipe_quench": {
+  "n": 1,
+  "loop": false,
+  "lufs": -26
+ },
+ "wipe_stamp": {
+  "n": 1,
+  "loop": false,
+  "lufs": -20
  }
 }

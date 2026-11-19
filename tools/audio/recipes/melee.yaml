@@ -1,0 +1,66 @@
+# Melee (AUDIO §3): three layers per hit = transient click + recorded body + sub weight. Parry/blocked live in core.yaml.
+events:
+  swing_polearm:                   # long whoosh: a slower, darker blade swing
+    lufs: -20
+    variants: 4
+    layers:
+      - {src: "oga_swords_sn/**/sword.*.ogg", pick: 2, dur: 0.7, pitch: -5, hp: 200, lp: 7000, gain: 0, fade: 0.25, fade_in: 0.03}
+      - {src: "oga_rpg_pack/**/battle/swing*.wav", at: 0.04, pitch: -2, hp: 120, gain: -6, fade: 0.08}
+  heavy_charge:                    # loop: leather creak over a filtered noise tension bed (engine opens the filter + level)
+    lufs: -26
+    loop: 0.3
+    layers:
+      - {synth: bed, at: 0, dur: 2.4, hp: 300, lp: 2200, gain: -4}
+      - {src: "oga_rpg_pack/**/inventory/cloth-heavy.wav", at: 0.1, gain: -2, fade: 0.15, fade_in: 0.05}
+      - {src: "oga_rpg_pack/**/inventory/armor-light.wav", at: 0.9, lp: 4000, gain: -8, fade: 0.2, fade_in: 0.05}
+      - {src: "oga_rpg_pack/**/inventory/cloth-heavy.wav", at: 1.5, pitch: -2, gain: -3, fade: 0.15, fade_in: 0.05}
+  heavy_release:                   # the big swing
+    lufs: -17
+    variants: 3
+    layers:
+      - {src: "oga_rpg_pack/**/battle/swing*.wav", pitch: -3, hp: 60, gain: 0, fade: 0.08, fade_in: 0.01}
+      - {src: "oga_swords_sn/**/sword.*.ogg", pick: 6, dur: 0.55, pitch: -4, hp: 250, gain: -2, fade: 0.2, fade_in: 0.01}
+      - {synth: thump, at: 0.06, dur: 0.2, f0: 80, f1: 42, decay: 0.07, gain: -7}
+  hit_flesh:                       # meat thud + cloth, crack on top, sub under
+    lufs: -17
+    variants: 4
+    layers:
+      - {src: ["oga_hits_punches/**/hit02.mp3.flac", "oga_hits_punches/**/hit07.mp3.flac", "oga_hits_punches/**/hit08.mp3.flac", "oga_hits_punches/**/hit05.mp3.flac"], dur: 0.35, hp: 50, gain: 0, fade: 0.12}
+      - {src: "oga_rpg_pack/**/inventory/cloth*.wav", at: 0.005, dur: 0.2, hp: 300, gain: -9, fade: 0.08}
+      - {synth: click, at: 0, dur: 0.01, decay: 0.0015, hp: 2500, gain: -10}
+      - {synth: thump, at: 0, dur: 0.1, f0: 90, f1: 50, decay: 0.035, gain: -6}
+  hit_armor:                       # metal plate clank + spark tick + weight
+    lufs: -16
+    expect: -17
+    squash: 8
+    variants: 4
+    layers:
+      - {src: ["oga_metal_wood/metal_hit_03.ogg", "oga_breaking/**/bfh1_metal_hit_02.ogg", "oga_breaking/**/bfh1_metal_hit_04.ogg", "oga_sfx100/metal_06.ogg"], dur: 0.4, hp: 150, gain: 0, fade: 0.15}
+      - {src: ["oga_hits_punches/**/hit03.mp3.flac", "oga_hits_punches/**/hit04.mp3.flac"], dur: 0.2, hp: 80, lp: 3000, gain: -6, fade: 0.08}
+      - {synth: noise, at: 0.004, dur: 0.06, decay: 0.012, hp: 5000, gain: -14}
+      - {synth: click, at: 0, dur: 0.01, decay: 0.0015, hp: 3000, gain: -10}
+      - {synth: thump, at: 0, dur: 0.1, f0: 100, f1: 55, decay: 0.035, gain: -7}
+  stagger:                         # body impact + a piece of gear dropping
+    lufs: -17
+    variants: 3
+    layers:
+      - {src: ["oga_hits_punches/**/hit02.mp3.flac", "oga_hits_punches/**/hit08.mp3.flac"], dur: 0.35, hp: 45, gain: 0, fade: 0.12}
+      - {src: "oga_breaking/**/bfh1_metal_falling_0[345].ogg", at: 0.09, dur: 0.4, hp: 400, gain: -8, fade: 0.15}
+      - {synth: thump, at: 0, dur: 0.16, f0: 85, f1: 40, decay: 0.06, gain: -4}
+  kill:                            # heavy hit, 80 ms of nothing (hit-stop), then the low boom + debris tail
+    lufs: -14
+    variants: 2
+    lead_check: true
+    layers:
+      - {src: "oga_hits_punches/**/hit0[27].mp3.flac", dur: 0.09, hp: 40, gain: 0, fade: 0.03}
+      - {synth: click, at: 0, dur: 0.012, decay: 0.002, hp: 2000, gain: -6}
+      - {synth: thump, at: 0, dur: 0.08, f0: 110, f1: 60, decay: 0.03, gain: -4}
+      - {synth: thump, at: 0.17, dur: 0.6, f0: 75, f1: 28, drop: 0.09, decay: 0.2, gain: -1}
+      - {synth: noise, at: 0.17, dur: 0.5, decay: 0.12, lp: 400, gain: -8}
+      - {src: "oga_breaking/**/bfh1_metal_falling_0[12].ogg", at: 0.2, dur: 0.7, hp: 500, gain: -12, fade: 0.3}
+  death:                           # own death: low drone that fades (the engine muffles the world under it)
+    lufs: -22
+    layers:
+      - {synth: thump, at: 0, dur: 2.6, f0: 62, f1: 44, drop: 0.8, decay: 1.1, gain: 0}
+      - {synth: noise, at: 0, dur: 2.6, decay: 0.9, hp: 40, lp: 220, gain: -3}
+      - {src: "oga_hits_punches/**/hit02.mp3.flac", dur: 0.3, lp: 900, gain: -4, fade: 0.15}

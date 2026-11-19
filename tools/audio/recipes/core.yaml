@@ -3,9 +3,10 @@
 events:
   strike_dat:                      # clean anvil ping, hammer weight layer
     lufs: -15
-    variants: 1
+    ring: 0.42                     # AUDIO §3: mid-high ring 0.4 s (real anvil); check.py allows this much tonal tail
+    variants: 2
     layers:
-      - {src: "oga_hammer_anvil/forger_0.ogg", start: 0.0, dur: 0.9, gain: 0, hp: 120}
+      - {src: "oga_hammer_anvil/forger_0.ogg", start: [0.0, 0.58], dur: 0.45, gain: 0, hp: 120, fade: 0.25}
       - {synth: click, at: 0, dur: 0.012, decay: 0.002, hp: 2500, gain: -12}
       - {synth: thump, at: 0, dur: 0.14, f0: 95, f1: 48, decay: 0.05, gain: -6}
   strike_hong:                     # dead crunchy clack, no ring
@@ -13,6 +14,7 @@ events:
     layers:
       - {src: "oga_blacksmith_hammer/*.wav", start: 0.0, dur: 0.14, lp: 2600, drive: 6, gain: 0, fade: 0.06}
       - {synth: noise, at: 0, dur: 0.05, decay: 0.012, hp: 900, lp: 5000, gain: -10}
+      - {src: "oga_breaking/**/bfh1_metal_hit_01.ogg", at: 0.004, dur: 0.12, lp: 4000, drive: 12, gain: -10, fade: 0.05}
   parry:
     squash: 24                      # crest-heavy source: compress harder so the loudness target is reachable                           # the signature: bright steel clang + crack + sub punch
     lufs: -15                       # aim hot: the encoder trim leaves it near `expect`
@@ -28,20 +30,21 @@ events:
     variants: 3
     layers:
       - {src: "oga_weapon_clash_1/*Haft*.wav", start: 0.0, dur: 0.3, lp: 3500, gain: 0}
+      - {src: "oga_shield/**/impact.*.ogg", dur: 0.35, lp: 2500, gain: -4, fade: 0.15}
       - {synth: thump, at: 0, dur: 0.1, f0: 80, f1: 50, decay: 0.04, gain: -6}
-  swing_sword:
-    lead_check: false                     # the pack's swishes are 0.07-0.2 s: pitched down they read as a blade, not a flick
-    lufs: -22
-    variants: 4
-    layers:
-      - {src: ["oga_swishes/swishes/swish-9.wav", "oga_swishes/swishes/swish-7.wav", "oga_swishes/swishes/swish-3.wav", "oga_swishes/swishes/swish-4.wav"], pitch: -4, hp: 250, gain: 0, fade: 0.08, fade_in: 0.02}
-  swing_hammer:
-    lead_check: false
+  swing_sword:                     # thin & fast: real blade swings, a swish on top for the edge
     lufs: -20
+    variants: 5
+    layers:
+      - {src: "oga_swords_sn/**/sword.*.ogg", dur: 0.45, hp: 350, gain: 0, fade: 0.15, fade_in: 0.01}
+      - {src: "oga_swishes/**/swish-*.wav", pick: 2, pitch: -3, hp: 600, gain: -8, fade: 0.06}
+  swing_hammer:                    # heavy & low: big body swing + low whoosh + weight
+    lufs: -19
     variants: 3
     layers:
-      - {src: ["oga_swishes/swishes/swish-9.wav", "oga_swishes/swishes/swish-7.wav", "oga_swishes/swishes/swish-8.wav"], pitch: -10, lp: 3500, gain: 0, fade: 0.15, fade_in: 0.04}
-      - {synth: thump, at: 0.12, dur: 0.18, f0: 70, f1: 45, decay: 0.08, gain: -12}
+      - {src: "oga_rpg_pack/**/battle/swing*.wav", pitch: -4, hp: 60, lp: 5000, gain: 0, fade: 0.08, fade_in: 0.02}
+      - {src: "oga_swishes/**/swish-*.wav", pick: 4, pitch: -11, lp: 3000, gain: -4, fade: 0.12, fade_in: 0.03}
+      - {synth: thump, at: 0.1, dur: 0.18, f0: 70, f1: 45, decay: 0.07, gain: -12}
   footstep_stone:
     lufs: -24
     variants: 6
@@ -56,6 +59,7 @@ events:
     lufs: -15
     layers:
       - {src: "oga_steam/steam hisses - Marker #1.wav", start: 0.0, dur: 1.5, hp: 400, gain: -2, fade: 0.5}
+      - {src: "oga_rpg_pack/**/chainmail1.wav", at: 0.35, dur: 0.4, hp: 3500, gain: -16, fade: 0.25, fade_in: 0.05}
       - {synth: thump, at: 0, dur: 0.4, f0: 70, f1: 38, drop: 0.08, decay: 0.15, gain: -2}
   steam_vent:
     lufs: -20
@@ -67,3 +71,4 @@ events:
     loop: 0.4
     layers:
       - {src: "oga_fire/fire.wav", start: 4.0, dur: 5.0, hp: 60, gain: 0, fade: 0}
+      - {synth: crackle, at: 0, dur: 5.0, rate: 10, hp: 1200, gain: -8}

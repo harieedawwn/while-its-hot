@@ -1,0 +1,87 @@
+# Movement (AUDIO §3). Own footsteps are 2D, enemy ones positional; level lives in catalog.ts (FEEL.audio.mix).
+events:
+  footstep_metal:                  # boots on grate/plate: real metal steps, a little rattle in the body
+    lufs: -24
+    variants: 6
+    layers:
+      - {src: "oga_metal_steps/**/metal_steps_*.wav", pick: 3, hp: 90, gain: 0, fade: 0.04}
+      - {synth: thump, at: 0, dur: 0.06, f0: 110, f1: 70, decay: 0.02, gain: -16}
+  footstep_wood:                   # planks: hollow low knock
+    lufs: -24
+    variants: 6
+    layers:
+      - {src: ["oga_steps_kdd/**/wood0*.ogg", "oga_sfx100_2/**/sfx100v2_footstep_wood_0*.ogg"], dur: 0.3, hp: 70, gain: 0, fade: 0.08}
+  jump:                            # cloth flap + boot scuff off the floor
+    lufs: -25
+    variants: 3
+    layers:
+      - {src: "oga_rpg_pack/**/inventory/cloth*.wav", dur: 0.3, hp: 200, gain: 0, fade: 0.12}
+      - {src: "oga_footsteps/**/flac/Fantozzi-Stone*.flac", dur: 0.12, hp: 400, gain: -5, fade: 0.05}
+  land_soft:                       # boot thud + a touch of body weight
+    lufs: -24
+    variants: 3
+    layers:
+      - {src: "oga_footsteps/**/flac/Fantozzi-Stone*.flac", pick: 2, dur: 0.25, hp: 60, gain: 0, fade: 0.08}
+      - {src: "oga_rpg_pack/**/inventory/cloth-heavy.wav", at: 0.01, dur: 0.25, gain: -8, fade: 0.1}
+      - {synth: thump, at: 0, dur: 0.1, f0: 85, f1: 50, decay: 0.03, gain: -8}
+  land_hard:                       # heavy: both boots + gear rattle + body weight
+    lufs: -19
+    variants: 3
+    layers:
+      - {src: "oga_footsteps/**/flac/Fantozzi-Stone*.flac", dur: 0.3, hp: 50, gain: 0, fade: 0.1}
+      - {src: "oga_footsteps/**/flac/Fantozzi-Stone*.flac", pick: 3, at: 0.018, dur: 0.3, hp: 50, gain: -3, fade: 0.1}
+      - {src: "oga_rpg_pack/**/chainmail*.wav", at: 0.02, dur: 0.35, hp: 1500, gain: -14, fade: 0.15}
+      - {synth: thump, at: 0, dur: 0.13, f0: 90, f1: 42, decay: 0.045, gain: -2}
+  dash:                            # air tear (noise burst 120 ms) + cloth flap + gear rattle
+    lufs: -20
+    variants: 3
+    layers:
+      - {synth: noise, at: 0, dur: 0.14, decay: 0.05, hp: 700, lp: 7000, gain: 0, fade_in: 0.01}
+      - {src: "oga_swishes/**/swish-*.wav", pick: 5, pitch: -6, hp: 300, gain: -3, fade: 0.06}
+      - {src: "oga_rpg_pack/**/inventory/cloth*.wav", at: 0.01, dur: 0.25, hp: 200, gain: -6, fade: 0.1}
+      - {src: "oga_rpg_pack/**/chainmail*.wav", at: 0.03, dur: 0.22, hp: 2000, gain: -15, fade: 0.1}
+  slide_start:                     # boots bite into the floor
+    lufs: -22
+    variants: 2
+    layers:
+      - {src: "oga_rpg80/stones_0[1-4].ogg", dur: 0.35, hp: 150, lp: 6000, gain: 0, fade: 0.15}
+      - {src: "oga_rpg_pack/**/inventory/cloth-heavy.wav", dur: 0.3, gain: -6, fade: 0.12}
+  slide_loop:                      # boot grind: gravel scrape + steady friction noise (engine bends pitch with speed)
+    lufs: -25
+    loop: 0.25
+    layers:
+      - {synth: bed, at: 0, dur: 2.2, hp: 250, lp: 2200, gain: -6}
+      - {src: "oga_rpg80/stones_03.ogg", at: 0.0, dur: 1.1, hp: 200, gain: 0, fade: 0.2, fade_in: 0.1}
+      - {src: "oga_rpg80/stones_02.ogg", at: 1.0, dur: 0.75, hp: 200, gain: -1, fade: 0.2, fade_in: 0.1}
+  slide_end:
+    lufs: -24
+    variants: 2
+    layers:
+      - {src: "oga_rpg80/stones_04.ogg", dur: 0.3, hp: 150, gain: 0, fade: 0.15}
+      - {src: "oga_footsteps/**/flac/Fantozzi-Stone*.flac", at: 0.05, dur: 0.2, hp: 80, gain: -4, fade: 0.08}
+  slam_fall:                       # rising wind (engine raises rate and level while falling)
+    lufs: -24
+    loop: 0.5
+    layers:
+      - {src: "oga_whoosh/*.wav", dur: 4.0, hp: 150, lp: 6000, gain: 0}
+      - {synth: bed, at: 0, dur: 4.0, hp: 400, lp: 2500, gain: -10}
+  slam_land:                       # huge thud + debris + sub drop
+    lufs: -14
+    variants: 2
+    layers:
+      - {src: "oga_sfx100/slam_0[23].ogg", dur: 0.6, hp: 40, gain: 0, fade: 0.2}
+      - {src: "oga_breaking/**/bfh1_rock_falling_0*.ogg", at: 0.04, dur: 0.8, hp: 300, gain: -7, fade: 0.3}
+      - {synth: click, at: 0, dur: 0.012, decay: 0.002, hp: 2000, gain: -8}
+      - {synth: thump, at: 0, dur: 0.35, f0: 95, f1: 32, drop: 0.06, decay: 0.12, gain: 0}
+  walljump:                        # hand slap on metal/stone
+    lufs: -22
+    variants: 3
+    layers:
+      - {src: "oga_metal_steps/**/metal_steps_1*.wav", hp: 150, gain: 0, fade: 0.04}
+      - {src: "oga_rpg_pack/**/inventory/cloth.wav", at: 0.01, dur: 0.22, hp: 250, gain: -5, fade: 0.1}
+  cling:                           # cloth grab, a soft scrape
+    lufs: -26
+    variants: 2
+    layers:
+      - {src: "oga_rpg_pack/**/inventory/cloth*.wav", pick: 1, dur: 0.3, hp: 200, gain: 0, fade: 0.1}
+      - {src: "oga_metal_steps/**/metal_steps_2*.wav", at: 0.02, lp: 3000, gain: -8, fade: 0.04}

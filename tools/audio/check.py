@@ -16,6 +16,7 @@ LIMITS = {'lufs_tol': 1.5, 'peak_db': -1.0, 'lead_ms': 3.0}
 
 def tonality(x, sr):
     """Longest run (s) where one narrow spectral peak above 1 kHz stays put and towers over the rest = a chime / pure ring."""
+    if len(x) < 4096: x = np.concatenate([x, np.zeros(4096 - len(x), dtype=x.dtype)])
     f, t, S = signal.spectrogram(x, sr, nperseg=2048, noverlap=1536)
     S = S[f > 1000]
     if S.shape[1] < 3: return 0.0
@@ -28,7 +29,8 @@ def tonality(x, sr):
 
 def main():
     want = set(sys.argv[1:])
-    recipes = yaml.safe_load(open(os.path.join(ROOT, 'tools', 'audio', 'recipes.yaml')))['events']
+    recipes = {}
+    for f in sorted(glob.glob(os.path.join(ROOT, 'tools', 'audio', 'recipes', '*.yaml'))): recipes.update(yaml.safe_load(open(f))['events'])
     manifest = json.load(open(os.path.join(SFX, 'manifest.json')))
     rows, fail = [], 0
     for ev in manifest:
@@ -49,7 +51,8 @@ def main():
             if abs(lufs - target) > LIMITS['lufs_tol']: issues.append(f'LUFS {lufs:.1f} vs {target}')
             if peak > LIMITS['peak_db']: issues.append(f'peak {peak:.1f}')
             if not manifest[ev]['loop'] and recipes.get(ev, {}).get('lead_check', True) and lead > LIMITS['lead_ms']: issues.append(f'lead {lead:.1f}ms')
-            if tone > 0.30: issues.append(f'tonal {tone:.2f}s (chime?)')
+            ring = recipes.get(ev, {}).get('ring', 0.30)        # a designed metal ring (AUDIO §3: Đạt 0.4 s) declares its length
+            if tone > ring: issues.append(f'tonal {tone:.2f}s > {ring}s (chime?)')
             if len(x) / sr > 12: issues.append('long')
             rows.append((ev, k, 'FAIL ' + '; '.join(issues) if issues else 'ok', lufs, peak, len(x) / sr, bass, tone, x, sr))
             fail += bool(issues)

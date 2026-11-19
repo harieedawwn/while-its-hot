@@ -1,3 +1,5 @@
+import { SceneAudio } from '../audio/scene-audio';
+import { foundryAmbience } from '../audio/places';
 import * as THREE from 'three';
 import { FEEL } from '../core/feel';
 import { LightRig } from '../render/lights';
@@ -42,17 +44,19 @@ const make: SceneFactory = async ({ pipeline, params, width, height }) => {
   // the fire ring brings its embers and the inside tint
   const fxl = ring > 0 ? new FxLayer({ scene, rig, pipeline, world: arena.world, seed: params.seed, ring: arena.ring }) : null;
   if (fxl && params.t !== null) for (let i = 0; i < 120; i++) fxl.update(1 / 60, camera);
+  const sa = params.t !== null ? null : new SceneAudio({ world: arena.world, ambience: foundryAmbience(arena.ring) });
   let opened = false;
   return {
     ready: true,
     update(dt, time) {
       if (pinned === null && !opened && time > 1.5) { opened = true; arena.openCages(); }
+      sa?.frame(dt, camera.position, camera.rotation.y);
       arena.update(dt, time);
       if (dt > 0) fxl?.update(dt, camera);
     },
     render() { pipeline.render(scene, camera); },
     resize(w, h) { camera.aspect = w / h; camera.updateProjectionMatrix(); },
-    dispose() { fxl?.dispose(); arena.dispose(); },
+    dispose() { sa?.dispose(); fxl?.dispose(); arena.dispose(); },
   };
 };
 export default make;

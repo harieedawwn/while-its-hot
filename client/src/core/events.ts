@@ -13,6 +13,8 @@ export interface GameEvents {
   'move:land': { speed: number };
   'move:dash': { x: number; z: number };
   'move:slide': { on: boolean };
+  /** A footstep of the local player: raw surface tag of the ground (materials `foot`), alternating side. */
+  'move:step': { surface: string; side: 1 | -1; x: number; y: number; z: number };
   'move:slamstart': Record<string, never>;
   'move:slam': { x: number; y: number; z: number };
   /** Melee (combat/*). ids are combatant ids; points are world space. */
@@ -30,6 +32,8 @@ export interface GameEvents {
   'forge:evolve': { form: string; family: Family };
   'forge:frenzy': { on: boolean };
   'forge:heating': { on: boolean };
+  /** Arena world moments: the cage doors slam open (match flow adds the countdown `tick`s in phase 18). */
+  'world:cages': { act: 'tick' | 'open' };
   /** Requests from gameplay to the local camera (combat emits these on hits/parries). */
   'cam:trauma': { amount: number };
   'cam:hitstop': { ms: number };

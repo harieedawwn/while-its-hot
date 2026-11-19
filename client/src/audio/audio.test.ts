@@ -4,6 +4,7 @@ import { pickTake } from './bank';
 import { pickVictim, VoicePool, type VoiceRec } from './voices';
 import { EVENTS } from './catalog';
 import { FEEL } from '../core/feel';
+import MANIFEST from '../../public/sfx/manifest.json';
 
 describe('round robin', () => {
   it('never repeats the previous take and reaches every take', () => {
@@ -47,5 +48,14 @@ describe('voice stealing', () => {
 describe('catalog', () => {
   it('only references mix keys that exist', () => {
     for (const [id, d] of Object.entries(EVENTS)) expect(FEEL.audio.mix[d.mix], id).toBeTypeOf('number');
+  });
+});
+
+describe('sound list (AUDIO §3)', () => {
+  it('every catalog event has a recording in the manifest, and every recording is routed', () => {
+    const m = MANIFEST as Record<string, { n: number }>;
+    expect(Object.keys(EVENTS).filter((id) => !m[id])).toEqual([]);
+    expect(Object.keys(m).filter((id) => !EVENTS[id])).toEqual([]);
+    for (const [id, def] of Object.entries(EVENTS)) if (/^(footstep_|swing_|hit_)/.test(id) && !def.loop) expect(m[id].n, id).toBeGreaterThanOrEqual(3);
   });
 });

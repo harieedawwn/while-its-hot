@@ -1,3 +1,5 @@
+import { SceneAudio } from '../audio/scene-audio';
+import { foundryAmbience } from '../audio/places';
 import * as THREE from 'three';
 import { BALANCE } from '@wih/shared';
 import { bus } from '../core/events';
@@ -134,6 +136,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     }
   }
 
+  const sa = frozen ? null : new SceneAudio({ world, area: arena ? 'hall_foundry' : 'room_small', ambience: arena ? foundryAmbience(arena.ring) : null });
   let last = performance.now();
   return {
     ready: true,
@@ -155,11 +158,12 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
       vm.update(fdt, cam, v);
       poseBody(fdt, v);
       hud.update(player.s.stamina);
+      sa?.frame(fdt, cam.camera.position, v.yaw, Math.hypot(player.s.vel.x, player.s.vel.z));
       pipeline.render(scene, cam.camera, tp ? undefined : vm);
     },
     resize(w, h) { cam.resize(w / h); vm.resize(w / h); },
     dispose() {
-      arena?.dispose(); unbindFeel(); unbindBody(); body?.dispose(); input.dispose(); hud.dispose(); removeEventListener('keydown', dev);
+      sa?.dispose(); arena?.dispose(); unbindFeel(); unbindBody(); body?.dispose(); input.dispose(); hud.dispose(); removeEventListener('keydown', dev);
       scene.traverse((o) => { if (o instanceof THREE.Mesh) o.geometry.dispose(); });
     },
   };

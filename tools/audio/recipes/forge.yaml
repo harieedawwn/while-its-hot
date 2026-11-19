@@ -1,0 +1,98 @@
+# Forge (AUDIO §3). strike_dat / strike_hong / quench / heat_loop live in core.yaml. The real anvil recording holds
+# two strikes (onset-relative 0.0 s and 0.58 s): `start: [..]` gives one per take.
+events:
+  strike_tuyet:                    # double strike, brighter ring, low thump, sparks hiss
+    lufs: -14
+    expect: -15
+    squash: 6
+    ring: 0.45                     # brighter than Đạt, same 0.4 s ring
+    variants: 2
+    layers:
+      - {src: "oga_hammer_anvil/forger_0.ogg", start: [0.0, 0.58], dur: 0.1, hp: 200, gain: -2, fade: 0.04}
+      - {src: "oga_hammer_anvil/forger_0.ogg", at: 0.085, start: [0.58, 0.0], dur: 0.45, hp: 400, gain: 0, fade: 0.3}
+      - {synth: click, at: 0.085, dur: 0.012, decay: 0.002, hp: 3000, gain: -8}
+      - {synth: thump, at: 0.085, dur: 0.16, f0: 100, f1: 45, decay: 0.06, gain: -4}
+      - {synth: noise, at: 0.09, dur: 0.35, decay: 0.1, hp: 4500, gain: -14}
+  strike_giu:                      # dull flat clank, no ring
+    lufs: -17
+    variants: 2
+    layers:
+      - {src: "oga_blacksmith_hammer/*.wav", start: [0.0, 0.0], dur: 0.16, lp: 1800, gain: 0, fade: 0.08}
+      - {src: "oga_metal_impact/thud*.wav", dur: 0.2, lp: 2500, gain: -4, fade: 0.1}
+      - {synth: thump, at: 0, dur: 0.1, f0: 85, f1: 50, decay: 0.035, gain: -6}
+  strike_refused:                  # training cap: muffled dead hit, no ring
+    lufs: -21
+    layers:
+      - {src: "oga_blacksmith_hammer/*.wav", dur: 0.12, lp: 700, gain: 0, fade: 0.06}
+      - {synth: thump, at: 0, dur: 0.08, f0: 70, f1: 45, decay: 0.03, gain: -5}
+  gay:                             # break: snap + shatter + shard tinkles bouncing on stone
+    lufs: -14
+    expect: -15
+    squash: 20
+    variants: 2
+    layers:
+      - {src: "oga_breaking/**/bfh1_breaking_0[12].ogg", dur: 0.35, hp: 200, gain: 0, fade: 0.12}
+      - {synth: click, at: 0, dur: 0.012, decay: 0.002, hp: 2500, gain: -4}
+      - {src: "oga_breaking/**/bfh1_metal_falling_0[12].ogg", at: 0.08, dur: 0.9, hp: 900, gain: -6, fade: 0.3}
+      - {src: "oga_metal_wood/metal_falling_02.ogg", at: 0.22, dur: 0.7, hp: 1500, gain: -12, fade: 0.3}
+      - {synth: thump, at: 0, dur: 0.12, f0: 95, f1: 50, decay: 0.04, gain: -7}
+  anvil_place:                     # heavy iron set-down + chain rattle
+    lufs: -16
+    variants: 2
+    layers:
+      - {src: "oga_sfx100/metal_0[89].ogg", dur: 0.6, hp: 40, gain: 0, fade: 0.2}
+      - {src: "oga_metal_wood/metal_slam_01.ogg", dur: 0.4, lp: 3500, gain: -5, fade: 0.15}
+      - {src: "oga_rpg80/chain_0[12].ogg", at: 0.07, dur: 0.4, hp: 800, gain: -11, fade: 0.2}
+      - {synth: thump, at: 0, dur: 0.22, f0: 85, f1: 38, decay: 0.08, gain: -2}
+  anvil_lift:                      # lift scrape + chain
+    lufs: -21
+    layers:
+      - {src: "oga_metal_wood/metal_open_01.ogg", dur: 0.6, hp: 200, lp: 5000, gain: 0, fade: 0.25}
+      - {src: "oga_rpg80/chain_03.ogg", at: 0.1, dur: 0.5, hp: 900, gain: -9, fade: 0.25}
+  frenzy_start:                    # furnace whoosh up
+    lufs: -16
+    layers:
+      - {src: "oga_rpg80/spell_fire_02.ogg", hp: 80, gain: 0, fade: 0.3, fade_in: 0.05}
+      - {synth: swell, at: 0, dur: 0.45, curve: 2.5, hp: 300, lp: 3000, gain: -4}
+      - {src: "oga_fire/fire.wav", at: 0.3, start: 1.0, dur: 0.9, hp: 60, gain: -3, fade: 0.5, fade_in: 0.1}
+      - {synth: thump, at: 0.42, dur: 0.3, f0: 70, f1: 35, decay: 0.12, gain: -5}
+  frenzy_loop:                     # roaring fire bed under the rapid strikes
+    lufs: -21
+    loop: 0.5
+    layers:
+      - {src: "oga_fire/fire.wav", start: 0.5, dur: 4.5, hp: 50, gain: 0}
+      - {synth: bed, at: 0, dur: 4.5, hp: 60, lp: 500, gain: -6}
+      - {synth: crackle, at: 0, dur: 4.5, rate: 22, hp: 1500, gain: -9}
+  frenzy_end:                      # exhale of a fire dying
+    lufs: -21
+    layers:
+      - {src: "oga_rpg80/spell_fire_05.ogg", hp: 80, lp: 4000, gain: 0, fade: 0.6}
+      - {src: "oga_steam/steam hisses - Marker #3.wav", at: 0.1, dur: 0.8, hp: 900, gain: -9, fade: 0.5, fade_in: 0.1}
+  swap_weapon:                     # blade off the back
+    lufs: -21
+    variants: 4
+    layers:
+      - {src: "oga_rpg_pack/**/battle/sword-unsheathe*.wav", hp: 250, gain: 0, fade: 0.15}
+      - {src: "oga_rpg_pack/**/inventory/cloth.wav", dur: 0.2, hp: 200, gain: -9, fade: 0.08}
+  # modules (armor): real gunshot body + compressed thump; bomb = explosion + debris + sub
+  shoulder_gun:
+    lufs: -15
+    variants: 2
+    layers:
+      - {src: "oga_mechanical/lightclunk*.wav", dur: 0.08, hp: 800, gain: -6, fade: 0.03}
+      - {src: "oga_firearms/**/1917/B_24P.wav", at: 0.03, start: [0.0, 0.0], dur: 0.7, hp: 60, gain: 0, fade: 0.35}
+      - {synth: thump, at: 0.03, dur: 0.14, f0: 110, f1: 45, decay: 0.05, gain: -4}
+  bolt:                            # crossbow: latch clack + string thump + short air
+    lufs: -18
+    variants: 2
+    layers:
+      - {src: "oga_mechanical/lightclunk*.wav", dur: 0.12, hp: 300, gain: 0, fade: 0.05}
+      - {synth: thump, at: 0.005, dur: 0.09, f0: 130, f1: 70, decay: 0.03, gain: -3}
+      - {src: "oga_swishes/**/swish-*.wav", at: 0.02, pick: 7, pitch: 2, hp: 1200, gain: -6, fade: 0.05}
+  bomb:
+    lufs: -14
+    layers:
+      - {src: "oga_sfx100/explosion.ogg", hp: 40, gain: 0, fade: 0.2}
+      - {src: "oga_firearms/**/1917/B_24P.wav", dur: 1.2, lp: 1500, gain: -4, fade: 0.6}
+      - {src: "oga_breaking/**/bfh1_rock_falling_0[3-5].ogg", at: 0.15, dur: 1.0, hp: 300, gain: -9, fade: 0.4}
+      - {synth: thump, at: 0, dur: 0.5, f0: 80, f1: 28, drop: 0.08, decay: 0.18, gain: 0}

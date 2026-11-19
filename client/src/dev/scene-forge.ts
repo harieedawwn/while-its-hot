@@ -1,3 +1,5 @@
+import { SceneAudio } from '../audio/scene-audio';
+import { foundryAmbience } from '../audio/places';
 import * as THREE from 'three';
 import { BALANCE, FAMILIES, type Family, ForgeSession, PLAYER_COLORS, type ModuleId, MODULE_IDS, formFor, weaponById } from '@wih/shared';
 import { CombatWorld } from '../combat/combat-world';
@@ -117,12 +119,14 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     if (!lf.c.alive && lf.c.deadT > BALANCE.combat.respawnS) reset();
     if (player.s.pos.y < -20) reset();
   };
+  let sa: SceneAudio | null = null;
   const frame = (dt: number, alpha: number) => {
     const v = player.viewState(alpha);
     cam.update(dt, v);
     lf.frame(dt, cam, v);
     dummy?.render(dt, alpha, cam.freezeS > 0);
     forge.frame(dt, time, cam);
+    sa?.frame(dt, cam.camera.position, v.yaw, Math.hypot(player.s.vel.x, player.s.vel.z));
     fxl.update(cam.freezeS > 0 ? 0 : dt, cam.camera);
   };
 
@@ -150,6 +154,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     forge.frame(0, time, cam);
   }
 
+  sa = frozen ? null : new SceneAudio({ world: arena.world, ambience: foundryAmbience(arena.ring) });
   let last = performance.now();
   return {
     ready: true,
@@ -171,6 +176,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     },
     resize(w, h) { cam.resize(w / h); lf.vm.resize(w / h); },
     dispose() {
+      sa?.dispose();
       offs.forEach((o) => o()); unbindFeel(); fxl.dispose(); lf.dispose(); forge.dispose(); hud.dispose(); anvil.dispose(); body.dispose();
       arena.dispose(); input.dispose(); removeEventListener('keydown', dev);
       scene.traverse((o) => { if (o instanceof THREE.Mesh) o.geometry.dispose(); });

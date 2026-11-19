@@ -31,7 +31,7 @@ thin arcade bleeps, chimes, rising arpeggios, chiptune, soft "ASMR" taps, long w
   free API key from the user — ask once, store in `.env`, never commit). Prefer real anvil and quench
   recordings for the forge sounds.
 - `tools/audio/design.py` (Python: numpy, scipy, soundfile, `pedalboard`) renders every game sound from a
-  declarative recipe file `tools/audio/recipes.yaml`: which takes, trims, layer offsets, EQ, saturation,
+  declarative recipe file `tools/audio/recipes/*.yaml`: which takes, trims, layer offsets, EQ, saturation,
   transient shaping, synth weight layer parameters, fades, target loudness. Output: mono
   `client/public/sfx/<event>_<n>.ogg` (Vorbis q5) + `.m4a` fallback, 48 kHz.
 - Loudness targets (integrated LUFS per file): weapons/impacts/forge results −14 to −16; hits −16 to −18;

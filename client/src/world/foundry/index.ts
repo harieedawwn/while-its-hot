@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { FOUNDRY } from '@wih/shared';
+import { bus } from '../../core/events';
 import { bakeAO } from '../../render/geo/ao';
 import type { LightRig } from '../../render/lights';
 import { MaterialLib } from '../../render/materials/library';
@@ -66,7 +67,7 @@ export async function createFoundry(rig: LightRig, seed = 1): Promise<FoundryVie
     root, statics, world, ring,
     update(dt, time) { molten.update(time); doors.update(dt); ring.update(time); },
     setDoors: (p) => doors.set(p),
-    openCages: () => doors.open(),
+    openCages: () => { doors.open(); bus.emit('world:cages', { act: 'open' }); },
     closeCages: () => doors.close(),
     setRing(i, radius) { const [x, z] = FOUNDRY.ringCenters[i % FOUNDRY.ringCenters.length]; ring.set(x, z, radius); },
     dispose() { statics.forEach((m) => m.geometry.dispose()); molten.dispose(); doors.dispose(); ring.dispose(); },

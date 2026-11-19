@@ -26,15 +26,18 @@ for (const s of sources) {
   if (want.size && !want.has(s.id)) continue;
   if (s.license !== 'CC0') { console.log(`skip ${s.id}: license ${s.license}`); continue; }
   const dir = join(out, s.id);
-  if (!s.url) { console.log(`manual ${s.id}: put files in ${dir}`); continue; }
+  const urls = s.urls ?? (s.url ? [s.url] : []);
+  if (!urls.length) { console.log(`manual ${s.id}: put files in ${dir}`); continue; }
   if (existsSync(dir) && readdirSync(dir).length) { console.log(`have ${s.id}`); continue; }
   mkdirSync(dir, { recursive: true });
   try {
-    const res = await fetch(s.url, { headers: { 'user-agent': 'while-its-hot-audio-fetch/1' } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const file = join(dir, decodeURIComponent(basename(new URL(s.url).pathname)));
-    writeFileSync(file, Buffer.from(await res.arrayBuffer()));
-    extract(file, dir);
+    for (const url of urls) {
+      const res = await fetch(url, { headers: { 'user-agent': 'while-its-hot-audio-fetch/1' } });
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${url}`);
+      const file = join(dir, decodeURIComponent(basename(new URL(url).pathname)));
+      writeFileSync(file, Buffer.from(await res.arrayBuffer()));
+      extract(file, dir);
+    }
     console.log(`ok   ${s.id}`);
   } catch (e) { fail++; console.log(`FAIL ${s.id}: ${e.message}`); }
 }

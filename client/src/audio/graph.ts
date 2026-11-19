@@ -29,6 +29,7 @@ export class AudioGraph {
   private verbSend: Record<Area, GainNode>;
   private hp: BiquadFilterNode;
   private exciter: GainNode;
+  private muffleLp: BiquadFilterNode;
   area: Area = 'hall_foundry';
 
   constructor() {
@@ -60,8 +61,10 @@ export class AudioGraph {
     const exHp = ctx.createBiquadFilter(); exHp.type = 'highpass'; exHp.frequency.value = P.exciterHp;
     this.exciter = g(0);
     const sum = g();
-    this.mix.connect(this.hp); this.hp.connect(sum);
-    this.mix.connect(exLp); exLp.connect(shaper); shaper.connect(exHp); exHp.connect(this.exciter); this.exciter.connect(sum);
+    this.muffleLp = ctx.createBiquadFilter(); this.muffleLp.type = 'lowpass'; this.muffleLp.frequency.value = 22000; this.muffleLp.Q.value = 0.5;
+    this.mix.connect(this.muffleLp);
+    this.muffleLp.connect(this.hp); this.hp.connect(sum);
+    this.muffleLp.connect(exLp); exLp.connect(shaper); shaper.connect(exHp); exHp.connect(this.exciter); this.exciter.connect(sum);
 
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = A.glue.threshold; comp.knee.value = A.glue.knee; comp.ratio.value = A.glue.ratio;
@@ -90,6 +93,12 @@ export class AudioGraph {
   duck(db: number = A.duck.db, s: number = A.duck.s): void {
     const p = this.duckNode.gain, t = this.ctx.currentTime;
     p.cancelScheduledValues(t); p.setTargetAtTime(dbToGain(db), t, 0.04); p.setTargetAtTime(1, t + s, 0.25);
+  }
+  /** Own death: sweep the whole mix down to a muffled low-pass (AUDIO §3), or open it again. */
+  muffle(on: boolean): void {
+    const f = this.muffleLp.frequency, t = this.ctx.currentTime;
+    f.cancelScheduledValues(t); f.setValueAtTime(f.value, t);
+    f.exponentialRampToValueAtTime(on ? A.muffle.hz : 22000, t + (on ? A.muffle.s : 0.25));
   }
   /** Browsers and the Android WebView start suspended: resume on the first touch/click/key. */
   autoUnlock(target: EventTarget = window): void {

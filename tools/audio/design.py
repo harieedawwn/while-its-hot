@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Render every game sound from tools/audio/recipes.yaml into client/public/sfx/<event>_<n>.ogg (+ .m4a).
 Usage: python3 tools/audio/design.py [event ...]     (no args = all events)
-Layers: {src: glob under audio-src/ | synth: thump|click|swell|noise, at, start, dur, gain(dB), hp, lp, pitch(semitones),
-         drive(dB), fade}. A `variants: N` event picks the k-th file of each glob for take k and jitters pitch ±pitch_jitter."""
+Layers: {src: glob under audio-src/ | synth: thump|click|swell|noise|bed|crackle|bubbles, at, start, dur, gain(dB), hp, lp,
+         pitch(semitones), drive(dB), fade, fade_in, reverse, pick(take offset)}. A `variants: N` event picks the k-th file of each glob for take k and jitters pitch ±pitch_jitter."""
 import sys, glob, json, math, os, subprocess, shutil
 import numpy as np, soundfile as sf, yaml
 from scipy import signal
@@ -44,6 +44,17 @@ def synth(l, rng):
         x = rng.standard_normal(len(t)) * np.exp(-t / l.get('decay', 0.002))
     elif kind == 'swell':                        # filtered noise tension: rises then cuts
         x = rng.standard_normal(len(t)) * (t / dur) ** l.get('curve', 2.0)
+    elif kind == 'bed':                          # steady noise for loops (shape it with hp/lp)
+        x = rng.standard_normal(len(t))
+    elif kind == 'crackle':                      # sparse coal pops: random short noise ticks of random size
+        x = np.zeros(len(t)); n = int(dur * l.get('rate', 18))
+        for p in rng.integers(0, max(1, len(t) - 600), n):
+            m = rng.integers(60, 500); x[p:p + m] += rng.standard_normal(m) * np.exp(-np.arange(m) / (m / 5)) * rng.uniform(0.2, 1)
+    elif kind == 'bubbles':                      # molten gloop: low sines that rise as they pop (kept < 600 Hz: never a chime)
+        x = np.zeros(len(t)); n = int(dur * l.get('rate', 4))
+        for p in rng.integers(0, max(1, len(t) - 9000), n):
+            m = int(rng.uniform(0.06, 0.18) * SR); tt = np.arange(m) / SR; f = rng.uniform(70, 160) * (1 + 2.2 * tt / tt[-1])
+            x[p:p + m] += np.sin(2 * np.pi * np.cumsum(f) / SR) * np.sin(np.pi * tt / tt[-1]) ** 2 * rng.uniform(0.3, 1)
     else:
         x = rng.standard_normal(len(t)) * np.exp(-t / l.get('decay', dur / 2))
     return x.astype('float32')
@@ -52,9 +63,11 @@ def build_layer(l, k, rng, jitter):
     if 'src' in l:
         pats = l['src'] if isinstance(l['src'], list) else [l['src']]   # a list keeps the given order
         files = [f for pt in pats for f in sorted(glob.glob(os.path.join(SRC, pt), recursive=True))]
-        files = [f for f in files if '__MACOSX' not in f and not f.lower().endswith(('.7z', '.zip'))]
+        files = [f for f in files if '__MACOSX' not in f and not os.path.basename(f).startswith('._') and not f.lower().endswith(('.7z', '.zip', '.txt'))]
         if not files: raise SystemExit(f"no source for {l['src']} (run tools/audio/fetch.mjs)")
-        x = load(files[k % len(files)], l.get('start', 0), l.get('dur'))
+        st = l.get('start', 0); st = st[k % len(st)] if isinstance(st, list) else st   # a list = one start per take (several hits in one file)
+        x = load(files[(k + l.get('pick', 0)) % len(files)], st, l.get('dur'))
+        if l.get('reverse'): x = x[::-1].copy()
     else:
         x = synth(l, rng)
     x = pitch(x, l.get('pitch', 0) + rng.uniform(-jitter, jitter))
@@ -120,7 +133,9 @@ def encode(name, y):
 
 def main():
     want = set(sys.argv[1:])
-    recipes = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), 'recipes.yaml')))
+    recipes = {'events': {}}
+    for f in sorted(glob.glob(os.path.join(os.path.dirname(__file__), 'recipes', '*.yaml'))):
+        recipes['events'].update(yaml.safe_load(open(f))['events'])
     os.makedirs(OUT, exist_ok=True)
     mpath = os.path.join(OUT, 'manifest.json')
     manifest = json.load(open(mpath)) if os.path.exists(mpath) else {}

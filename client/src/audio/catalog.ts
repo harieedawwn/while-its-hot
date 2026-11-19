@@ -60,7 +60,7 @@ export const EVENTS: Record<string, EventDef> = {
   bomb: d('module', 'sfx', 'strike', 2, { fb: { sfx: 'explosion', secs: 2.4 }, reverb: 0.7 }),
   // world emitters
   fire_ring: d('world', 'world', 'emitter', 2, { loop: true }), fire_inside: d('world', 'world', 'ambience', 1, { loop: true }),
-  steam_vent: d('world', 'world', 'emitter', 3), molten: d('world', 'world', 'emitter', 3, { loop: true }),
+  steam_vent: d('world', 'world', 'emitter', 3, { reverb: 0.5 }), amb_oneshot: d('world', 'world', 'emitter', 3, { reverb: 0.7 }), molten: d('world', 'world', 'emitter', 3, { loop: true }),
   // match flow
   cage_tick: d('match', 'sfx', 'strike', 2), cage_open: d('match', 'sfx', 'strike', 1, { fb: { sfx: 'door_open', secs: 2 }, reverb: 0.7 }),
   truce_horn: d('match', 'sfx', 'strike', 1, { reverb: 0.8 }),
@@ -70,7 +70,7 @@ export const EVENTS: Record<string, EventDef> = {
   // UI
   ui_tap: ui({ sfx: 'ui_click', secs: 0.4 }), ui_back: ui({ sfx: 'ui_hover', secs: 0.4 }), ui_toggle: ui({ sfx: 'ui_toggle_on', secs: 0.4 }),
   ui_notch: ui({ sfx: 'ui_hover', opts: { pitch: 1.3 }, secs: 0.3 }), ui_open: ui({ sfx: 'ui_open', secs: 0.5 }), ui_close: ui({ sfx: 'ui_close', secs: 0.5 }),
-  ui_error: ui({ sfx: 'ui_error', secs: 0.5 }),
+  ui_error: ui({ sfx: 'ui_error', secs: 0.5 }), ui_select: ui(),
   wipe_quench: d('ui', 'ui', 'ui', 1), wipe_stamp: d('ui', 'ui', 'ui', 1),
 };
 export const EVENT_IDS = Object.keys(EVENTS);

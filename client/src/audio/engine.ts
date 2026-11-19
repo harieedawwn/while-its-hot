@@ -30,7 +30,7 @@ export interface Handle {
 }
 export type OcclusionProbe = (from: Vec3, to: Vec3) => boolean;
 
-const rand = (a: number, b: number) => a + Math.random() * (b - a);
+export const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
 /** The audio facade the game talks to: `play(eventId, opts)` / `loop(eventId, opts)`. Gameplay never calls it directly (audio/events.ts, phase 12). */
 export class AudioEngine {
@@ -49,6 +49,7 @@ export class AudioEngine {
   }
   get ctx(): AudioContext { return this.graph.ctx; }
   get running(): boolean { return this.ctx.state === 'running'; }
+  get listenerPos(): Vec3 { return this.listener; }
 
   /** Render procedural stand-ins for events without a recording, one per tick so boot never stalls. */
   private async warmFallbacks(): Promise<void> {
@@ -67,6 +68,9 @@ export class AudioEngine {
   }
   setArea(a: Area): void { this.graph.area = a; }
   duck(db?: number, s?: number): void { this.graph.duck(db, s); }
+  muffle(on: boolean): void { this.graph.muffle(on); }
+  /** App backgrounded (Capacitor pause): stop the clock so nothing plays behind the home screen. */
+  pause(paused: boolean): void { void (paused ? this.ctx.suspend() : this.ctx.resume()); }
   setOcclusionProbe(p: OcclusionProbe | null): void { this.probe = p; }
 
   setListener(pos: Vec3, yaw: number): void {

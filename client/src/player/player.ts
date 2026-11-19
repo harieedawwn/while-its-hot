@@ -22,6 +22,10 @@ export class Player {
   private prev = new THREE.Vector3();
   private input: MoveInput = { mx: 0, my: 0, yaw: 0, jumpPressed: false, dashPressed: false, slidePressed: false, slideHeld: false };
   private view: ViewState;
+  private stepAcc = 0;
+  private side: 1 | -1 = 1;
+  private down = new THREE.Vector3(0, -1, 0);
+  private rayO = new THREE.Vector3();
 
   /** emit = false for bodies that are not the local player (dummies): their moves stay off the bus. */
   constructor(world: CollisionWorld, spawn: THREE.Vector3Tuple, yaw = 0, private emit = true) {
@@ -55,13 +59,27 @@ export class Player {
     for (const e of this.s.events) {
       switch (e.k) {
         case 'jump': bus.emit('move:jump', { kind: e.kind }); break;
-        case 'land': bus.emit('move:land', { speed: e.speed }); break;
+        case 'land': bus.emit('move:land', { speed: e.speed }); this.stepAcc = FEEL.audio.react.stepLen * 0.5; break;
         case 'dash': bus.emit('move:dash', { x: e.dir.x, z: e.dir.z }); break;
         case 'slide': bus.emit('move:slide', { on: e.on }); break;
         case 'slamstart': bus.emit('move:slamstart', {}); break;
         case 'slam': bus.emit('move:slam', { x: e.pos.x, y: e.pos.y, z: e.pos.z }); break;
       }
     }
+    this.footsteps();
+  }
+
+  /** Ground travel → `move:step` every FEEL.audio.react.stepLen m, with the surface under the feet. */
+  private footsteps(): void {
+    const s = this.s;
+    if (!s.grounded || s.sliding) return;
+    this.stepAcc += Math.hypot(s.pos.x - this.prev.x, s.pos.z - this.prev.z);
+    if (this.stepAcc < FEEL.audio.react.stepLen) return;
+    this.stepAcc = 0;
+    this.side = this.side === 1 ? -1 : 1;
+    const hit = this.kin.world.raycast(this.rayO.copy(s.pos).setY(s.pos.y + 0.3), this.down, 0.9);
+    const surface = hit ? this.kin.world.footAt(hit) : 'stone';
+    bus.emit('move:step', { surface, side: this.side, x: s.pos.x, y: s.pos.y, z: s.pos.z });
   }
 
   /** Camera input for this frame; alpha interpolates between the last two sim ticks. */

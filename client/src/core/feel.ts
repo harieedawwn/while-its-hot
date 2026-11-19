@@ -202,5 +202,12 @@ export const FEEL = {
     duck: { db: -4, s: 0.4 },
     /** Mix snapshot (AUDIO §5), dB. Catalog rows pick one of these keys. */
     mix: { parry: 0, kill: 0, strike: -2, hit: -3, swing: -6, footOwn: -14, footEnemy: -10, dash: -8, ambience: -20, emitter: -16, ui: -12, move: -10 } as Record<string, number>,
+    /** audio/events.ts: a footstep every stepLen m of ground travel; landings above landHard m/s are heavy; slide loop rate
+     *  at 0 and at slideFast m/s; slam wind rises to slamRate over slamRise s; heat swell time constant s; combo pitch step. */
+    react: { stepLen: 1.25, landHard: 9, slideRate: [0.85, 1.15], slideFast: 14, slamRate: 1.5, slamRise: 0.8, heatTau: 0.35, comboPitch: 0.05 },
+    /** Ambience one-shots (AUDIO §3): interval s and distance from the listener m. */
+    amb: { every: [4, 12] as readonly [number, number], dist: [12, 28] as readonly [number, number] },
+    /** Own death: the world muffles to `hz` over `s` seconds. */
+    muffle: { hz: 380, s: 0.4 },
   },
 } as const;

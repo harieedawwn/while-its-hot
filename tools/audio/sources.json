@@ -1,14 +1,240 @@
 {
-  "_note": "CC0 sources only. kenney.nl answers 403 to automated clients, so Kenney packs are added by hand if wanted (put the zip's files in audio-src/<id>/ and add an entry with url null). freesound needs an API key; not used yet.",
-  "sources": [
-    { "id": "oga_weapon_clash_1", "url": "https://opengameart.org/sites/default/files/medieval_sfx_weapon_on_weapon_1_of_2.7z", "license": "CC0", "page": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts", "what": "real blade and haft clashes (1 of 2)" },
-    { "id": "oga_weapon_clash_2", "url": "https://opengameart.org/sites/default/files/medieval_sfx_weapon_on_weapon_2_of_2.7z", "license": "CC0", "page": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts", "what": "real blade and haft clashes (2 of 2)" },
-    { "id": "oga_firearms", "url": "https://opengameart.org/sites/default/files/Prepared%20SFX%20Library.7z", "license": "CC0", "page": "https://opengameart.org/content/the-free-firearm-sound-library", "what": "shoulder gun, bolt, bomb mechanics" },
-    { "id": "oga_blacksmith_hammer", "url": "https://opengameart.org/sites/default/files/blacksmithhammer.wav", "license": "CC0", "page": "https://opengameart.org/content/blacksmiths-hammer", "what": "hammer on iron" },
-    { "id": "oga_hammer_anvil", "url": "https://opengameart.org/sites/default/files/forger_0.ogg", "license": "CC0", "page": "https://opengameart.org/content/hammer-on-anvil", "what": "hammer on anvil, real" },
-    { "id": "oga_footsteps", "url": "https://opengameart.org/sites/default/files/Fantozzi-footsteps.7z", "license": "CC0", "page": "https://opengameart.org/content/fantozzis-footsteps-grasssand-stone", "what": "boots on stone, grass, sand" },
-    { "id": "oga_steam", "url": "https://opengameart.org/sites/default/files/steam_hisses.zip", "license": "CC0", "page": "https://opengameart.org/content/steam-release-sounds", "what": "steam hisses (quench, vents)" },
-    { "id": "oga_fire", "url": "https://opengameart.org/sites/default/files/fire.wav", "license": "CC0", "page": "https://opengameart.org/content/fireplace-sound-loop", "what": "fire loop (brazier, ring)" },
-    { "id": "oga_swishes", "url": "https://opengameart.org/sites/default/files/swishes.zip", "license": "CC0", "page": "https://opengameart.org/content/swishes-sound-pack", "what": "weapon swishes" }
-  ]
+ "_note": "CC0 sources only. kenney.nl answers 403 to automated clients; Kenney's OGA mirrors are used instead. `urls` = several files in one folder. freesound needs an API key; not used yet.",
+ "sources": [
+  {
+   "id": "oga_weapon_clash_1",
+   "url": "https://opengameart.org/sites/default/files/medieval_sfx_weapon_on_weapon_1_of_2.7z",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+   "what": "real blade and haft clashes (1 of 2)"
+  },
+  {
+   "id": "oga_weapon_clash_2",
+   "url": "https://opengameart.org/sites/default/files/medieval_sfx_weapon_on_weapon_2_of_2.7z",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/medieval-sound-effects-weapon-impacts",
+   "what": "real blade and haft clashes (2 of 2)"
+  },
+  {
+   "id": "oga_firearms",
+   "url": "https://opengameart.org/sites/default/files/Prepared%20SFX%20Library.7z",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/the-free-firearm-sound-library",
+   "what": "shoulder gun, bolt, bomb mechanics"
+  },
+  {
+   "id": "oga_blacksmith_hammer",
+   "url": "https://opengameart.org/sites/default/files/blacksmithhammer.wav",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/blacksmiths-hammer",
+   "what": "hammer on iron"
+  },
+  {
+   "id": "oga_hammer_anvil",
+   "url": "https://opengameart.org/sites/default/files/forger_0.ogg",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/hammer-on-anvil",
+   "what": "hammer on anvil, real"
+  },
+  {
+   "id": "oga_footsteps",
+   "url": "https://opengameart.org/sites/default/files/Fantozzi-footsteps.7z",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/fantozzis-footsteps-grasssand-stone",
+   "what": "boots on stone, grass, sand"
+  },
+  {
+   "id": "oga_steam",
+   "url": "https://opengameart.org/sites/default/files/steam_hisses.zip",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/steam-release-sounds",
+   "what": "steam hisses (quench, vents)"
+  },
+  {
+   "id": "oga_fire",
+   "url": "https://opengameart.org/sites/default/files/fire.wav",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/fireplace-sound-loop",
+   "what": "fire loop (brazier, ring)"
+  },
+  {
+   "id": "oga_swishes",
+   "url": "https://opengameart.org/sites/default/files/swishes.zip",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/swishes-sound-pack",
+   "what": "weapon swishes"
+  },
+  {
+   "id": "oga_rpg_pack",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/rpg-sound-pack",
+   "what": "cloth, metal gear, doors, battle (artisticdude)",
+   "url": "https://opengameart.org/sites/default/files/rpg_sound_pack.zip"
+  },
+  {
+   "id": "oga_steps_kdd",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/different-steps-on-wood-stone-leaves-gravel-and-mud",
+   "what": "boots on wood, stone, gravel",
+   "url": "https://opengameart.org/sites/default/files/%5Bkdd%5DDifferentSteps_0.zip"
+  },
+  {
+   "id": "oga_metal_steps",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/metal-footsteps-on-concrete",
+   "what": "metal footsteps",
+   "url": "https://opengameart.org/sites/default/files/metal_steps_48k24b.7z"
+  },
+  {
+   "id": "oga_hits_punches",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/37-hitspunches",
+   "what": "body hits and punches",
+   "url": "https://opengameart.org/sites/default/files/independent_nu_ljudbank-hits_and_punches.7z"
+  },
+  {
+   "id": "oga_sfx100",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/100-cc0-sfx",
+   "what": "general impacts, explosions",
+   "url": "https://opengameart.org/sites/default/files/100-CC0-SFX_0.zip"
+  },
+  {
+   "id": "oga_sfx100_2",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/100-cc0-sfx-2",
+   "what": "general impacts",
+   "url": "https://opengameart.org/sites/default/files/sfx_100_v2.zip"
+  },
+  {
+   "id": "oga_rpg80",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/80-cc0-rpg-sfx",
+   "what": "rpg foley",
+   "url": "https://opengameart.org/sites/default/files/80-CC0-RPG-SFX_0.zip"
+  },
+  {
+   "id": "oga_metal_wood",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/100-cc0-metal-and-wood-sfx",
+   "what": "metal and wood hits",
+   "url": "https://opengameart.org/sites/default/files/100-CC0-wood-metal-SFX.zip"
+  },
+  {
+   "id": "oga_wood_metal_2",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/wood-and-metal-sound-effects-volume-2",
+   "what": "wood and metal hits",
+   "url": "https://opengameart.org/sites/default/files/wood_and_metal_vol.2_0.zip"
+  },
+  {
+   "id": "oga_metal_interact",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/metal-interactions",
+   "what": "metal handling, drops",
+   "url": "https://opengameart.org/sites/default/files/metal_interactions.7z"
+  },
+  {
+   "id": "oga_metal_impact",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/metal-impact-sounds",
+   "what": "metal impacts",
+   "urls": [
+    "https://opengameart.org/sites/default/files/bing1.wav",
+    "https://opengameart.org/sites/default/files/bong1.wav",
+    "https://opengameart.org/sites/default/files/clink1_0.wav",
+    "https://opengameart.org/sites/default/files/clink2.wav",
+    "https://opengameart.org/sites/default/files/clink3.wav",
+    "https://opengameart.org/sites/default/files/thud2.wav",
+    "https://opengameart.org/sites/default/files/thud3.wav"
+   ]
+  },
+  {
+   "id": "oga_mechanical",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/mechanical-sounds",
+   "what": "clanks, ratchets, rattles",
+   "urls": [
+    "https://opengameart.org/sites/default/files/clank1.wav",
+    "https://opengameart.org/sites/default/files/lightclunk1.wav",
+    "https://opengameart.org/sites/default/files/lightclunk2.wav",
+    "https://opengameart.org/sites/default/files/mechanical1.wav",
+    "https://opengameart.org/sites/default/files/mechanical2.wav",
+    "https://opengameart.org/sites/default/files/rattle1.wav"
+   ]
+  },
+  {
+   "id": "oga_chain_winch",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/chain-winch-sounds",
+   "what": "chain run",
+   "url": "https://opengameart.org/sites/default/files/winch.zip"
+  },
+  {
+   "id": "oga_iron_door",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/iron-door",
+   "what": "iron gate slam",
+   "url": "https://opengameart.org/sites/default/files/iron_door_0.ogg"
+  },
+  {
+   "id": "oga_breaking",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx",
+   "what": "shatter, falling debris",
+   "url": "https://opengameart.org/sites/default/files/sfx_breaking_and_falling.zip"
+  },
+  {
+   "id": "oga_shield",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/10-impactshield-blocks",
+   "what": "shield blocks",
+   "url": "https://opengameart.org/sites/default/files/impact_-_starninjas.zip"
+  },
+  {
+   "id": "oga_swords_sn",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/20-sword-sound-effects-attacks-and-clashes",
+   "what": "sword swings and clashes",
+   "urls": [
+    "https://opengameart.org/sites/default/files/sword_-_starninjas_1.zip",
+    "https://opengameart.org/sites/default/files/sword_clash_-_starninjas_0.zip"
+   ]
+  },
+  {
+   "id": "oga_wind",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/short-wind-sound",
+   "what": "wind",
+   "url": "https://opengameart.org/sites/default/files/short%20wind%20sound.wav"
+  },
+  {
+   "id": "oga_whoosh",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/air-whoosh",
+   "what": "air whoosh",
+   "url": "https://opengameart.org/sites/default/files/whoosh2_0.wav"
+  },
+  {
+   "id": "oga_dungeon_amb",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/loopable-dungeon-ambience",
+   "what": "low room tone loop",
+   "url": "https://opengameart.org/sites/default/files/dungeon_ambient_1_0.ogg"
+  },
+  {
+   "id": "oga_ui_kenney",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/interface-sounds",
+   "what": "Kenney Interface Sounds (OGA mirror)",
+   "url": "https://opengameart.org/sites/default/files/kenney_interfaceSounds.zip"
+  },
+  {
+   "id": "oga_ui_51",
+   "license": "CC0",
+   "page": "https://opengameart.org/content/51-ui-sound-effects-buttons-switches-and-clicks",
+   "what": "switches and clicks",
+   "url": "https://opengameart.org/sites/default/files/UI_SFX_Set.zip"
+  }
+ ]
 }
