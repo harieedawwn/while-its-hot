@@ -22,6 +22,14 @@ export interface GameEvents {
   'combat:hit': { attacker: number; target: number; dmg: number; zone: Zone; kind: AttackKind; result: HitKind; x: number; y: number; z: number };
   'combat:parry': { parrier: number; attacker: number; x: number; y: number; z: number };
   'combat:kill': { target: number; by: number };
+  /** Forging (forge/*). act: place/placed/lift = anvil; owner = combatant id. */
+  'forge:anvil': { act: 'place' | 'placed' | 'lift'; x: number; y: number; z: number; owner: number };
+  'forge:stance': { on: boolean; owner: number };
+  /** One strike: outcome, the level after it, and the world point of the anvil face. heat = 0..1 at the blow. */
+  'forge:strike': { outcome: 'tuyet' | 'dat' | 'giu' | 'hong'; perfect: boolean; auto: boolean; target: 'blade' | 'armor'; level: number; refused: boolean; broke: boolean; heat: number; x: number; y: number; z: number };
+  'forge:evolve': { form: string; family: Family };
+  'forge:frenzy': { on: boolean };
+  'forge:heating': { on: boolean };
   /** Requests from gameplay to the local camera (combat emits these on hits/parries). */
   'cam:trauma': { amount: number };
   'cam:hitstop': { ms: number };

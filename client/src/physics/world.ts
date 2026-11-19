@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { MeshBVH } from 'three-mesh-bvh';
+import { type Blocker, resolveBlockers } from './blockers';
 
 /** Called once per push-out with the push direction (unit, from surface toward the capsule). */
 export type ContactFn = (n: THREE.Vector3) => void;
@@ -15,6 +16,9 @@ export class CollisionWorld {
   /** Footstep surface per source triangle (index into `footNames`), when built from tagged meshes. */
   private triFoot: Uint8Array | null = null;
   readonly footNames: string[] = [];
+  /** Dynamic solid cylinders (placed anvils). Toggle `on`; resolve and overlaps see them (probe does not: no wall-cling on an anvil). */
+  readonly blockers: Blocker[] = [];
+  private nOut = new THREE.Vector3();
   private box = new THREE.Box3();
   private triP = new THREE.Vector3();
   private segP = new THREE.Vector3();
@@ -91,6 +95,7 @@ export class CollisionWorld {
       any ||= hit;
       if (!hit) break;
     }
+    if (this.blockers.length && resolveBlockers(this.blockers, seg, r, this.nOut, onContact)) any = true;
     return any;
   }
 
@@ -120,6 +125,7 @@ export class CollisionWorld {
         return hit;
       },
     });
+    if (!hit && this.blockers.length) { const c = new THREE.Line3(seg.start.clone(), seg.end.clone()); hit = resolveBlockers(this.blockers, c, r - slop, this.nOut); }
     return hit;
   }
 

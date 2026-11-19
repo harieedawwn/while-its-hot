@@ -143,4 +143,22 @@ export const FEEL = {
       stickFixed: false, invertY: false, gyro: false, aimAssist: true, haptics: true, holdParry: true,
     },
   },
+
+  /** Forge stance (LOOK §6/§8). The camera sits behind-above the anvil looking at the working face. */
+  forge: {
+    /** Stance camera in the anvil frame (+X = horn side, +Z = the smith's side), meters; looks at `look`. */
+    cam: { pos: [-0.3, 1.42, 0.82] as readonly [number, number, number], look: [-0.3, 0.52, -0.05] as readonly [number, number, number], vfov: 62 },
+    /** Stick length beyond this leaves the stance. */
+    exitStick: 0.3,
+    /** Hammer swings about the grip (near the smith): head tilt below horizontal (deg, − = raised) at rest and at contact; fall/rise times (s); grip x, height above the face and z, yaw toward the anvil (rad); handle length (m). */
+    hammer: { restDeg: -38, hitDeg: 33, fallS: 0.07, riseS: 0.34, x: 0.4, gripY: 0.3, gripZ: 0.32, yaw: 0.85, len: 0.5, head: 0.15, idleDeg: 2.5 },
+    /** Blade on the anvil: longest length shown (m), and how fast it slides into the brazier (1/s). */
+    blade: { showLen: 1.15, maxScale: 1.4, slideRate: 7, brazierX: -0.88 },
+    /** Camera trauma and hit-stop on a strike, by outcome. */
+    strike: { trauma: { tuyet: 0.5, dat: 0.32, giu: 0.2, hong: 0.4 } as Record<string, number>, hitStopMs: 55, kickBack: 0.05 },
+    /** Anvil appearing/leaving: drop height of the placing animation (m). */
+    drop: 0.55,
+    /** HUD: seconds a result word stays. */
+    flashS: 0.8,
+  },
 } as const;

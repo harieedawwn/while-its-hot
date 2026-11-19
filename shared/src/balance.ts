@@ -62,6 +62,33 @@ export const BALANCE = {
     },
   },
   /**
+   * Forging (GDD §6, §7). Odds are points out of 100. Rows by level band; armor looks up level × armorRowMul.
+   * Heat bands/shifts, ring timing and frenzy numbers all live here; relics only change them through
+   * ForgeMods (shared/src/forge/odds.ts).
+   */
+  forge: {
+    rows: [
+      { upTo: 4, tuyet: 15, dat: 60, giu: 15, hong: 10 },
+      { upTo: 9, tuyet: 10, dat: 45, giu: 20, hong: 25 },
+      { upTo: 14, tuyet: 7, dat: 33, giu: 25, hong: 35 },
+      { upTo: 99, tuyet: 5, dat: 25, giu: 25, hong: 45 },
+    ],
+    armor: { maxLevel: 10, rowMul: 2 },
+    /** Heat bands (upper edges) and the points each moves from success to Hỏng. */
+    heat: { cold: 0.25, dull: 0.5, burning: 0.9, coldShift: 20, dullShift: 8, burnShift: 10,
+      holdPerS: 0.55, decayPerS: 0.05, strikeCost: 0.12, hitCost: 0.2 },
+    /** Ring: sweet zone = zoneFrac of the circle, one lap per ringS. Perfect moves perfectShift points Hỏng → Đạt:Tuyệt 2:1; a miss moves missShift to Hỏng. */
+    strike: { cadenceS: 0.5, ringS: 1.1, zoneFrac: 0.18, perfectShift: 15, perfectDatShare: 2 / 3, missShift: 15 },
+    /** Tiếng tăm: points per stack moved from Đạt to Hỏng. */
+    notorietyShift: 6,
+    frenzy: { perDat: 1, perTuyet: 2, full: 10, durS: 4, cadenceMul: 0.5 },
+    /** Anvil (Đe): place / pick-up time, cooldown after picking up, how far in front it is placed, interaction reach. */
+    anvil: { placeS: 0.6, pickupS: 0.6, cooldownS: 5, placeDist: 1.15, useRadius: 2.2, radius: 0.42, height: 0.86 },
+    stance: { blendInS: 0.35, blendOutS: 0.2, pickS: 3 },
+    /** Armor level at which each module slot opens (GDD §7). */
+    moduleSlotAt: [3, 7],
+  },
+  /**
    * Melee (GDD §5). Seconds, meters, m/s, degrees. Frame data per family: w = windup, a = active, r = recover;
    * a light swing's w+a+r equals the family's comboS (the chain rhythm of GDD §5). Arcs are in the attacker's
    * view frame: slash = blade sweeps from→to degrees (+ = right / up) in a plane rolled by `roll`; thrust =

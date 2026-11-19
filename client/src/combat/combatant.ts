@@ -21,6 +21,8 @@ export class Combatant {
   /** Targets already hit by swing `hitSwing` (one hit per target per swing). */
   readonly hitSet = new Set<number>();
   hitSwing = -1;
+  /** Untouchable (Nhập thần at the anvil). */
+  invuln = false;
   burnT = 0;
   burnDps = 0;
   /** Seconds dead (respawn timing belongs to the owner). */
@@ -67,7 +69,7 @@ export class Combatant {
     const s = this.body.s, f = this.fighter;
     return {
       x: s.pos.x, z: s.pos.z, yaw: this.yaw, parrying: f.parrying, blocking: f.blocking,
-      immune: s.iframe > 0 || f.dead, stamina: s.stamina, armorLevel: this.armor, blockArcDeg: this.blockArcDeg,
+      immune: s.iframe > 0 || f.dead || this.invuln, stamina: s.stamina, armorLevel: this.armor, blockArcDeg: this.blockArcDeg,
     };
   }
 

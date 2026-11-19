@@ -26,4 +26,11 @@ export const STR = {
     bua_ren: 'Búa rèn', bua_ta: 'Búa tạ', chuy_gai: 'Chùy gai', bua_chien: 'Búa chiến', bua_de: 'Búa đe',
     giao_sat: 'Giáo sắt', thuong_thep: 'Thương thép', kich: 'Kích', dai_dao: 'Đại đao', tram_ma_dao: 'Trảm mã đao',
   },
+  /** Forge stance HUD (GDD §6). Only result words and what a player truly needs to read. */
+  forge: {
+    outcome: { tuyet: 'Tuyệt', dat: 'Đạt', giu: 'Giữ', hong: 'Hỏng' },
+    broke: 'Gãy', refused: 'Chạm trần',
+    target: { blade: 'Vũ khí', armor: 'Giáp' },
+    frenzy: 'Nhập thần',
+  },
 } as const;
