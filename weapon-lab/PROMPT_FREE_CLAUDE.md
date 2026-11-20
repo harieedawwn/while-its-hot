@@ -1,6 +1,7 @@
 <request>
-  Nhánh (kiem / bua / thuong):
-  Cấp (0-20):
+  Dòng roster (dán nguyên 1 dòng từ docs/ROSTER.md, nếu có thì bỏ qua mấy dòng dưới):
+  Nhánh (kiem / bua / dao / tay):
+  Cấp (0-45):
   Tên:
   Cảm hứng:
   Mô tả:
@@ -19,8 +20,14 @@
 
   <input>
     Read the <request> block (family, level, name, inspiration, description) and every attached image.
+    A roster line reads: nhánh | cấp | id | tên | hình dáng & chất liệu | hiệu ứng. Use its id and name as given,
+    build the look it describes, and write meta.effects from its effect column.
     kiem = sword or any one-handed/two-handed blade, bua = hammer, mace, axe, club, flail,
-    thuong = spear, glaive, naginata, halberd, scythe, any polearm. Empty field: decide it yourself.
+    dao = knife, dagger, cleaver, sickle, karambit, any short one-hand blade,
+    tay = ONE armored gauntlet for the RIGHT hand, closed fist (the game mirrors it for the left hand):
+    wrist at the origin, forearm cuff toward -Y (down to about -0.22 m), fist from 0 to about +0.12 m,
+    knuckles (the striking face) at the +Y end, back of the hand toward +Z, thumb on the -X side.
+    Empty field: decide it yourself.
     Weapons do NOT have to be ordinary: saw blades, twin or forked blades, chained heads, mechanical parts,
     bone or stone, lacquered colors, cloth, gems, asymmetric or absurd shapes are all welcome when the
     request or level calls for it. Never ask questions. A later message with a new <request> = a new weapon.
@@ -75,16 +82,22 @@
     - Output one code block with exactly: export default { meta: {...}, build(k) {...} }. No imports,
       no Math.random, no textures/lights/materials/animation. Plain numbers and small loops are fine.
     - meta: id (ascii snake_case), name (short Vietnamese, grounded, no slang or "thần/chí tôn" epics),
-      family, level 0-20, inspiration (one line), look (one-two lines), power { score 1-10, note },
+      family, level 0-45, inspiration (one line), look (one-two lines), power { score 1-10, note },
       effects (2-3 ideas: low level = small twists like knockback, slow, bleed; mid = skill-like such as
-      summons, traps, chains; +16 and up = absurd and funny but powerful), lengthM.
-    - Lengths: kiem 0.8-1.4 m, bua 0.7-1.3 m, thuong 1.8-2.9 m. Grip 0.18-0.30 m long, radius 0.016-0.022.
-    - Level shows in craft: 0-5 crude and hammered, 6-12 solid, 13-17 masterwork, 18-20 extravagant.
+      summons, traps, chains; +30 and up = absurd and funny but powerful), lengthM.
+    - Lengths: kiem 0.8-1.5 m, bua 0.7-1.4 m, dao 0.22-0.55 m, tay 0.30-0.45 m (up to 0.6 m at +36 and up).
+      Grip 0.18-0.30 m long, radius 0.016-0.022 (dao grip 0.09-0.13 m; tay has no grip).
+    - Level shows in craft: 0-5 crude and hammered, 6-14 solid, 15-23 masterwork, 24-32 strange materials
+      (stone, ice, bronze, obsidian, rubber, mechanisms), 33-45 otherworldly and oversized. From +33 a few
+      parts may float on purpose (at most 3 groups, evenly spaced, clearly magic); below +33 nothing floats.
+    - Higher level = heavier, more striking silhouette and a stranger material, never just a cleaner copy
+      of a real weapon. Keep it readable: one big shape, then details.
     - Inspiration from films/cartoons: capture shape language and colors, no logos or text.
   </rules>
 
   <reference_quality>
-    This is the quality and style expected (a naginata). Match its care: real proportions, k.edge for the
+    This is the quality and style expected (a naginata from the old 'thuong' family, which is no longer
+    used: copy its craft, never its family). Match its care: real proportions, k.edge for the
     curved blade with a fuller, a stacked-ring collar from k.lathe, parts overlapping at joints, wraps,
     sparse bands, a shaped butt cap, a small palette.
 

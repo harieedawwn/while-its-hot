@@ -263,20 +263,128 @@ Read: LOOK §1, §5. TECH §6 (splash).
   and all mipmaps + splash with a small script (sharp), wired into `android/`. Commit the PNGs.
 Done when the APK built by CI shows the new icon and splash.
 
-### Phase 24 — Import community weapons from weapon-lab · `TODO` · Sonnet 5.5 · medium
-Read: `weapon-lab/PROMPT_FREE_CLAUDE.md` (the kit contract), GDD §6 (roster, data shape). Code map lines for weapons/, shared/src/data/weapons.ts, passives.ts.
+### Phase 24 — Import community weapons from weapon-lab · `WAIT` (set to TODO after phase 28, when lab files exist) · Sonnet 5.5 · medium
+Run only after phase 28. Read: `weapon-lab/PROMPT_FREE_CLAUDE.md` (the kit contract), `docs/ROSTER.md`. Code map lines for weapons/, shared/src/data/weapons.ts, passives.ts.
 Run this phase again every time the user drops new files into `weapon-lab/weapons/*.js`.
 - Once: `client/src/weapons/lab-kit.ts` implements the same `k` API as `weapon-lab/preview.html` (incl. `edge` loft + fuller, `wrap`, `paint`; port the code from that file) on top of the
   game's one-mesh builder (`wkit`): merges all parts into one geometry, maps slots → weapon atlas palette,
   metal slots → heatMask, flat normals, keeps `tip`/`base` markers. A loader registers each lab file as a
-  model by `meta.id`.
-- For each new lab file: add a row to `shared/src/data/weapons.ts` (id, Vietnamese name, family,
-  minLevel = meta.level, adjusting levels so forms stay sorted and spaced) and turn `meta.effects` +
-  `meta.power` into passives in `shared/src/passives.ts` (reuse hooks; new hooks only when needed; scale by
-  level: low = small twists, mid = skill-like, +16 and up = absurd but bounded so matches stay playable).
+  model by `meta.id`. `tay` files are a right gauntlet; the game mirrors it for the left fist.
+  Also give `preview.html` swing previews for `dao` and `tay`, and drop `thuong`.
+- For each lab file whose `meta.id` is a ROSTER id: it becomes that row's model (mark the row `có`); effects
+  stay as ROSTER says (ignore `meta.effects`). A file with a new id: add a row only if it fits a free level
+  slot, else report it. Files of the old `thuong` family (e.g. `the_dao_pha_thu.js`) are skipped.
   Keep the lab file unchanged; put any fix in an override next to it.
 - Unit test: every lab file builds, tris ≤ 1500, markers present, ids unique.
-Shots: `weapons` (rack). Done when the new forms appear in the rack, armory and training.
+Shots: `weapons` (rack). Done when the new models appear in the rack, armory and training.
+
+## Round 3 — second playtest (design: `docs/ROUND3.md`, forms: `docs/ROSTER.md`; shots on `phones` only)
+Order: 25 → 26 → 27 → 28 → 29 → 30 → 31 → 32. Phase 24 any time after 28 when lab files exist.
+Every phase rewrites the GDD sections it changes so GDD stays the truth.
+
+### Phase 25 — Controls, HUD, weapon swap, smooth ring · `TODO` · Sonnet 5.5 · medium
+Read: ROUND3 §6 and §3 (only the "Ring closes smoothly" bullet). Code map lines for input/, ui/hud, ui/menu (settings), app/pause.ts, net/net-flow.ts, world/foundry/ring.ts, forge/controller.ts.
+- Already done in chat: look sens max 6, gyro sens max 5. Do the rest of ROUND3 §6: top speed −25% (with
+  the reach/course/arena check),
+  audit every settings row (each one must change the game live; fix the dead ones), remove the
+  third-person setting, solid black layout-editor backdrop in a match, HP bar position, exit button,
+  2-slot weapon swap with slot digit, forge-stance icons (flame strike, eye Nhập thần grayed until full).
+- Ring: per-frame scale/uniform from the fight clock, never rebuilt; remove the 0.25 m quantize in
+  `net-flow.ts` (it causes the jumps) and any rebuild in `setRing`.
+- Tests: settings round-trip, swap rules (empty slot, auto-switch on stance), ring radius continuity.
+Shots: `hud&touch=1`, layout editor over `net`, forge stance with frenzy empty and full. Done when no
+dead setting is left, swap works online, and the ring moves without steps.
+
+### Phase 26 — Forging rework: precise strikes, new outcomes, new Nhập thần · `TODO` · Sonnet 5.5 · high
+Read: ROUND3 §1, GDD §6 (rewrite it). Code map lines for shared/src/forge, forge/, ui/forge-hud*, match/forge-auth, net/net-forge, tools/forge-sim, audio/events, fx/.
+- Shared ForgeSession: Lên/Giữ/Vỡ outcomes, `p(L)`/`zone(L)` curves, heat zone multipliers, seeded zone
+  sequence + jump-ahead gap, no cadence, max +45, no Gãy, new frenzy (meter 10, 4 s, half-ring zone that
+  shrinks, its own odds). Keep relic hooks working through ForgeMods (cards replace relics in phase 31;
+  rename/extend mods to fit ROUND3 §5 weapon cards: zoneMul, heatMul, decayMul, costMul, frenzyFillMul,
+  frenzyPlusS, guardVo, plus2Once, sureAfterVo).
+- Client: strike on pointer-down with the event timestamp, local Trúng/Trượt verdict shown at once,
+  queued strikes, ring drawn from the shared clock every frame; server checks phase within `strikeTolS`.
+  Find and remove the current delay (tap discrimination, release-based input, cooldown, waiting on server).
+- Frenzy feel per ROUND3 §1, everything restored at the end (lesson: audio filters must reopen).
+- `tools/forge-sim.mjs`: add blind-spam / semi-careful / expert player models for frenzy and the round
+  targets; tune with it and write the numbers in the Phase log.
+- Tests: outcomes, gap never under the marker, frenzy shrink, server/client verdict agreement at ±tol.
+Shots: `forge` normal, frenzy start, frenzy end (zone small). Done when the sim hits the ROUND3 targets.
+
+### Phase 27 — Ghost respawn, rounds carry over, fire-ring pain · `TODO` · Sonnet 5.5 · high
+Read: ROUND3 §2 and §3, GDD §3 (rewrite it). Code map lines for shared/src/match, net/ (net-flow, net-match, remote), player/camera, render/post.ts, audio/{events,catalog,bank}, fx/fx-bind, ui/transition.
+- Death costs no level (remove `deathLevelLoss`). Ghost phase exactly as ROUND3 §2, server-authoritative,
+  synced in State/Snapshot (one flag), pale dithered remote body, hidden attack/guard/forge/swap buttons.
+- Carry-over: blades (both slots, family, level), armor; end-of-round loss 2k / k; form resets at round
+  change; pedestal blank count; result screen shows the loss. `match.carry` numbers in balance.ts.
+- Outside the ring: 0.5 s ticks, `ring_hurt_0` each tick, hurt-cam roll + dip, dithered red edge vignette
+  in `post.ts` (shared with the white ghost vignette). Death: `death_crack_0` loud.
+- Both sound files are already in `client/public/sfx/` (ogg + m4a); add them to the manifest/catalog and
+  CREDITS; they are user-supplied, so `tools/audio/design.py` must not overwrite or delete them.
+- Tests: ghost rejects hits both ways, ghost end inside ring, carry-over math for 5 rounds, tick damage sum.
+Shots: `net` dead text, ghost view, outside ring (red edge), round result with losses. Done when an
+online bot match plays 3 rounds with carried blades and no death level loss.
+
+### Phase 28 — Families: Kiếm, Búa, Dao, Tay (remove Thương) · `TODO` · Opus 5.5 · medium
+Why Opus: new first- and third-person knife and fist animations decide how the game feels.
+Read: ROUND3 §4, `docs/ROSTER.md` (columns + ids only), GDD §5 and §6 roster (rewrite them). Code map lines for data/weapons, passives, weapons/, combat/ (incl. vm/), character/clips, forge-hud (family pick), core/profile.
+- Remove thương everywhere; old profiles load (drop unknown ids). Family pick shows 4.
+- `weapons.ts`: 60 ROSTER rows (+ phoi), forms every 3 levels to +45, per-family stat/scaling formulas and
+  move traits from ROUND3 §4 (numbers in balance.ts), `passivesOf` = row's own list. Kiếm/búa keep their
+  existing passives on their new levels; effects not built yet are listed ids that are no-ops until phases
+  29/30 (a test lists which ids are still no-op).
+- Movesets: dao (alternating slashes + stab, heavy lunge stab) and tay (jab, jab, hook, uppercut, charged
+  straight) with FP viewmodel + TP clips + sweep arcs; gauntlet mirrored for the left fist; fists hidden in
+  forge stance with the gauntlet on the anvil.
+- Placeholder in-game models for `dao_gam` and `gang_sat` (decent, family style) + the missing-model
+  fallback rule; bua/kiem existing models move to their new levels.
+- DPS table test (ROUND3 §4).
+Shots: `combat` with each family (FP mid-swing), `weapons` rack. Done when all 4 families fight online.
+
+### Phase 29 — Form effects A: effect toolkit + Kiếm and Búa rows · `TODO` · Sonnet 5.5 · high
+Read: ROSTER kiem + bua rows, ROUND3 §4. Code map lines for passives, match/effects, combat/resolver, net/ (snapshot), fx/, audio/events, physics/blockers.
+- One data-driven effect toolkit (server-authoritative, every active effect has a cd in balance.ts):
+  statuses (burn, slow, freeze/root, pin-to-ground), knock/launch/wall-bounce, pull, projectiles (flying
+  slash, fire column, thrown anchor + grapple, meteor), ground fields (lava crack/pool, ice floor, gong
+  wave, black hole with a hard cap on hold time), chain lightning, orbiting blades, crack line.
+  Projectiles and fields are small server entities in the snapshot (compact, pooled on the client).
+- Map every kiem/bua row 18–45 to toolkit entries; no switch-case on ids.
+- VFX and sound per atom through the bus: dithered, crunchy, readable, no glow; reuse fx pools.
+- Tests: every kiem/bua row resolves; cds hold; black hole cannot pin anyone longer than its cap.
+Shots: `fx` bench for each new atom. Done when each row's effect is visible in `training` at its level.
+
+### Phase 30 — Form effects B: Dao and Tay rows · `TODO` · Sonnet 5.5 · high
+Read: ROSTER dao + tay rows. Code map lines as phase 29 + the toolkit files it added.
+- Add the missing atoms: backstab bonus, invisibility (dithered, breaks on attack), blink/teleport (behind
+  attacker, aimed 12 m slash-dash with a safe-landing probe), hook lunge to target, decoy clone, blade
+  storm, time-slow field, speed stacks, extra jumps, heal on hit/kill, stone wall (dynamic collider), rocket
+  fist, giant hand slam (incl. from the sky), meteor rain, returning thrown knife, fire trail on slide.
+- Map every dao/tay row; then a test that no ROSTER effect id is a no-op any more.
+Shots: `fx` bench for each new atom. Done when each row's effect is visible in `training` at its level.
+
+### Phase 31 — Card draft (Lá bài) replaces relics · `TODO` · Sonnet 5.5 · medium
+Read: ROUND3 §5, GDD §7 and §8 (rewrite them), LOOK §8 palette only. Code map lines for data/relics, data/modules, match/flow, net/net-flow, ui/hud/draft, ui/modal.ts, input/pictograms.
+- `cards.ts` (all cards of ROUND3 §5, effects through existing hooks/ForgeMods), server draft rules
+  (≥ 1 of each kind, last place reroll + rare, timeout = first card), delete relics.ts and its uses.
+- Card UI: black cards, pictograms on the touch grid, name + one line, rare double border, big tap targets,
+  `setModal` hides the touch layer. Strings in strings.vi.ts.
+- Tests: offers always mix kinds, no duplicates unless stackable, every card id has an effect.
+Shots: draft with `touch=1` (normal and last place). Done when cards are picked every round online.
+
+### Phase 32 — Performance, audio stutter, gyro · `TODO` · Sonnet 5.5 · high
+Read: TECH §5 (gyro) and the perf/quality section, LOOK nothing. Code map lines for main.ts, render/pipeline, render/geo/static-batch, character/skin-batch, fx/, audio/{graph,engine,voices,bank}, input/gyro, tools/sweep.
+- Measure first: a 6-bot fight scene with effects, CPU throttled ×4 in `tools/sweep.mjs`; write frame-time
+  split (JS / render / GC) before and after in the Phase log.
+- Render: no per-frame allocations, pooled fx, fewer draw calls (instancing / merged batches), lower-rate
+  or GPU skinning for far characters, LOD for remote weapons, warm every effect material at load
+  (no shader compile mid-fight), faster adaptive resolution.
+- Audio stutter: `latencyHint: 'playback'` on Android, one shared reverb send, voice cap, node pooling,
+  decode at load only, no voice stacking for repeating ticks (`ring_hurt`), nothing heavy on the audio path.
+- Gyro: `devicemotion.rotationRate` at sensor rate, axes remapped by `screen.orientation.angle` for both
+  landscapes, yaw = rotation around gravity (works upright or flat), pitch around the screen's horizontal
+  axis, tiny deadzone + One-Euro filter, applied per render frame. Pure mapping function with a test:
+  tilting the phone up never turns the view sideways, in both landscape orientations.
+Done when the throttled 6-bot scene holds ≥ 55 fps and a 3-minute run has no audio dropouts.
 
 ---
 

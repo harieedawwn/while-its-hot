@@ -138,8 +138,8 @@ export const FEEL = {
     pad: { deadzone: 0.15, curve: 1.6, lookRate: 3.4, triggerAt: 0.35 },
     /** Player-facing defaults and ranges of the control settings (Điều khiển). */
     controls: {
-      sens: { def: 1, min: 0.3, max: 3 },
-      gyroSens: { def: 1, min: 0.3, max: 3 },
+      sens: { def: 1, min: 0.3, max: 6 },
+      gyroSens: { def: 1, min: 0.3, max: 5 },
       deadzone: { def: 0.12, min: 0, max: 0.4 },
       stickFixed: false, invertY: false, gyro: false, aimAssist: true, haptics: true, holdParry: true,
     },

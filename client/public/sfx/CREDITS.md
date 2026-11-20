@@ -39,3 +39,6 @@ produced by `tools/audio/design.py` from `tools/audio/recipes/*.yaml`; raw sourc
 
 kenney.nl answers 403 to automated clients; Kenney's Interface Sounds come from its OpenGameArt mirror (CC0).
 Procedural stand-ins come from `client/src/audio/vendor/sfx.js` (own code).
+
+## User-supplied (not from the pipeline; `design.py` must not overwrite)
+- `ring_hurt_0` (outside the fire ring, every damage tick) and `death_crack_0` (death): supplied by the project owner (trimmed, mono). The hurt sound is a Minecraft sound (Mojang) — fine for private play with friends; replace it before any public release.

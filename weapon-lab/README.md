@@ -7,3 +7,4 @@
 3. Thấy ổn thì bấm **Tải .js** rồi bỏ file vào thư mục `weapons/`.
    Chưa ổn thì nói lại với Claude free, ví dụ "đầu búa to hơn", "ít chi tiết quá".
 4. Gom được vài cái thì push lên repo, rồi chạy phase 24 trong Claude Code để ghép vào game.
+5. Danh sách vũ khí cần làm: `docs/ROSTER.md`. Mỗi chat free: dán prompt, rồi dán 1 dòng roster vào ô "Dòng roster".

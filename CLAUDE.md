@@ -6,6 +6,7 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 ## Where things are
 - `TASK.md` — the phase list. Work on exactly ONE phase per session (see the loop prompt).
 - `docs/GDD.md` — game design, rules, numbers. `docs/LOOK.md` — art, camera, VFX, UI, copy.
+- `docs/ROUND3.md` — round-3 design changes (override GDD until each phase folds them in) · `docs/ROSTER.md` — 60 weapon forms.
 - `docs/AUDIO.md` — sound direction and pipeline. `docs/TECH.md` — architecture, netcode, build, APK.
 - Read only the doc sections a phase lists. Do not read whole docs "just in case".
 - `kit/` — vendored helpers (procedural geometry, sound engine + checkers). Moved into packages in phase 00.

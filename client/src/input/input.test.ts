@@ -101,7 +101,7 @@ describe('gyro, gamepad, settings', () => {
   });
   it('control settings clamp and default', () => {
     const s = sanitizeControls({ sensX: 99, sensY: -3, invertY: 'yes', deadzone: 0.2 });
-    expect(s.sensX).toBe(3); expect(s.sensY).toBe(0.3); expect(s.invertY).toBe(false); expect(s.deadzone).toBe(0.2);
+    expect(s.sensX).toBe(6); expect(s.sensY).toBe(0.3); expect(s.invertY).toBe(false); expect(s.deadzone).toBe(0.2);
     expect(sanitizeControls(null).haptics).toBe(true);
   });
 });
