@@ -20,7 +20,7 @@ const I: Record<CardIcon, string> = {
   fist: '<path d="M5 11h13v7H5zM5 11V8h3v3M8 11V7h3v4M11 11V8h3v3M18 13h3v3h-3"/><path d="M8 18v3M15 18v3"/>',
   shield: '<path d="M12 3l7 2.5V11c0 5-3 8-7 10-4-2-7-5-7-10V5.5z"/><path d="M12 7.5v9"/>',
   spring: '<path d="M7 21h10M7 17l10-3M7 13l10-3M7 9l10-3M12 3v3"/>',
-  wing: '<path d="M4 18c0-6 5-12 16-13-1 7-5 13-12 13zM4 18l9-8"/>',
+  wing: '<path d="M5 4h5v11H5zM14 4h5v11h-5zM10 8h4M7.5 15v2l-2 3M16.5 15v2l2 3M7.5 17l1 3M16.5 17l-1 3"/>',
   wheel: '<path d="M12 3l8 5v8l-8 5-8-5V8z"/><path d="M12 9h0v6M9 12h6"/>',
   gun: '<path d="M3 9h12l2-2h4v4h-4l-1 3H9l-1 5H5V9"/>',
   bow: '<path d="M6 4c8 2 12 6 14 14M6 4v0M6 4l14 14M3 21l6-6"/>',
