@@ -103,7 +103,7 @@ Read: ROSTER dao + tay rows. Code map lines as phase 28 + the toolkit files it a
 - Map every dao/tay row; then a test that no ROSTER effect id is a no-op any more.
 Shots: `fx` bench for each new atom. Done when each row's effect is visible in `training` at its level.
 
-### Phase 30 — Card draft (Lá bài) replaces relics · `PARTIAL` · Sonnet 5.5 · medium
+### Phase 30 — Card draft (Lá bài) replaces relics · `DONE` · Sonnet 5.5 · medium
 Read: ROUND3 §5, GDD §7 and §8 (rewrite them), LOOK §8 palette only. Code map lines for data/relics, data/modules, match/flow, net/net-flow, ui/hud/draft, ui/modal.ts, input/pictograms.
 - `cards.ts` (all cards of ROUND3 §5, effects through existing hooks/ForgeMods), server draft rules
   (≥ 1 of each kind, last place reroll + rare, timeout = first card), delete relics.ts and its uses.
@@ -263,3 +263,4 @@ Done when the throttled 6-bot scene holds ≥ 55 fps and a 3-minute run has no a
 - Phase 31 audio: `latencyHint: 'playback'` on Android, ONE shared convolver (IR swapped by `setArea`), global voice cap `FEEL.audio.maxVoices` 24 (quietest-oldest stolen), `EventDef.gap` (ring_hurt 0.2 s, 1 voice), no per-voice low-pass node on 2D one-shots. Gyro rewritten: `input/gyro-math.ts` (`gyroRates` yaw about gravity from accelerationIncludingGravity + pitch about screen x, both landscapes, One-Euro, dead band) + `gyro.ts` binder at sensor rate; tests in `input/gyro.test.ts`.
 - Phase 31 still open: confirm >= 55 fps on a real mid-range Android and a 3-minute run with no audio dropouts (user test: Điều khiển > Con quay on, rotate flat and upright in both landscapes; fight 3 min). Not done: GPU skinning, instancing/fewer draw calls, node pooling for voices, weapon LOD.
 - Aim assist: pause menu has a Hỗ trợ ngắm Bật/Tắt row; pull/snap check `enabled` (fix(aim)).
+- Phase 30 (finish): GDD §7/§8 rewritten for cards (no armor module slots, draft rules, rare/reroll for last place); stale "relic" comments left in code are harmless. Draft shots on `net&cage=0&preview=draft|draft_last&touch=1` (normal, last place with reroll) read cleanly on phones: card text fits, rare double border, touch layer hidden while the choice is open. Offers/auto-pick/no-duplicate rules are covered by `cards.test.ts` + `match/flow.test.ts`. User test: play an online round and pick a card in each cage; last place should see the Đổi button and one rare card.

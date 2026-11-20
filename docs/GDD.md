@@ -152,46 +152,24 @@ Data shape (`shared/src/data/weapons.ts`): `{ id, name, family, minLevel, stats,
 Passives are small functions registered by id in `shared/src/passives.ts` with hooks
 (`modifyAttack`, `modifyParryWindow`, `onHit`, `onParry`, `onSlamLand`). New weapon = new row (+ maybe new passive).
 
-## 7. Armor (Giáp) and modules
+## 7. Armor (Giáp) and body cards
 Forge target toggle at the anvil: blade or armor. Armor level 0–10 uses the same outcome table (level × 2 for
 the row lookup) but never breaks. Each level: +3% damage reduction (max 30%). Visual tiers: apron → leather →
 studded → half plate → full plate (LOOK §4).
-Module slots open at armor +3 and +7. Modules come from the relic draft and persist for the match:
-| id | Name | Effect |
-|---|---|---|
-| phan_luc | Bộ phản lực | +1 air jump (double jump) and 0.6 s hover (hold Nhảy in air) |
-| sung_may_vai | Súng máy vai | auto-fires an explosive bolt at the nearest visible enemy every 6 s (8 dmg + knockback) |
-| no_vai | Nỏ vai | tap Đổi twice to fire a bolt (14 dmg, 3 per life) — weak late, useful early |
-| banh_lan | Bánh lăn gót | +12% ground speed, slides last 50% longer |
-| khien_tay | Khiên tay | block arc 180°, parry window +40 ms |
-| binh_no | Bình nổ | starting a slide drops a bomb (1.2 s fuse, 18 dmg, 3 per round) |
-Modules render as attachments on armor sockets (back, shoulders, forearm, heels).
+Armor has NO module slots any more (ROUND3 §5). The six modules are **Cơ thể** cards that mount on the
+armor sockets as soon as they are picked: Bộ phản lực (back), Súng máy vai (shoulder), Nỏ vai (shoulder),
+Bánh lăn gót (heels), Khiên tay (forearm), Bình nổ (back). Numbers: `BALANCE.cards`; effects:
+`shared/src/data/cards.ts` (`CardFx`, `foldCards`).
 
-## 8. Between rounds: relics and anti-snowball
-- **Di vật draft** during the cage: pick 1 of 3. The last-place player picks first and from the rare pool.
-  Players who scored below the round winner get one extra reroll.
+## 8. Between rounds: Lá bài (cards) and anti-snowball
+- **Card draft** during the cage: 3 black cards, at least one **Vũ khí** (weapon/forge) and one **Cơ thể**
+  (body). Pick 1; on timeout the first card is taken. Cards last the whole match; no duplicates unless the
+  card is "cộng dồn". The last-place player gets one reroll and one card from the rare pool.
 - **Tiếng tăm** (notoriety): the round winner starts the next round with 1 stack (2 if they won by 3+ kills).
   Each stack lowers p(L) by 0.04 on their forge rolls, and killing them gives +1 point per stack.
   Stacks are recalculated every round (never accumulate forever).
-- The first and second relic offered to last place can be armor modules (catch-up builds).
-
-Starting relic pool (`shared/src/data/relics.ts`):
-| id | Name | Effect |
-|---|---|---|
-| da_niem | Đá niêm | the first Vỡ each round becomes Giữ |
-| hon_than_do | Hòn than đỏ | 1 Lên +2 per round |
-| vong_da | Vòng da | each strike costs 25% less heat |
-| moi_han | Mối hàn | after a Vỡ the next Trúng is a sure Lên |
-| an_sat | Ấn sắt | +10% weapon damage |
-| kim_giu_nhiet | Kìm giữ nhiệt | heat decay −50% |
-| ong_be | Ống bễ | heating 2× faster |
-| bua_nen | Búa nện | every Vỡ releases a shockwave around your anvil (knockback 4 m) |
-| de_nhe | Đe nhẹ | place and pick up the anvil instantly |
-| dau_toi | Dầu tôi | parries restore 1 stamina and 5 HP |
-| gang_da | Găng da | leaving forge stance grants 0.3 s i-frames |
-| mat_tho | Mắt thợ | strike sweet zone +40% |
-| sat_vun | Sắt vụn | kills give +1 level to your held weapon |
-| dinh_tan | Đinh tán | start each round with armor +2 |
+- Full card table (34 cards: 17 Vũ khí incl. 4 family-only, 17 Cơ thể): `docs/ROUND3.md` §5 and
+  `shared/src/data/cards.ts` — the code is the source of truth for numbers.
 
 ## 9. Profile and unlocks (offline, `localStorage` + Capacitor Preferences)
 `profile = { name, color, unlocked: { phoi: true, <formId>: true }, bestLevel: { kiem, bua, dao, tay }, stats }`.
