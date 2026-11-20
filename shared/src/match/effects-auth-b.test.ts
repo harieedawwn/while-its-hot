@@ -39,7 +39,7 @@ describe('dao and tay effects on the server (phase 29)', () => {
   });
 
   it('Dao rạch không gian: heavy swing cuts the foe on the line and sends the owner a tp', () => {
-    const { a, p2 } = duel('dao', 45, Math.PI);
+    const { a, p2 } = duel('dao', 57, Math.PI);
     const out: Out[] = [];
     out.push(...a.msg(1, { t: 'atk', s: 1, kind: 'heavy', combo: 0, at: 5000 }, 5000));
     for (let now = 5050; now <= 5400; now += 50) out.push(...a.tick(now));

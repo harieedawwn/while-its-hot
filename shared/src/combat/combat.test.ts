@@ -125,12 +125,12 @@ describe('fighter', () => {
 
 describe('damage', () => {
   const def = (o: Partial<DefenderView> = {}): DefenderView => ({ x: 0, z: 0, yaw: 0, parrying: false, blocking: false, immune: false, stamina: 3, armorLevel: 0, ...o });
-  const atk = (shape = attackShape(weaponById('kiem_tho'), 'light', 0)) => ({ x: 0, z: -2, shape, family: 'kiem' as const, weaponLevel: 5 });
-  const K = 1 + 0.045 * 5;
+  const atk = (shape = attackShape(weaponById('kiem_tho'), 'light', 0)) => ({ x: 0, z: -2, shape, family: 'kiem' as const, weaponLevel: 3 });
+  const K = 1 + 0.045 * 3;
   it('formula: base × scale(family, L) × armor × taken', () => {
     expect(armorFactor(10)).toBeCloseTo(0.7); expect(armorFactor(20)).toBeCloseTo(0.7);
-    expect(damageOf(attackShape(weaponById('kiem_tho'), 'light', 0), 'kiem', 5, 4)).toBeCloseTo(12 * K * 0.88);
-    expect(damageOf(attackShape(weaponById('kiem_tho'), 'light', 0), 'kiem', 5, 0, 1.1)).toBeCloseTo(12 * K * 1.1);
+    expect(damageOf(attackShape(weaponById('kiem_tho'), 'light', 0), 'kiem', 3, 4)).toBeCloseTo(12 * K * 0.88);
+    expect(damageOf(attackShape(weaponById('kiem_tho'), 'light', 0), 'kiem', 3, 0, 1.1)).toBeCloseTo(12 * K * 1.1);
     const tay = resolveHit(atk(), def({ taken: 1.1 }));
     if (tay.r === 'hit') expect(tay.dmg).toBeCloseTo(12 * K * 1.1);
   });

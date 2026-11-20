@@ -7,16 +7,23 @@ import { dmgScale, FAMILIES, familyForms, formFor, passivesOf, timeMulAt, traits
 const base: AttackShape = { dmg: 10, arcDeg: 90, lungeM: 2, staggerS: 0.5, ignoresBlock: false, breaksBlock: false };
 const W = BALANCE.weapons;
 
-describe('weapon data (ROSTER: 4 families, 15 rows to +45 plus extras above + phoi)', () => {
-  it('has 64 unique snake_case ids, no thương left', () => {
-    expect(WEAPONS).toHaveLength(64);
+describe('weapon data (ROSTER: 4 families, 15 rows to +57 + phoi)', () => {
+  it('has 61 unique snake_case ids, no thương left', () => {
+    expect(WEAPONS).toHaveLength(61);
     expect(FAMILIES).toEqual(['kiem', 'bua', 'dao', 'tay']);
     expect(new Set(WEAPON_IDS).size).toBe(WEAPON_IDS.length);
     for (const id of WEAPON_IDS) expect(id).toMatch(/^[a-z][a-z0-9_]*$/);
     for (const id of ['giao_sat', 'thuong_thep', 'kich', 'dai_dao', 'tram_ma_dao']) expect(WEAPON_IDS).not.toContain(id);
   });
-  it('a form every 3 levels from +3 to +45', () => {
-    for (const f of FAMILIES) expect(familyForms(f).map((w) => w.minLevel)).toEqual(Array.from({ length: familyForms(f).length }, (_, i) => 3 + 3 * i));
+  it('forms sit on BALANCE.weapons.formLevels (+3..+21 by 3, +25..+37 by 4, +42..+57 by 5)', () => {
+    for (const f of FAMILIES) expect(familyForms(f).map((w) => w.minLevel)).toEqual([...BALANCE.weapons.formLevels]);
+    expect(formFor('kiem', 24).minLevel).toBe(21); expect(formFor('kiem', 25).minLevel).toBe(25); expect(formFor('kiem', 41).minLevel).toBe(37);
+    expect(formFor('kiem', 57).id).toBe(familyForms('kiem')[14].id); expect(BALANCE.weapons.maxLevel).toBe(57);
+  });
+  it('a form hits like the old 3-per-form ladder', () => {
+    const old = (L: number) => 1 + 0.045 * L;
+    expect(dmgScale('kiem', 57)).toBeCloseTo(old(45)); expect(dmgScale('kiem', 56)).toBeCloseTo(old(42)); expect(dmgScale('kiem', 25)).toBeCloseTo(old(24));
+    expect(dmgScale('kiem', 2)).toBeCloseTo(old(2));
     expect(weaponById('phoi').family).toBeNull();
   });
   it('every listed passive is registered', () => {
@@ -25,10 +32,10 @@ describe('weapon data (ROSTER: 4 families, 15 rows to +45 plus extras above + ph
   it('forms by level; rows are complete lists (not cumulative)', () => {
     expect(formFor('kiem', 2).id).toBe('phoi');
     expect(formFor(null, 12).id).toBe('phoi');
-    expect([3, 5, 6, 9, 12, 15, 44, 45].map((l) => formFor('kiem', l).id))
+    expect([3, 5, 6, 9, 12, 15, 52, 57].map((l) => formFor('kiem', l).id))
       .toEqual(['kiem_tho', 'kiem_tho', 'kiem_thep', 'kiem_ban_rong', 'truong_kiem', 'kiem_toi_lua', 'kiem_nhat_thuc', 'kiem_mat_troi']);
     expect(formFor('dao', 3).id).toBe('dao_gam');
-    expect(formFor('tay', 45).id).toBe('gang_troi');
+    expect(formFor('tay', 57).id).toBe('gang_troi');
     expect(passivesOf(weaponById('kiem_toi_lua'))).toEqual(['combo3_bonus', 'parry_window_plus', 'thrust_pierce', 'burn_on_hit']);
     expect(passivesOf(weaponById('kiem_rang_cua'))).toEqual(['burn_strong', 'slow_on_hit', 'thrust_pierce']);
     expect(passivesOf(weaponById('bua_ren'))).toEqual([]);
@@ -46,12 +53,12 @@ describe('weapon data (ROSTER: 4 families, 15 rows to +45 plus extras above + ph
     expect(framesFor(weaponById('dao_gam'), 'heavy', 0).lungeM).toBe(3);
   });
   it('scaling formulas', () => {
-    expect(dmgScale('kiem', 10)).toBeCloseTo(1.45);
-    expect(dmgScale('bua', 10)).toBeCloseTo(1 + 0.2 + 0.12);
-    expect(dmgScale('dao', 20)).toBeCloseTo(1.7);
-    expect(dmgScale('tay', 20)).toBeCloseTo(1.6);
+    expect(dmgScale('kiem', 12)).toBeCloseTo(1.54);
+    expect(dmgScale('bua', 12)).toBeCloseTo(1 + 0.24 + 0.1728);
+    expect(dmgScale('dao', 21)).toBeCloseTo(1.735);
+    expect(dmgScale('tay', 21)).toBeCloseTo(1.63);
     expect(timeMulAt('bua', 12)).toBe(1);
-    expect(timeMulAt('bua', 30)).toBeCloseTo(0.7);
+    expect(timeMulAt('bua', 33)).toBeCloseTo(0.7);
     expect(timeMulAt('bua', 21)).toBeCloseTo(0.85);
     expect(timeMulAt('kiem', 45)).toBe(1);
     expect(weaponById('bua_sao_lun').stats.timeMul).toBeCloseTo(0.7);
@@ -65,7 +72,7 @@ function lightDps(f: Family, level: number): number {
   return (def.stats.light * dmgScale(f, level)) / (t.w + t.a + t.r);
 }
 describe('DPS table (ROUND3 §4)', () => {
-  const lv = [3, 15, 30, 45];
+  const lv = [3, 15, 33, 57];
   const table = Object.fromEntries(FAMILIES.map((f) => [f, lv.map((l) => lightDps(f, l))])) as Record<Family, number[]>;
   const rank = (i: number) => FAMILIES.slice().sort((a, b) => table[a][i] - table[b][i]);
   it('bua is lowest at +3 and highest at +45', () => {

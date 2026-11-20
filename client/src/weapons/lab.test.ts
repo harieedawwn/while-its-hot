@@ -25,6 +25,6 @@ describe('weapon-lab files', () => {
     }
   });
   it('files outside the roster are only the known strays', () => {
-    expect(labSkipped(roster).sort()).toEqual(['the_dao_pha_thu']);
+    expect(labSkipped(roster).sort()).toEqual(['dao_bong_toi', 'phi_dao_loi_than', 'the_dao_pha_thu', 'thien_nghich_mau']);
   });
 });

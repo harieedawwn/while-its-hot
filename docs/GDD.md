@@ -110,7 +110,7 @@ client draws it every frame and the server re-checks the phase at the press's ti
 - After every Trúng the zone jumps 0.30–0.65 of the ring ahead of the marker (never under it, at least half a zone
   + 0.04 clear); a Trượt does not move it. Zone positions come from a seeded sequence the client and server share.
 - The local Trúng/Trượt verdict shows at once (hammer, word); online the server's Lên/Giữ roll follows.
-- Max level **+45** (`BALANCE.weapons.maxLevel`). Armor stays 0–10 and runs the same curves stretched over 0..44.
+- Max level **+57** (`BALANCE.weapons.maxLevel`; phase 34). p(L)/zone(L) keep their values up to +44 and stay flat above (`oddsSpan` 45). Armor stays 0–10 and runs the same curves stretched over 0..44.
   A blade remembers its highest level (its form never goes backwards, like ForgeTax).
 - Heat cost per strike 0.12 (not in Nhập thần). Cards/relics change the numbers through `ForgeMods` only
   (zoneMul, heatMul, decayMul, costMul, frenzyFillMul, frenzyPlusS, guardVo, plus2Once, sureAfterVo, notoriety).
@@ -132,7 +132,7 @@ for +45; a smith with 100 ms of timing noise plateaus in the mid +20s (the −2 
 Forms change at the milestones below. Each form adds its passive (passives stack within a family).
 
 ### Weapon roster (4 families × 15 forms + phôi; full table with shapes and effects: `docs/ROSTER.md`)
-A form every 3 levels from +3 to +45 (`minLevel = 3 + 3·i`). Each row's effect list is COMPLETE (not cumulative):
+Forms at `BALANCE.weapons.formLevels`: +3…+21 every 3, +25…+37 every 4, +42, +47, +52, +57 (phase 34). Damage/speed use the form-equivalent level (form index × 3 + 3, `formEquivLevel`), so each form hits as before. Each row's effect list is COMPLETE (not cumulative):
 `passivesOf(def)` returns the row's own list. Ids never change; the blank `phoi` is level 0.
 
 | Family | +3 | +6 | +9 | +12 | +15 | +18 … +45 |
@@ -192,3 +192,5 @@ the slag heap (west, uneven ground), the crane (south).
 
 ## 12. Out of scope for now
 Bots, matchmaking with strangers, chat, cosmetics shop, more arenas (design leaves room), iOS build.
+
+Phase 34 sim (`tools/forge-sim.mjs`, level p10/p50/p90 after 15/30/45/90/150 s at the anvil): solid 10/14/18 · 18/23/29 · 24/29/35 · 31/36/42 · 32/39/45; expert 13/16/19 · 24/29/33 · 34/38/43 · 48/55/57 · 55/57/57. Rounds to +57 (60 s anvil per round, carry loss 2): expert p50 2–3, solid never (plateaus ~+40–45).

@@ -58,7 +58,7 @@ describe('weapon models', () => {
       const own = familyForms(f).filter((w) => !modelFor(w).borrowed);
       if (own.length < 2) continue;
       const len = own.map((w) => { const bb = new THREE.Box3().setFromObject(built.get(w.id)!); return bb.max.y - bb.min.y; });
-      expect(Math.max(...len), f).toBeGreaterThan(len[0]); // extras above +45 may be short (thien_nghich_mau)
+      expect(Math.max(...len), f).toBeGreaterThan(len[0]); // extras above +45 may be short
     }
   });
   it('a missing model borrows the nearest lower form of its family, tinted brighter', () => {

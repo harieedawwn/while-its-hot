@@ -32,7 +32,7 @@ describe('form effects on the server (phase 28)', () => {
   it('a 3rd light with Kiếm băng freezes the target through a status message', () => {
     const a = new MatchAuthority([1, 2], { truce: 0 }, rng(), 0, true);
     const p1 = a.players.get(1)!, p2 = a.players.get(2)!;
-    p1.forge.blades[0] = { family: 'kiem', level: 33, best: 33 };
+    p1.forge.blades[0] = { family: 'kiem', level: 37, best: 37 };
     Object.assign(p1.st, { x: 0, y: 0, z: 0, yaw: 0 });
     Object.assign(p2.st, { x: 0, y: 0, z: -1.5, yaw: Math.PI });
     const now = 5000;

@@ -56,7 +56,7 @@ function play(m, { level = 0, armor = false, secs, frenzyOnly = false }) {
   }
   return { gain: lv() - start, level: lv(), strikes, vo, lens };
 }
-const CHECK = [15, 30, 45, 90];
+const CHECK = [15, 30, 45, 90, 150];
 const pct = (v, q) => v[Math.floor(q * (v.length - 1))];
 const stat = (rs, k) => { const v = rs.map((r) => r[k]).sort((x, y) => x - y); return `${pct(v, 0.1)}/${pct(v, 0.5)}/${pct(v, 0.9)}`; };
 
@@ -67,9 +67,19 @@ for (const [name, m] of Object.entries(SMITHS)) {
   console.log(`  ${name.padEnd(9)} mean ${mean.toFixed(2).padStart(6)} · ${stat(rs, 'gain')} · ≥+7 ${(hi * 100).toFixed(0)}% · taps ${(rs.reduce((x, r) => x + r.strikes, 0) / N).toFixed(1)}`);
 }
 for (const armor of a.includes('--armor') ? [true] : [false, true]) {
-  console.log(`\n== normal forging, ${armor ? 'ARMOR (0..10)' : 'BLADE (0..45)'} · level p10/p50/p90 after ${CHECK.join('/')} s at the anvil, from +0 ==`);
+  console.log(`\n== normal forging, ${armor ? 'ARMOR (0..10)' : 'BLADE (0..' + BALANCE.weapons.maxLevel + ')'} · level p10/p50/p90 after ${CHECK.join('/')} s at the anvil, from +0 ==`);
   for (const [name, m] of Object.entries(SMITHS)) {
     const cps = CHECK.map((c) => { const rs = Array.from({ length: Math.min(N, 800) }, () => play(m, { armor, secs: c })); return `${c}s ${stat(rs, 'level')}`; });
     console.log(`  ${name.padEnd(9)} ${cps.join(' · ')}`);
+  }
+}
+
+// Rounds to the top form: ANVIL s at the anvil per round (rest = fighting), then carry loss 2 per round (BALANCE.match.carry.bladeLoss x1 death).
+if (!a.includes('--armor')) {
+  const ANVIL = opt('anvil', 60), top = BALANCE.weapons.maxLevel, loss = BALANCE.match.carry.bladeLoss;
+  console.log(`\n== rounds to the top form (+${top}) · ${ANVIL} s at the anvil per round, carry loss ${loss}/round · p10/p50/p90 (>12 = not reached) ==`);
+  for (const [name, m] of Object.entries(SMITHS)) {
+    const rs = Array.from({ length: Math.min(N, 300) }, () => { let lv = 0; for (let r = 1; r <= 12; r++) { lv = play(m, { level: lv, secs: ANVIL }).level; if (lv >= top) return { r }; lv = Math.max(0, lv - loss); } return { r: 13 }; });
+    console.log(`  ${name.padEnd(9)} ${stat(rs, 'r')}`);
   }
 }

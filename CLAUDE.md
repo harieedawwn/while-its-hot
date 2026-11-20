@@ -65,7 +65,7 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/player/character/{skeleton,skin-batch,body,character}.ts` rigid skeleton + sockets, CPU-skinned batch, base body, assembled Character · `armor-{kit,soft,plate}.ts`, `armor.ts`, `modules.ts` armor tiers + 6 modules
 - `client/src/player/character/{pose,animator,drive}.ts` clip sampling/blend, base+action animator, MoveState → anim · `clips/*.ts` clip data + attack slots · `player/third-person.ts` TP camera · `render/geo/cbox.ts` 44-tri box
 - `shared/src/data/{armor,modules,colors}.ts` armor tiers, module defs, player colors · `dev/scene-character.ts` lineup / `clip=` player
-- `shared/src/data/weapons.ts` 4 families × 15 forms + phoi (ROSTER), formFor/passivesOf/traitsOf/dmgScale/timeMulAt · `shared/src/passives.ts` passive hook registry + folds, `pendingPassives()` no-op ids
+- `shared/src/data/weapons.ts` 4 families × 15 forms + phoi (ROSTER), formFor/passivesOf/traitsOf/dmgScale/timeMulAt/`formEquivLevel` (ladder in `BALANCE.weapons.formLevels`) · `shared/src/passives.ts` passive hook registry + folds, `pendingPassives()` no-op ids
 - `client/src/weapons/{wkit,shapes,palette,tassel,weapon,hold}.ts` one-mesh builder + atlas UVs/heatMask, blade loft/profile/wrap, colors, tassel, build/load(GLB)/setHeat/`modelFor` (borrowed model)/`mirrorLeft`, `gripInHand`/`holdWeapon` (TP hands) · `weapons/models/*.ts` own builders + index
 - `client/src/weapons/{lab-kit,lab-geo}.ts`, `models/lab.ts` weapon-lab `k` kit -> one-mesh bake (tri-budget detail ladder, tay axis remap), glob of `weapon-lab/weapons/*.js` by roster id · `weapons/lab.test.ts`
 - `client/src/dev/scene-weapons.ts` rack / `?weapon=&heat=` close-up · `tools/weapon-atlas.mjs` → `public/tex/weapon.png`

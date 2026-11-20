@@ -32,13 +32,14 @@ export const BALANCE = {
    * through shared/src/passives.ts. Damage = base × scale(family, level) × armor × passives.
    */
   weapons: {
-    /** Highest blade level (the 15 ROSTER rows end at +45; extra forms go on top). */
-    maxLevel: 51,
+    /** Highest blade level = the last form level. */
+    maxLevel: 57,
+    /** Level of each of the 15 forms (phase 34): every 3 to +21, every 4 to +37, every 5 after. */
+    formLevels: [3, 6, 9, 12, 15, 18, 21, 25, 29, 33, 37, 42, 47, 52, 57] as readonly number[],
     /** Forge odds/zone curves keep their old span (p0 at +0 → pEnd at +oddsSpan−1) so extra levels don't slow levelling. */
     oddsSpan: 45,
-    /** Level at which the blank becomes a family form (the 4-way pick). Forms change every formEvery levels. */
+    /** Level at which the blank becomes a family form (the 4-way pick). Forms sit at formLevels. */
     familyPick: 3,
-    formEvery: 3,
     /**
      * Families (ROUND3 §4). Damage = base × scale(L) with scale = 1 + dmgK·L + dmgQ·L² (L = blade level).
      * speedUp: attack time ×(1 − k·smoothstep(from, to, form level)). Traits apply only while the weapon is held:

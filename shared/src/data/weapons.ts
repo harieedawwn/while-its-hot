@@ -2,7 +2,7 @@ import { BALANCE } from '../balance';
 import { type PassiveId, traitMods } from '../passives';
 
 /**
- * Weapon roster (ROUND3 §4, docs/ROSTER.md): 4 families × 15 forms, one form every 3 levels from +3 to +45.
+ * Weapon roster (ROUND3 §4, docs/ROSTER.md): 4 families × 15 forms, forms at +3…+21 (every 3), +25…+37 (every 4), +42…+57 (every 5).
  * `passives` is the row's FULL effect list (not cumulative). Display names and effect lines live in
  * client/src/ui/strings.vi.ts, never here. `model` = the builder/GLB id (usually the weapon id); a form with
  * no model yet borrows the nearest lower form's (client/src/weapons/weapon.ts `modelFor`).
@@ -25,8 +25,16 @@ export interface WeaponDef {
 
 const W = BALANCE.weapons;
 const smooth = (a: number, b: number, x: number): number => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+/** Power level of a blade level: the old 3-per-form ladder (form index × 3 + 3), so a form hits the same however far apart the forms are. */
+export function formEquivLevel(level: number): number {
+  if (level < W.familyPick) return level;
+  let i = 0;
+  while (i + 1 < W.formLevels.length && level >= W.formLevels[i + 1]) i++;
+  return i * 3 + 3;
+}
 /** Attack time multiplier at a level: 1 − k·smoothstep(from, to, L) for families with speedUp. */
 export function timeMulAt(f: Family, level: number): number {
+  level = formEquivLevel(level);
   const fam = W.family[f] as { speedUp?: { k: number; from: number; to: number } };
   return fam.speedUp ? 1 - fam.speedUp.k * smooth(fam.speedUp.from, fam.speedUp.to, level) : 1;
 }
@@ -35,7 +43,7 @@ const stats = (f: Family, level: number): WeaponStats => {
   return { moveset: f, light: s.light, heavy: s.heavy, comboHits: s.comboHits, comboS: s.comboS, reach: s.reach, heavyKind: s.heavyKind, timeMul: timeMulAt(f, level) };
 };
 
-/** One family's 15 forms in level order (+3, +6, … +45): [id, passives]. */
+/** One family's 15 forms in level order (BALANCE.weapons.formLevels): [id, passives]. */
 type Rows = readonly (readonly [string, readonly PassiveId[]])[];
 const ROSTER: Record<Family, Rows> = {
   kiem: [
@@ -54,7 +62,6 @@ const ROSTER: Record<Family, Rows> = {
     ['kiem_van_kiem', ['orbit_blades', 'meteor_heavy']],
     ['kiem_nhat_thuc', ['black_hole_heavy', 'orbit_blades']],
     ['kiem_mat_troi', ['slash_all_lights', 'fire_column_heavy']],
-    ['thien_nghich_mau', ['flying_slash_strong', 'lava_crack', 'orbit_blades']],
   ],
   bua: [
     ['bua_ren', []],
@@ -89,8 +96,6 @@ const ROSTER: Record<Family, Rows> = {
     ['dao_phan_than', ['slide_decoy', 'time_slow_heavy']],
     ['dao_nghin_luoi', ['blade_storm', 'slide_decoy']],
     ['dao_khe_nut', ['rift_dash', 'triple_jump', 'blade_storm']],
-    ['phi_dao_loi_than', ['throw_knife', 'throw_burn', 'rift_dash']],
-    ['dao_bong_toi', ['shadow_invis', 'poison_on_hit', 'throw_poison']],
   ],
   tay: [
     ['gang_sat', []],
@@ -112,7 +117,7 @@ const ROSTER: Record<Family, Rows> = {
 };
 
 const forms = (f: Family): WeaponDef[] => ROSTER[f].map(([id, passives], i) => {
-  const minLevel = W.familyPick + i * W.formEvery;
+  const minLevel = W.formLevels[i];
   return { id, family: f, minLevel, stats: stats(f, minLevel), passives, model: id };
 });
 
@@ -153,6 +158,7 @@ export function traitsOf(def: WeaponDef): FamilyTraits {
 }
 /** Damage scale by blade level: 1 + dmgK·L + dmgQ·L² of the family (the blank scales like a sword). */
 export function dmgScale(family: Family | null, level: number): number {
+  level = formEquivLevel(level);
   const f = W.family[family ?? 'kiem'];
   return 1 + f.dmgK * level + f.dmgQ * level * level;
 }
