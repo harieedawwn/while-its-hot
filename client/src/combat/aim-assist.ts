@@ -38,14 +38,14 @@ export class AimAssist {
 
   /** Gentle pull toward the target (call when the player moves, looks or swings). */
   pull(me: Combatant, dt: number): void {
-    if (!this.target) return;
+    if (!this.enabled || !this.target) return;
     me.body.yaw += clampAbs(this.dYaw, A.pullRate * dt);
     me.body.pitch += clampAbs(this.dPitch, A.pitchRate * dt);
   }
 
   /** At swing start: turn up to snapDeg toward the target. */
   snap(me: Combatant): void {
-    if (!this.target) return;
+    if (!this.enabled || !this.target) return;
     me.body.yaw += clampAbs(this.dYaw, A.snapDeg * D2R);
     me.body.pitch += clampAbs(this.dPitch, A.snapDeg * D2R * 0.6);
   }

@@ -1,6 +1,7 @@
 import type { Family } from '@wih/shared';
 import { el, sfx } from '../kit/dom';
-import { stampedButton } from '../kit/controls';
+import { segmented, stampedButton } from '../kit/controls';
+import { sharedControls } from '../../input/controls-settings';
 import { STR } from '../strings.vi';
 import { silhouette } from './silhouettes';
 
@@ -63,7 +64,12 @@ export class PauseMenu {
     p.style.pointerEvents = 'auto';
     const head = el('div', 'k-head');
     head.appendChild(el('div', 'k-title', STR.pause.title));
-    p.append(head, stampedButton(STR.pause.resume, this.h.resume), stampedButton(STR.pause.settings, this.h.settings), stampedButton(STR.pause.leave, this.h.leave));
+    const c = sharedControls();
+    const aim = el('div', 'p-aim');
+    aim.append(el('div', 'p-aim-l', STR.controls.aimAssist), segmented(STR.controls.aimAssist,
+      [{ id: 'on', label: STR.settings.on }, { id: 'off', label: STR.settings.off }] as const,
+      c.v.aimAssist ? 'on' : 'off', (x) => c.set({ aimAssist: x === 'on' })).root);
+    p.append(head, stampedButton(STR.pause.resume, this.h.resume), aim, stampedButton(STR.pause.settings, this.h.settings), stampedButton(STR.pause.leave, this.h.leave));
     this.parent.append(dim, p);
     this.nodes = [dim, p];
     sfx('open');

@@ -59,3 +59,5 @@
 .p-pause.k-in { animation: p-drop var(--t-drop) var(--drop) both; }
 @keyframes p-drop { from { transform: translate(-50%, -150vh); } to { transform: translate(-50%, -50%); } }
 .p-pause .k-btn { width: 100%; text-align: left; }
+.p-aim { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 2px 4px; }
+.p-aim-l { font: 600 var(--t-s)/1.4 var(--f-text); }
