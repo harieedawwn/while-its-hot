@@ -90,8 +90,15 @@
     - Level shows in craft: 0-5 crude and hammered, 6-14 solid, 15-23 masterwork, 24-32 strange materials
       (stone, ice, bronze, obsidian, rubber, mechanisms), 33-45 otherworldly and oversized. From +33 a few
       parts may float on purpose (at most 3 groups, evenly spaced, clearly magic); below +33 nothing floats.
-    - Higher level = heavier, more striking silhouette and a stranger material, never just a cleaner copy
-      of a real weapon. Keep it readable: one big shape, then details.
+    - Higher level = a new IDEA, never just bigger or longer. Bigger/longer alone is a failure. Each weapon
+      needs one twist the eye catches in a second, picked from: an unexpected object used as the weapon
+      (bell, anchor, clock hand, rubber head, a mountain), a broken or split form (segments, twin blades,
+      a hole through the blade), a mechanism (piston, gears, coil, hinge), a material swap (obsidian,
+      ice, bronze patina, bone, jade, rubber), or deliberate floating parts at +33 and up.
+      Before coding, silently list 3 different twists, drop the most obvious one, build the boldest of the
+      other two that still reads as this family.
+    - Keep it readable at phone size: one big memorable silhouette, then 5-15 details. Length stays inside
+      the family range.
     - Inspiration from films/cartoons: capture shape language and colors, no logos or text.
   </rules>
 

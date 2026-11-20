@@ -6,6 +6,7 @@ Numbers are starting values; phase 29/30 tunes them in `balance.ts`. Family base
 
 Weapon lab: copy one whole row (from `kiem |` to the end) into the "Dòng roster" field of
 `weapon-lab/PROMPT_FREE_CLAUDE.md`. Rows marked `có` already have a model in the game.
+Rows +30 and up are built by Claude Code (phase 28b); free chats do +3 to +27.
 
 Nhánh | Cấp | id | Tên | Hình dáng & chất liệu | Hiệu ứng | Mẫu
 ---|---|---|---|---|---|---

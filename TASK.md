@@ -279,7 +279,7 @@ Run this phase again every time the user drops new files into `weapon-lab/weapon
 Shots: `weapons` (rack). Done when the new models appear in the rack, armory and training.
 
 ## Round 3 — second playtest (design: `docs/ROUND3.md`, forms: `docs/ROSTER.md`; shots on `phones` only)
-Order: 25 → 26 → 27 → 28 → 29 → 30 → 31 → 32. Phase 24 any time after 28 when lab files exist.
+Order: 25 → 26 → 27 → 28 → 28b → 29 → 30 → 31 → 32. Phase 24 any time after 28 when lab files exist.
 Every phase rewrites the GDD sections it changes so GDD stays the truth.
 
 ### Phase 25 — Controls, HUD, weapon swap, smooth ring · `TODO` · Sonnet 5.5 · medium
@@ -340,6 +340,15 @@ Read: ROUND3 §4, `docs/ROSTER.md` (columns + ids only), GDD §5 and §6 roster 
   fallback rule; bua/kiem existing models move to their new levels.
 - DPS table test (ROUND3 §4).
 Shots: `combat` with each family (FP mid-swing), `weapons` rack. Done when all 4 families fight online.
+
+### Phase 28b — High-level weapon models (+30 to +45, 16 forms) · `TODO` · Sonnet 5.5 · medium
+Read: `weapon-lab/PROMPT_FREE_CLAUDE.md` (rules + kit), ROSTER rows +30..+45 only. Code map lines for weapons/.
+- Build the 16 rows as weapon-lab JS files in `weapon-lab/weapons/` (same contract, so phase 24 imports them),
+  following the prompt's "new idea, never just bigger" rule. Render each in `preview.html` or the game
+  rack, look at it, fix proportions and floating parts, max 2 fix rounds per model. tris ≤ 1500.
+- If a free-chat model from +3..+27 is already in `weapon-lab/weapons/` and clearly broken, note it in the log
+  (do not rebuild it here).
+Shots: `weapons` close-up of each new model. Done when 16 files exist and each passes the preview warnings.
 
 ### Phase 29 — Form effects A: effect toolkit + Kiếm and Búa rows · `TODO` · Sonnet 5.5 · high
 Read: ROSTER kiem + bua rows, ROUND3 §4. Code map lines for passives, match/effects, combat/resolver, net/ (snapshot), fx/, audio/events, physics/blockers.
