@@ -33,18 +33,21 @@ function shape(e: number, t: number): number {
   switch (e) { case 1: return t * t; case 2: return 1 - (1 - t) * (1 - t); case 3: return t; default: return t * t * (3 - 2 * t); }
 }
 
+/** out = data[at .. at + POSE_LEN) without allocating a subarray view (this runs per character per frame). */
+function copyKey(out: Pose, data: Float32Array, at: number): void { for (let j = 0; j < POSE_LEN; j++) out[j] = data[at + j]; }
+
 /** Sample a compiled clip at u (looping clips wrap, others clamp) into `out`. */
 export function sample(c: Compiled, uIn: number, out: Pose): void {
   const { n, u, data } = c;
   let t = uIn;
   if (c.loop) t -= Math.floor(t); else t = t < 0 ? 0 : t > 1 ? 1 : t;
-  if (n === 1) { out.set(data.subarray(0, POSE_LEN)); return; }
+  if (n === 1) { copyKey(out, data, 0); return; }
   // segment i0 → i1; for loops the last key wraps to the first (u + 1)
   let i0 = n - 1;
   for (let i = 0; i < n; i++) if (u[i] > t) { i0 = i - 1; break; }
   let u0: number, u1: number, i1: number;
   if (i0 < 0) { i0 = n - 1; u0 = u[i0] - 1; i1 = 0; u1 = u[0]; }
-  else if (i0 === n - 1) { if (c.loop) { i1 = 0; u0 = u[i0]; u1 = u[0] + 1; } else { out.set(data.subarray(i0 * POSE_LEN, (i0 + 1) * POSE_LEN)); return; } }
+  else if (i0 === n - 1) { if (c.loop) { i1 = 0; u0 = u[i0]; u1 = u[0] + 1; } else { copyKey(out, data, i0 * POSE_LEN); return; } }
   else { i1 = i0 + 1; u0 = u[i0]; u1 = u[i1]; }
   const f = u1 > u0 ? (t - u0) / (u1 - u0) : 0;
   const A = i0 * POSE_LEN, B = i1 * POSE_LEN;

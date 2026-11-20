@@ -12,6 +12,8 @@ export interface EventDef {
   /** Reverb send 0..1 (× the area send level). */
   reverb?: number;
   loop?: boolean;
+  /** Minimum seconds between two starts of this event (repeating ticks must not stack). */
+  gap?: number;
   fb?: Fallback;
 }
 const d = (cat: Cat, bus: BusName, mix: string, voices: number, extra: Partial<EventDef> = {}): EventDef => ({ cat, bus, mix, voices, ...extra });
@@ -46,7 +48,7 @@ export const EVENTS: Record<string, EventDef> = {
   kill: ml('kill', 3, { sfx: 'hit_heavy', opts: { pitch: 0.7 }, secs: 1.4 }),
   death: ml('kill', 1),
   // user-supplied recordings (manifest `supplied`): bone crack on a death, one tick of fire-ring damage
-  death_crack: d('match', 'sfx', 'kill', 2, { reverb: 0.3 }), ring_hurt: d('match', 'sfx', 'hit', 2, { reverb: 0.15 }),
+  death_crack: d('match', 'sfx', 'kill', 2, { reverb: 0.3 }), ring_hurt: d('match', 'sfx', 'hit', 1, { reverb: 0.15, gap: 0.2 }),
   // forge
   anvil_place: fg('strike', 2, { sfx: 'impact_metal', opts: { pitch: 0.6 }, secs: 1.4 }), anvil_lift: fg('move', 2),
   heat_loop: d('forge', 'world', 'emitter', 1, { loop: true }),

@@ -15,11 +15,15 @@ export const FEEL = {
     /** A frame longer than this is a hitch (load, tab switch), not sustained slowness: ignored, restarts the grace. */
     adaptiveHitchMs: 250,
     /** …and this many seconds of slow frames in a row steps resolution down one notch. */
-    adaptiveHoldS: 2,
+    adaptiveHoldS: 1,
+    /** A frame slower than this (ms) steps down in half the hold time. */
+    adaptiveSevereMs: 40,
     /** Never step below this height. */
     adaptiveFloor: 360,
     /** Seconds to ignore after load or a resolution change (shader compile, texture upload). */
-    adaptiveGraceS: 1.5,
+    adaptiveGraceS: 1.2,
+    /** Remote character skinning LOD: beyond midM re-skin every midEvery frames, beyond farM every farEvery. */
+    lod: { midM: 14, midEvery: 2, farM: 28, farEvery: 4 },
     /** "Nén màu": levels per channel after dither. 0 = off. */
     quantize: { off: 0, light: 32, strong: 16 } as const,
     defaultQuantize: 'light' as 'off' | 'light' | 'strong',
@@ -138,6 +142,8 @@ export const FEEL = {
     gyro: {
       /** Degrees of turn per degree of device rotation at sensitivity 1. */
       gain: 1, maxRate: 360,
+      /** Dead zone in deg/s, and One-Euro filter (cutoffs in Hz) applied to the look rates at sensor rate. */
+      deadzone: 0.25, oneEuro: { minCutoff: 4, beta: 0.04, dCutoff: 1 },
     },
     pad: { deadzone: 0.15, curve: 1.6, lookRate: 3.4, triggerAt: 0.35 },
     /** Player-facing defaults and ranges of the control settings (Điều khiển). */
@@ -210,6 +216,8 @@ export const FEEL = {
     glue: { ratio: 3, attack: 0.005, release: 0.12, threshold: -14, knee: 6 },
     limiter: { threshold: -1, ratio: 20, attack: 0.001, release: 0.06 },
     /** Generated reverbs: length s, decay s, start brightness (0..1 noise smoothing). Per-area send level 0..1 in `send`. */
+    /** Hard cap on simultaneous voices (Android mixes on one thread); the quietest oldest is stolen first. */
+    maxVoices: 24,
     reverb: { room_small: { len: 0.5, decay: 0.16, bright: 0.55 }, hall_foundry: { len: 1.4, decay: 0.42, bright: 0.38 } },
     send: { room_small: 0.16, hall_foundry: 0.3 },
     /** 3D: inverse-distance ref and max (m), air-absorption cutoff at ref and at max (Hz), occlusion factor on the cutoff, probe rate (Hz). */

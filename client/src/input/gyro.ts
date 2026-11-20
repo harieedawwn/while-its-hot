@@ -1,33 +1,34 @@
-import { FEEL } from '../core/feel';
 import type { Actions } from './actions';
 import type { Controls } from './controls-settings';
-
-const G = FEEL.input.gyro;
-const RAD = Math.PI / 180;
+import { OneEuro, gyroRates, gyroStep, type Vec3 } from './gyro-math';
 
 /**
- * Device rotation rate (deg/s, the devicemotion axes of a phone in portrait) → look radians, for a phone held
- * in landscape. `angle` is screen.orientation.angle: 90 = landscape-primary, 270 = landscape-secondary.
- * Turning the phone about its vertical (screen-up) axis is the device x axis (beta); tilting its top edge
- * toward or away from you is the device y axis (gamma). Yaw right and pitch up are positive.
+ * Android (Chrome/WebView): devicemotion needs no permission and fires at sensor rate. Each sample is mapped,
+ * filtered and integrated straight into the action layer's look accumulator, which the render loop drains once
+ * per frame. Disabled unless the setting is on.
  */
-export function gyroLook(beta: number, gamma: number, angle: number, dt: number, sens: number, invertY: boolean): { dx: number; dy: number } {
-  const s = angle === 270 || angle === -90 ? -1 : 1;
-  const cap = (v: number) => Math.max(-G.maxRate, Math.min(G.maxRate, v));
-  const k = G.gain * sens * RAD * dt;
-  return { dx: -s * cap(beta) * k, dy: -s * cap(gamma) * k * (invertY ? -1 : 1) };
-}
-
-/** Android (Chrome/WebView): devicemotion needs no permission. Disabled unless the setting is on. */
 export function bindGyro(actions: Actions, controls: Controls): () => void {
   let last = 0;
+  const grav: Vec3 = { x: 0, y: 0, z: 0 };
+  let haveGrav = false;
+  const fy = new OneEuro(), fp = new OneEuro();
   const on = (e: DeviceMotionEvent) => {
-    const r = e.rotationRate, now = performance.now();
-    const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+    const now = performance.now();
+    const iv = e.interval; // ms in current browsers
+    const dt = iv > 0 && iv <= 100 ? iv / 1000 : last ? Math.min(0.05, (now - last) / 1000) : 0;
     last = now;
-    if (!controls.v.gyro || !r || dt <= 0) return;
+    const g = e.accelerationIncludingGravity;
+    if (g && g.x !== null && g.y !== null && g.z !== null) {
+      // slow low-pass: gravity direction, not shake
+      const k = haveGrav ? Math.min(1, dt * 8) : 1;
+      grav.x += k * (g.x - grav.x); grav.y += k * (g.y - grav.y); grav.z += k * (g.z - grav.z); haveGrav = true;
+    }
+    const r = e.rotationRate;
+    if (!controls.v.gyro) { fy.reset(); fp.reset(); return; }
+    if (!r || dt <= 0) return;
     const angle = screen.orientation?.angle ?? 90;
-    const l = gyroLook(r.beta ?? 0, r.gamma ?? 0, angle, dt, controls.v.gyroSens, controls.v.invertY);
+    const q = gyroRates({ alpha: r.alpha ?? 0, beta: r.beta ?? 0, gamma: r.gamma ?? 0 }, haveGrav ? grav : null, angle);
+    const l = gyroStep(fy.filter(q.yaw, dt), fp.filter(q.pitch, dt), dt, controls.v.gyroSens, controls.v.invertY);
     actions.look(l.dx, l.dy);
   };
   addEventListener('devicemotion', on);

@@ -66,7 +66,7 @@ export class AudioEngine {
     if (p.output) this.graph.setOutput(p.output);
     this.graph.setVolumes();
   }
-  setArea(a: Area): void { this.graph.area = a; }
+  setArea(a: Area): void { this.graph.setArea(a); }
   duck(db?: number, s?: number): void { this.graph.duck(db, s); }
   muffle(on: boolean): void { this.graph.muffle(on); }
   /** App backgrounded (Capacitor pause): stop the clock so nothing plays behind the home screen. */
@@ -103,22 +103,25 @@ export class AudioEngine {
     const ctx = this.ctx, now = ctx.currentTime;
     const db = (A.mix[def.mix] ?? 0) + (o.db ?? 0) + rand(-A.vary.db, A.vary.db);
     const gain = dbToGain(db);
-    if (!this.pool.admit(ev, gain, now, def.voices)) return null;
+    if (!this.pool.admit(ev, gain, now, def.voices, def.gap)) return null;
 
     const src = ctx.createBufferSource(); src.buffer = buf; src.loop = loop;
     src.playbackRate.value = (o.pitch ?? 1) * (1 + rand(-A.vary.pitch, A.vary.pitch));
     const env = ctx.createGain(); env.gain.value = gain;
-    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 22000; lp.Q.value = 0.4;
-    src.connect(env); env.connect(lp);
+    // the per-voice low-pass is only for loops (setCutoff) and positional voices; a 2D one-shot skips the node
+    const lp = loop || o.pos ? ctx.createBiquadFilter() : null;
+    if (lp) { lp.type = 'lowpass'; lp.frequency.value = 22000; lp.Q.value = 0.4; }
+    const tail: AudioNode = lp ?? env;
+    src.connect(env); if (lp) env.connect(lp);
     let sp: Spatial | null = null;
-    if (o.pos) { sp = new Spatial(ctx, o.pos, audioSettings.output); sp.filter(ctx, this.listener, true); lp.connect(sp.input); sp.out.connect(this.graph.bus[def.bus]); }
-    else lp.connect(this.graph.bus[def.bus]);
-    if (def.reverb) { const s = ctx.createGain(); s.gain.value = def.reverb * A.send[o.area ?? this.graph.area]; env.connect(s); s.connect(this.graph.sendFor(o.area)); }
+    if (o.pos) { sp = new Spatial(ctx, o.pos, audioSettings.output); sp.filter(ctx, this.listener, true); tail.connect(sp.input); sp.out.connect(this.graph.bus[def.bus]); }
+    else tail.connect(this.graph.bus[def.bus]);
+    if (def.reverb) { const s = ctx.createGain(); s.gain.value = def.reverb * A.send[o.area ?? this.graph.area]; env.connect(s); s.connect(this.graph.sendFor()); }
 
     let done = false;
     const rec = this.pool.add(ev, now, gain, () => stop(0.02));
     if (sp) this.spatials.set(rec.id, sp);
-    const finish = () => { if (done) return; done = true; this.pool.remove(rec); this.spatials.delete(rec.id); try { env.disconnect(); lp.disconnect(); } catch { /* already gone */ } };
+    const finish = () => { if (done) return; done = true; this.pool.remove(rec); this.spatials.delete(rec.id); try { env.disconnect(); lp?.disconnect(); } catch { /* already gone */ } };
     const stop = (fade = 0.04) => {
       if (done) return;
       env.gain.cancelScheduledValues(ctx.currentTime); env.gain.setTargetAtTime(0, ctx.currentTime, fade / 3);
@@ -131,7 +134,7 @@ export class AudioEngine {
       stop,
       setDb: (d, tau = 0.05) => env.gain.setTargetAtTime(dbToGain((A.mix[def.mix] ?? 0) + d), ctx.currentTime, tau),
       setRate: (r) => src.playbackRate.setTargetAtTime(r, ctx.currentTime, 0.05),
-      setCutoff: (hz) => lp.frequency.setTargetAtTime(hz, ctx.currentTime, 0.06),
+      setCutoff: (hz) => lp?.frequency.setTargetAtTime(hz, ctx.currentTime, 0.06),
       move: (pos) => sp?.move(ctx, pos),
     };
   }

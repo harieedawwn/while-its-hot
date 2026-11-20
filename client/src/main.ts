@@ -14,7 +14,7 @@ import { Pipeline } from './render/pipeline';
 declare global {
   interface Window {
     __ready?: boolean;
-    __stats?: { calls: number; tris: number; programs: number; frameMs: number; geos: number; textures: number };
+    __stats?: { calls: number; tris: number; programs: number; frameMs: number; updMs: number; renMs: number; geos: number; textures: number };
     __app?: Director;
     __progNames?: () => string;
     __THREE?: typeof THREE; // set with ?shot=1 so tools/leak.mjs can trace resource creation
@@ -75,10 +75,11 @@ async function boot(): Promise<void> {
       acc += dt * clock.timeScale;
       while (acc >= FEEL.simStep) { time += FEEL.simStep; scene.update(FEEL.simStep, time); acc -= FEEL.simStep; }
     } else scene.update(0, time);
+    const t1 = performance.now();
     renderer.info.reset();
     scene.render(frozen ? 1 : acc / FEEL.simStep);
     const info = renderer.info;
-    window.__stats = { calls: info.render.calls, tris: info.render.triangles, programs: info.programs?.length ?? 0, frameMs: performance.now() - t0, geos: info.memory.geometries, textures: info.memory.textures };
+    window.__stats = { calls: info.render.calls, tris: info.render.triangles, programs: info.programs?.length ?? 0, frameMs: performance.now() - t0, updMs: t1 - t0, renMs: performance.now() - t1, geos: info.memory.geometries, textures: info.memory.textures };
     wipe.afterRender(renderer.domElement);
     if (scene.ready && !pipeline.warming && !window.__ready) { window.__ready = true; native.firstFrame(); app.markReady(); }
   };

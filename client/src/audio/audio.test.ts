@@ -43,6 +43,18 @@ describe('voice stealing', () => {
     expect(pool.admit('a', 0.01, 2, 2)).toBe(false);
     expect(pool.admit('b', 0.01, 2, 2)).toBe(true);
   });
+  it('repeating ticks do not stack: a start inside the gap is refused', () => {
+    const pool = new VoicePool();
+    expect(pool.admit('t', 1, 1, 4, 0.2)).toBe(true); pool.add('t', 1, 1, () => {});
+    expect(pool.admit('t', 1, 1.1, 4, 0.2)).toBe(false);
+    expect(pool.admit('t', 1, 1.25, 4, 0.2)).toBe(true);
+  });
+  it('the global cap steals the quietest voice across events', () => {
+    const pool = new VoicePool(); let stopped = 0;
+    for (let i = 0; i < FEEL.audio.maxVoices; i++) pool.add('e' + i, 0, i === 0 ? 0.05 : 1, () => stopped++);
+    expect(pool.admit('new', 1, 1, 4)).toBe(true);
+    expect(stopped).toBe(1); expect(pool.count('e0')).toBe(0);
+  });
 });
 
 describe('catalog', () => {

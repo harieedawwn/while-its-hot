@@ -154,7 +154,7 @@ export class NetMatch {
   frame(dt: number, frozen: boolean): void {
     this.remotes.jitter.update(dt);
     if (this.started) this.remotes.apply(this.now() - this.remotes.jitter.delay);
-    this.remotes.render(dt, frozen);
+    this.remotes.render(dt, frozen, this.d.lf.c.body.s.pos);
     this.anvils.animate();
   }
 

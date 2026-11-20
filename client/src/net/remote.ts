@@ -1,3 +1,4 @@
+import { FEEL } from '../core/feel';
 import type * as THREE from 'three';
 import { FLAG, mirrorFighter, type NetState, WEAPONS, weaponById } from '@wih/shared';
 import { Combatant } from '../combat/combatant';
@@ -78,14 +79,16 @@ export class RemotePlayer {
   }
 
   /** Per render frame, after apply(). */
-  render(dt: number, frozen: boolean): void {
+  render(dt: number, frozen: boolean, viewer?: { x: number; z: number }): void {
     this.c.invisT = Math.max(0, this.c.invisT - dt);
     this.ch.root.visible = this.mode !== 'none'; // 'hold' = frozen in place (TECH §4), still drawn
     if (!this.ch.root.visible) return;
     const s = this.c.body.s;
     this.ch.root.position.copy(s.pos);
     this.ch.root.rotation.y = this.c.body.yaw;
-    this.ch.update(frozen ? 0 : dt, animInputFromMove(s, this.c.body.yaw, this.animIn));
+    const d = viewer ? Math.hypot(s.pos.x - viewer.x, s.pos.z - viewer.z) : 0;
+    const L = FEEL.render.lod; // far bodies are a few pixels at this resolution: re-skin them less often
+    this.ch.update(frozen ? 0 : dt, animInputFromMove(s, this.c.body.yaw, this.animIn), d > L.farM ? L.farEvery : d > L.midM ? L.midEvery : 1);
   }
 
   /** A respawn or teleport: forget the path so it does not slide across the map. */

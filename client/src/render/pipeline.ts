@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { FEEL } from '../core/feel';
 import type { LightRig } from './lights';
 import { PostPass } from './post';
+import { ghostMaterial, veilMaterial } from './materials/ghost';
 
 export type QuantizeMode = keyof typeof FEEL.render.quantize;
 export interface Quality {
@@ -17,6 +18,16 @@ export interface Quality {
  * pass writes the canvas at that same size, and CSS (`image-rendering: pixelated`) does the nearest
  * upscale — zero native-resolution fill cost. DOM HUD stays crisp above it.
  */
+let warmGeo: THREE.BufferGeometry | null = null;
+/** One degenerate triangle with the attributes every game material reads, only used to compile programs. */
+function tinyTri(): THREE.BufferGeometry {
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9), 3));
+  g.setAttribute('normal', new THREE.BufferAttribute(new Float32Array([0, 1, 0, 0, 1, 0, 0, 1, 0]), 3));
+  g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(6), 2));
+  g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(9).fill(1), 3));
+  return g;
+}
 export class Pipeline {
   readonly post = new PostPass();
   readonly q: Quality;
@@ -105,13 +116,17 @@ export class Pipeline {
   private warm(scene: THREE.Scene, camera: THREE.Camera): void {
     if (this.warmed.has(scene)) return;
     this.warmed.add(scene);
+    // materials a character only gets mid-fight (ghost after death, invisibility veil): compile them now, not at the first death
+    const extra = new THREE.Group();
+    for (const m of [ghostMaterial(), veilMaterial(FEEL.fx.effects.veilAlpha)]) { const o = new THREE.Mesh(warmGeo ??= tinyTri(), m); o.frustumCulled = false; extra.add(o); }
+    extra.visible = false; scene.add(extra);
     const hidden: THREE.Object3D[] = [];
     scene.traverse((o) => { if (!o.visible) { hidden.push(o); o.visible = true; } });
     // async: the page keeps painting (the cover animation) while the driver links programs in parallel
     this.warming++;
     const done = () => { this.warming = Math.max(0, this.warming - 1); };
     const guard = setTimeout(done, 4000); // never stay blank if the promise is lost
-    this.renderer.compileAsync(scene, camera).catch(() => {}).finally(() => { clearTimeout(guard); done(); });
+    this.renderer.compileAsync(scene, camera).catch(() => {}).finally(() => { clearTimeout(guard); scene.remove(extra); done(); });
     for (const o of hidden) o.visible = false;
   }
   /** Scenes being compiled in the background; the world is not drawn (and the scene is not "ready") until 0. */
@@ -146,7 +161,8 @@ export class Pipeline {
     const dt = frameMs / 1000;
     if (this.graceS > 0) { this.graceS -= dt; return false; }
     this.slowS = frameMs > Math.max(FEEL.render.adaptiveSlowMs, targetMs * 1.15) ? this.slowS + dt : 0;
-    if (this.slowS < FEEL.render.adaptiveHoldS) return false;
+    // a really slow frame (< 25 fps) counts double: step down in half the time
+    if (this.slowS < (frameMs > FEEL.render.adaptiveSevereMs ? FEEL.render.adaptiveHoldS / 2 : FEEL.render.adaptiveHoldS)) return false;
     this.slowS = 0;
     const steps = FEEL.render.resolutions.filter((r) => r > 0 && r >= FEEL.render.adaptiveFloor);
     const cur = this.q.resolution > 0 ? this.q.resolution : this.height;

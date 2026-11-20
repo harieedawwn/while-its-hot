@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { sanitizeControls, sharedControls } from './controls-settings';
 import { sanitizeGame } from '../core/game-settings';
 import { padAxis } from './gamepad';
-import { gyroLook } from './gyro';
 import { CONTROL_IDS, mirrorLayout, overlaps, placeCtl, realSize, resolveCtl, sanitizeLayout, uiScale } from './touch-layout';
 import { DEFAULT_LAYOUT, PRESETS, PRESET_IDS } from './touch-presets';
 import { clampKnob, dragToLook, hitDisc, stickVector } from './touch-math';
@@ -86,15 +85,6 @@ describe('touch math', () => {
 });
 
 describe('gyro, gamepad, settings', () => {
-  it('gyro: opposite landscape angles mirror the result; invert flips pitch', () => {
-    const a = gyroLook(30, 10, 90, 0.016, 1, false), b = gyroLook(30, 10, 270, 0.016, 1, false);
-    expect(a.dx).toBeCloseTo(-b.dx); expect(a.dy).toBeCloseTo(-b.dy);
-    expect(gyroLook(30, 10, 90, 0.016, 1, true).dy).toBeCloseTo(-a.dy);
-    expect(gyroLook(30, 0, 90, 0.016, 2, false).dx).toBeCloseTo(a.dx * 2);
-  });
-  it('gyro: a hard flick is capped', () => {
-    expect(Math.abs(gyroLook(9999, 0, 90, 0.016, 1, false).dx)).toBeCloseTo((360 * Math.PI / 180) * 0.016);
-  });
   it('gamepad axis: dead zone, rim = 1, curve softens the middle', () => {
     expect(padAxis(0.1, 0.1, 0.15, 1)).toEqual({ x: 0, y: 0 });
     expect(padAxis(1, 0, 0.15, 1.6).x).toBeCloseTo(1);

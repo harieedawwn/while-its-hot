@@ -77,7 +77,12 @@ export class Character {
   }
 
   /** Advance the animation by dt and re-pose the meshes. */
-  update(dt: number, inp: AnimInput): void { this.anim.update(dt, inp); this.refresh(); }
+  update(dt: number, inp: AnimInput, skinEvery = 1): void {
+    this.anim.update(dt, inp);
+    // far characters keep their clock but re-skin (CPU vertex work + buffer upload) only every Nth frame
+    if (skinEvery <= 1 || ++this.skinTick % skinEvery === 0) this.refresh();
+  }
+  private skinTick = 0;
 
   /** Re-pose the bones and meshes from the animator's current pose (after `anim.preview` or `update`). */
   refresh(pose: Pose = this.anim.pose): void {

@@ -52,7 +52,7 @@ export class Remotes {
     }
   }
 
-  render(dt: number, frozen: boolean): void { for (const r of this.map.values()) r.render(dt, frozen); }
+  render(dt: number, frozen: boolean, viewer?: { x: number; z: number }): void { for (const r of this.map.values()) r.render(dt, frozen, viewer); }
 
   get(id: number): RemotePlayer | undefined { return this.map.get(id); }
   teleport(id: number): void { this.map.get(id)?.teleport(); }

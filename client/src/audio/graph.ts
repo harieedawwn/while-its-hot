@@ -26,7 +26,9 @@ export class AudioGraph {
   readonly duckNode: GainNode;
   private master: GainNode;
   private mix: GainNode;
-  private verbSend: Record<Area, GainNode>;
+  private verbSend!: GainNode;
+  private conv!: ConvolverNode;
+  private irs = {} as Record<Area, AudioBuffer>;
   private hp: BiquadFilterNode;
   private exciter: GainNode;
   private muffleLp: BiquadFilterNode;
@@ -34,7 +36,9 @@ export class AudioGraph {
 
   constructor() {
     let ctx: AudioContext;
-    try { ctx = new AudioContext({ latencyHint: 'interactive' }); } catch { ctx = new AudioContext(); }
+    // Android's WebView underruns with small buffers under load (clicks/dropouts): trade ~30 ms latency for a steady stream
+    const android = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
+    try { ctx = new AudioContext({ latencyHint: android ? 'playback' : 'interactive' }); } catch { ctx = new AudioContext(); }
     this.ctx = ctx;
     const g = (v = 1) => { const n = ctx.createGain(); n.gain.value = v; return n; };
 
@@ -46,12 +50,10 @@ export class AudioGraph {
     this.bus.world.connect(this.duckNode); this.duckNode.connect(this.mix);
     this.bus.ui.connect(this.mix);
 
-    this.verbSend = {} as Record<Area, GainNode>;
-    (Object.keys(A.reverb) as Area[]).forEach((k, i) => {
-      const conv = ctx.createConvolver(); conv.buffer = makeIr(ctx, A.reverb[k], 1234 + i * 31);
-      const send = g(); send.connect(conv); conv.connect(this.mix);
-      this.verbSend[k] = send;
-    });
+    // ONE shared convolver (a second one doubles the FFT work); its IR follows the area
+    (Object.keys(A.reverb) as Area[]).forEach((k, i) => { this.irs[k] = makeIr(ctx, A.reverb[k], 1234 + i * 31); });
+    this.conv = ctx.createConvolver(); this.conv.buffer = this.irs[this.area];
+    this.verbSend = g(); this.verbSend.connect(this.conv); this.conv.connect(this.mix);
 
     // output stage: dry through the (phone) high-pass, plus the exciter: 40-150 Hz weight re-synthesised as harmonics a phone speaker can play
     const P = A.phone;
@@ -76,8 +78,10 @@ export class AudioGraph {
     this.setOutput(audioSettings.output, true);
   }
 
-  /** Send node a voice connects to for the current area (gain = send amount × the event's reverb). */
-  sendFor(area: Area = this.area): GainNode { return this.verbSend[area]; }
+  /** The shared reverb send a voice connects to (gain = send amount × the event's reverb). */
+  sendFor(): GainNode { return this.verbSend; }
+  /** Change the room: swaps the shared convolver's impulse response (the old tail is cut; areas change on scene loads). */
+  setArea(a: Area): void { if (a === this.area) return; this.area = a; this.conv.buffer = this.irs[a]; }
 
   setOutput(mode: OutputMode, immediate = false): void {
     const t = this.ctx.currentTime, k = immediate ? 0.001 : 0.03;
