@@ -2,11 +2,11 @@
 
 Forms change every 3 levels from +3 to +45. Each row lists the form's FULL effect set (not cumulative:
 `passivesOf` returns the row's own list). Every active effect has a cooldown (cd) so fights stay readable.
-Numbers are starting values; phase 29/30 tunes them in `balance.ts`. Family base traits: docs/ROUND3.md §4.
+Numbers are starting values; phases 28/29 tune them in `balance.ts`. Family base traits: docs/ROUND3.md §4.
 
 Weapon lab: copy one whole row (from `kiem |` to the end) into the "Dòng roster" field of
 `weapon-lab/PROMPT_FREE_CLAUDE.md`. Rows marked `có` already have a model in the game.
-Rows +30 and up are built by Claude Code (phase 28b); free chats do +3 to +27.
+Rows +30 and up are built by Claude Code (phase 27b); free chats do +3 to +27.
 
 Nhánh | Cấp | id | Tên | Hình dáng & chất liệu | Hiệu ứng | Mẫu
 ---|---|---|---|---|---|---

@@ -124,7 +124,7 @@ arm | Khiên tay | vòng đỡ 180°, đỡ chuẩn +40 ms (module) |
 bomb | Bình nổ | bắt đầu trượt thả bom (module) | 
 plate | Giáp dày | mỗi round bắt đầu với giáp +2 | 
 
-## 6. Controls, settings, HUD (phase 25)
+## 6. Controls, settings, HUD (phase 24)
 - Look sensitivity max 6, gyro sensitivity max 5 (both done in feel.ts). Every settings row must change the game
   live; remove the third-person view setting (keep `third-person.ts` only if a dev scene uses it).
 - Layout editor opened in a match: solid black backdrop over the game, so the live controls never show
