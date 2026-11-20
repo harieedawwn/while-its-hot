@@ -151,6 +151,29 @@ Run this phase again every time the user drops new files into `weapon-lab/weapon
 - Unit test: every lab file builds, tris ≤ 2000 after detail, markers present, ids unique.
 Shots: `weapons` (rack). Done when the new models appear in the rack, armory and training.
 
+### Phase 33 — Brightness setting + on-phone perf report + GPU skinning · `TODO` · Sonnet 5.5 · high
+Why: phase 19/31 could only measure headless (software GPU), so the phone was optimized blind. This phase
+makes the phone measure itself, and does the one big CPU win left.
+Read: Phase log lines of phases 19 and 31. Code map lines for render/{pipeline,post,lights}, character/skin-batch, ui/fps-badge, ui/menu/settings-rows, core/game-settings, net/net-debug, audio/graph.
+- **Độ sáng** (Hình ảnh tab): slider 0–100, default **65**, live. Minecraft-style: lifts the dark end, not a
+  flat exposure — raise the LightRig hemi/ambient floor + a gamma lift in `post.ts` that leaves bright
+  areas and the heat ramp alone. 0 = the current look, 100 ≈ Minecraft "Sáng". Saved profiles without the
+  key get 65. Shots: `arena` at 0 / 65 / 100.
+- **On-phone perf report:** "Hiện FPS" gets a detailed mode: fps, 1% low, JS update ms, render submit ms,
+  GPU ms (`EXT_disjoint_timer_query_webgl2` when present), draw calls, tris, resolution scale, ping +
+  snapshot jitter + late snapshots, audio (AudioContext `baseLatency/outputLatency`, main-thread long tasks
+  > 50 ms). A "Ghi 30 s" button records 30 s and copies a compact one-screen text report to the clipboard
+  (also logs it), with device info (UA, GPU renderer string, DPR, screen, quality preset). Strings in
+  strings.vi.ts, styling matches the fps badge.
+- **GPU skinning:** move `skin-batch` skinning from JS to the vertex shader (bone matrices as a uniform
+  array or a float texture; same PSX look, same AO/vertex colors, ghost/veil materials too). Keep the CPU
+  path as a fallback when float textures are missing. Measure with `tools/perf.mjs --throttle 4` before/after.
+- Also, if cheap: DPR cap 1 inside the APK (the low-res target is upscaled anyway), `powerPreference:
+  'high-performance'`, no `preserveDrawingBuffer`, and skip rendering the viewmodel scene pass when hidden.
+- Tests: brightness 0 keeps the old post output (pixel test on a tiny target), skin shader vs CPU pose match.
+Done when GPU skinning cuts throttled render-submit time clearly, and the report copies on the phone.
+After this phase the user sends the report text to the planning chat for a targeted fix.
+
 ---
 
 ## Phase log
