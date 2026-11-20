@@ -1,7 +1,7 @@
-import { PLAYER_COLORS, FAMILIES, MODULE_IDS, WEAPONS, type Family } from '@wih/shared';
+import { BALANCE, PLAYER_COLORS, FAMILIES, familyForms, MODULE_IDS, WEAPONS, type Family } from '@wih/shared';
 import { loadJson, saveJson } from './store';
 
-/** Offline profile (GDD §9). A form unlocks when reached in an online match; the start set is `phoi` + the three +3 forms. */
+/** Offline profile (GDD §9). A form unlocks when reached in an online match; the start set is `phoi` + the four +3 forms. Unknown ids (thương) are dropped on load. */
 export interface Profile {
   name: string;
   color: string;
@@ -13,13 +13,13 @@ export interface Profile {
 }
 const KEY = 'wih.profile.v1';
 export const NAME_MAX = 14;
-const START = ['phoi', 'kiem_tho', 'bua_ren', 'giao_sat'];
+const START = ['phoi', ...FAMILIES.map((f) => familyForms(f)[0].id)];
 
 export function defaultProfile(): Profile {
   return {
     name: '', color: PLAYER_COLORS[0],
     unlocked: Object.fromEntries(START.map((id) => [id, true])),
-    bestLevel: { kiem: 3, bua: 3, thuong: 3 },
+    bestLevel: Object.fromEntries(FAMILIES.map((f) => [f, 3])) as Record<Family, number>,
     stats: { kills: 0, deaths: 0, matches: 0 },
     drafted: [],
   };
@@ -30,7 +30,7 @@ export function sanitizeProfile(raw: unknown): Profile {
   const un = { ...d.unlocked };
   if (r.unlocked && typeof r.unlocked === 'object') for (const w of WEAPONS) if ((r.unlocked as Record<string, unknown>)[w.id] === true) un[w.id] = true;
   const best = { ...d.bestLevel };
-  for (const f of FAMILIES) { const v = (r.bestLevel as Record<string, unknown> | undefined)?.[f]; if (typeof v === 'number' && Number.isFinite(v)) best[f] = Math.max(3, Math.min(30, Math.floor(v))); }
+  for (const f of FAMILIES) { const v = (r.bestLevel as Record<string, unknown> | undefined)?.[f]; if (typeof v === 'number' && Number.isFinite(v)) best[f] = Math.max(3, Math.min(BALANCE.weapons.maxLevel, Math.floor(v))); }
   const st = (r.stats && typeof r.stats === 'object' ? r.stats : {}) as Record<string, unknown>;
   const n = (v: unknown) => (typeof v === 'number' && v >= 0 ? Math.floor(v) : 0);
   return {

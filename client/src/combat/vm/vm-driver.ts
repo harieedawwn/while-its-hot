@@ -21,13 +21,22 @@ export class VmDriver {
   private swing = -1;
   private t = 0;
 
-  constructor(private vm: Viewmodel, def: WeaponDef) {
+  constructor(private readonly vm: Viewmodel, def: WeaponDef) {
     this.set = vmSet(def);
     this.out.setKey(this.set.rest);
     vm.pose = { pos: this.out.pos, quat: this.out.quat };
+    this.bindLeft();
   }
 
-  setWeapon(def: WeaponDef): void { this.set = vmSet(def); }
+  setWeapon(def: WeaponDef): void {
+    const was = this.set.fists;
+    this.set = vmSet(def);
+    if (this.set.fists && !was) this.out.setKey(this.set.rest);
+    this.bindLeft();
+  }
+  /** Two-fist sets drive the viewmodel's left hand too. */
+  get fists(): boolean { return this.set.fists; }
+  private bindLeft(): void { this.vm.poseL = this.set.fists ? { pos: this.out.lpos, quat: this.out.lquat } : null; }
 
   /** dt = render frame time; frozen = the camera's hit-stop is active. */
   update(dt: number, f: Fighter, frozen: boolean): void {
@@ -63,7 +72,7 @@ export class VmDriver {
       case 'block': tg.setKey(set.block); rate = 24; break;
       case 'stagger': tg.setKey(set.stagger); rate = 14; break;
       case 'flinch': tg.setKey(set.rest); this.tmp.setKey(set.stagger); tg.towards(this.tmp, 0.45); rate = 30; break;
-      case 'dead': tg.setKey(set.stagger); tg.pos.y -= 0.3; rate = 4; break;
+      case 'dead': tg.setKey(set.stagger); tg.pos.y -= 0.3; tg.lpos.y -= 0.3; rate = 4; break;
       default: tg.setKey(set.rest);
     }
     this.out.towards(tg, 1 - Math.exp(-rate * dt));

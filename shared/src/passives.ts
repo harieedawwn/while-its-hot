@@ -34,12 +34,18 @@ export interface PassiveHooks {
 }
 
 const heavy = (c: AttackCtx) => c.kind === 'heavy';
+/** Listed in a ROSTER row but not built yet (phases 28/29 give them hooks). `passives.test.ts` keeps the list. */
+const PENDING: PassiveHooks = {};
 
 export const PASSIVES = {
+  // built: attack shape, parry window, on-hit status, slam
   combo3_bonus: { modifyAttack: (a, c) => { if (c.kind === 'light' && c.combo === 2) a.dmg *= PB.combo3Mul; } },
+  combo4_bonus: { modifyAttack: (a, c) => { if (c.kind === 'light' && c.combo === 3) a.dmg *= PB.combo4Mul; } },
+  after_slide_bonus: { modifyAttack: (a, c) => { if (c.kind === 'slide') a.dmg *= PB.afterSlideMul; } },
   parry_window_plus: { modifyParryWindow: (s) => s + PB.parryPlusS },
   thrust_pierce: { modifyAttack: (a, c) => { if (heavy(c)) a.ignoresBlock = true; } },
   burn_on_hit: { onHit: (_c, out) => { out.push({ type: 'burn', dps: PB.burn.dps, durS: PB.burn.durS }); } },
+  burn_strong: { onHit: (_c, out) => { out.push({ type: 'burn', dps: PB.burnStrong.dps, durS: PB.burnStrong.durS }); } },
   light_break_block: { modifyAttack: (a, c) => { if (c.kind === 'light') a.breaksBlock = true; } },
   stagger_plus: { modifyAttack: (a, c) => { if (heavy(c)) a.staggerS += PB.staggerPlusS; } },
   slam_aoe: { onSlamLand: (out) => { out.push({ type: 'aoe', dmg: PB.slamAoe.dmg, r: PB.slamAoe.r }); } },
@@ -49,15 +55,33 @@ export const PASSIVES = {
       out.push({ type: 'launch', upVel: PB.launch.upVel }, { type: 'shockwave', r: PB.launch.shockR, push: PB.launch.shockPush });
     },
   },
-  max_reach_bonus: { modifyAttack: (a, c) => { if (c.dist >= c.reach * PB.maxReach.frac) a.dmg *= PB.maxReach.mul; } },
-  sweep_wide: { modifyAttack: (a, c) => { if (heavy(c)) a.arcDeg = Math.max(a.arcDeg, PB.sweepArcDeg); } },
-  slide_lunge_plus: { modifyAttack: (a, c) => { if (c.kind === 'slide') a.lungeM *= PB.lungeMul; } },
-  heavy_pull: { onHit: (c, out) => { if (heavy(c)) out.push({ type: 'pull', m: PB.pullM }); } },
+  // kiem 18–45 (phase 28)
+  slow_on_hit: PENDING, flying_slash: PENDING, flying_slash_strong: PENDING, parry_slash: PENDING,
+  chain_whip: PENDING, light_reach_plus: PENDING, lava_crack: PENDING, flying_slash_burn: PENDING,
+  freeze_combo3: PENDING, slash_ice_floor: PENDING, meteor_heavy: PENDING, orbit_blades: PENDING,
+  black_hole_heavy: PENDING, slash_all_lights: PENDING, fire_column_heavy: PENDING,
+  // bua 18–45 (phase 28)
+  piston_blast: PENDING, magnet_pull_heavy: PENDING, lava_pool_ground: PENDING, slam_lava_big: PENDING,
+  bell_ring: PENDING, bell_wave_heavy: PENDING, rubber_launch: PENDING, light_push: PENDING,
+  chain_lightning_heavy: PENDING, anchor_throw: PENDING, gravity_pin: PENDING, slam_double: PENDING,
+  mountain_crack: PENDING, star_black_hole: PENDING, light_shockwave: PENDING,
+  // dao (phase 29)
+  backstab_bonus: PENDING, slide_long: PENDING, throw_knife: PENDING, poison_on_hit: PENDING, throw_poison: PENDING,
+  shadow_invis: PENDING, hook_lunge: PENDING, parry_blink: PENDING, slide_fire_trail: PENDING, throw_burn: PENDING,
+  speed_stacks: PENDING, triple_jump: PENDING, time_slow_heavy: PENDING, slide_decoy: PENDING, blade_storm: PENDING,
+  rift_dash: PENDING,
+  // tay (phase 29)
+  combo4_knock: PENDING, heal_on_hit: PENDING, heal_on_hit_2: PENDING, piston_charge: PENDING, heavy_push: PENDING,
+  fireball_heavy: PENDING, freeze_combo4: PENDING, iceball_heavy: PENDING, spark_on_hit: PENDING, stone_wall: PENDING,
+  heavy_push_far: PENDING, magnet_punch: PENDING, rocket_fist: PENDING, kill_full_heal: PENDING, giant_hand: PENDING,
+  gravity_well_throw: PENDING, light_pull: PENDING, meteor_combo4: PENDING, meteor_rain: PENDING, sky_hand: PENDING,
 } as const satisfies Record<string, PassiveHooks>;
 export type PassiveId = keyof typeof PASSIVES;
 export const PASSIVE_IDS = Object.keys(PASSIVES) as PassiveId[];
 
 const hooks = (id: PassiveId): PassiveHooks => PASSIVES[id];
+/** Ids that do nothing yet (no hook): the list phases 28/29 empty out. */
+export const pendingPassives = (): PassiveId[] => PASSIVE_IDS.filter((id) => Object.keys(hooks(id)).length === 0);
 
 /** Fold modifyAttack over the passives; returns a new shape. */
 export function applyAttack(ids: readonly PassiveId[], base: AttackShape, c: AttackCtx): AttackShape {

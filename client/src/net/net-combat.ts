@@ -42,7 +42,7 @@ export class NetCombat implements HitResolver {
     const a = this.d.lf.c, t = this.d.world.byId(c.target);
     if (!t || !t.alive) return;
     const shape = attackShape(a.weapon, c.kind, c.combo, c.dist);
-    const res = resolveHit({ x: a.body.s.pos.x, z: a.body.s.pos.z, shape, weaponLevel: a.level }, t.view());
+    const res = resolveHit({ x: a.body.s.pos.x, z: a.body.s.pos.z, shape, family: a.weapon.family, weaponLevel: a.level }, t.view());
     const [x, y, z] = c.point;
     if (res.r !== 'immune' && res.r !== 'parried') {
       this.predicted.add(`${c.attackId}:${c.target}`);

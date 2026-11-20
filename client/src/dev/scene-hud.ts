@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { PLAYER_COLORS } from '@wih/shared';
+import { isFamily, PLAYER_COLORS } from '@wih/shared';
 import { foundryAmbience } from '../audio/places';
 import { SceneAudio } from '../audio/scene-audio';
 import { FEEL } from '../core/feel';
@@ -13,7 +13,7 @@ import { num } from './params';
 import type { SceneFactory } from './scenes';
 
 /**
- * HUD bench (LOOK §8) over the foundry. Params: `hp=0..100` `sta=0..3` `level=0..20` `fam=kiem|bua|thuong` `round=<s>` `ring=<s>`
+ * HUD bench (LOOK §8) over the foundry. Params: `hp=0..100` `sta=0..3` `level=0..20` `fam=kiem|bua|dao|tay` `round=<s>` `ring=<s>`
  * (omit = hidden) `lives=<left>/<max>`, `feed=1` kill feed lines, `score=1` scoreboard, `pause=1` pause menu, `touch=1` shows the
  * touch controls under it (overlap check). Keys: Tab = scoreboard, Esc = pause.
  */
@@ -35,7 +35,7 @@ const make: SceneFactory = async ({ pipeline, params, width, height }) => {
   const input = bindInput(host, host, { touch: params.touch });
   const hud = new Hud(host);
   const fam = params.get('fam');
-  const family = fam === 'bua' || fam === 'thuong' ? fam : 'kiem';
+  const family = isFamily(fam) ? fam : 'kiem';
   const [ll, lm] = (params.get('lives') ?? '2/3').split('/').map(Number);
   const opt = (k: string) => (params.get(k) === null ? null : num(params, k, 0));
   hud.set({
@@ -44,7 +44,7 @@ const make: SceneFactory = async ({ pipeline, params, width, height }) => {
   });
   if (params.get('feed') === '1') {
     hud.kill('Tuấn', 'Hằng', 'bua', false, 1e9);
-    hud.kill('Bạn', 'Nguyễn Văn Ấn', 'thuong', true, 1e9);
+    hud.kill('Bạn', 'Nguyễn Văn Ấn', 'dao', true, 1e9);
     hud.kill('Minh', 'Bạn', 'kiem', false, 1e9);
   }
   const layer = uiRoot(host);
@@ -52,7 +52,7 @@ const make: SceneFactory = async ({ pipeline, params, width, height }) => {
   const rows = [
     { name: 'Bạn', color: PLAYER_COLORS[0], family: 'kiem' as const, level: 12, kills: 4, deaths: 1, me: true },
     { name: 'Tuấn', color: PLAYER_COLORS[1], family: 'bua' as const, level: 9, kills: 3, deaths: 2 },
-    { name: 'Hằng', color: PLAYER_COLORS[2], family: 'thuong' as const, level: 14, kills: 6, deaths: 3 },
+    { name: 'Hằng', color: PLAYER_COLORS[2], family: 'tay' as const, level: 14, kills: 6, deaths: 3 },
     { name: 'Minh', color: PLAYER_COLORS[3], family: null, level: 2, kills: 0, deaths: 4 },
   ];
   if (params.get('score') === '1') board.show(rows);

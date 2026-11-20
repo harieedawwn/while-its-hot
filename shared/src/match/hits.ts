@@ -1,7 +1,7 @@
 import { BALANCE } from '../balance';
 import { resolveHit, type DefenderView } from '../combat/damage';
-import { attackShape, framesOf, totalS } from '../combat/frames';
-import { passivesOf } from '../data/weapons';
+import { attackShape, framesFor, totalS } from '../combat/frames';
+import { passivesOf, traitsOf } from '../data/weapons';
 import { FLAG } from '../net/codec';
 import type { MatchClientMsg, Vec3 } from '../net/match-msgs';
 import { hitEffects, parryEffects, parryWindow } from '../passives';
@@ -25,10 +25,10 @@ export function recordSwing(a: MPlayer, m: AtkMsg): boolean {
   const prev = a.swings[a.swings.length - 1];
   if (prev && m.s <= prev.s) return false;
   if (prev && m.kind !== 'heavy') {
-    const f = framesOf(a.forge.form.stats.moveset, prev.kind, prev.combo);
+    const f = framesFor(a.forge.form, prev.kind, prev.combo);
     if (m.at - prev.at < totalS(f) * 1000 * A.rateMul) return false;
   }
-  a.swings.push({ s: m.s, kind: m.kind, combo: Math.max(0, Math.min(2, m.combo | 0)), at: m.at, hits: new Set() });
+  a.swings.push({ s: m.s, kind: m.kind, combo: Math.max(0, Math.min(a.forge.form.stats.comboHits - 1, m.combo | 0)), at: m.at, hits: new Set() });
   if (a.swings.length > 2) a.swings.shift();
   return true;
 }
@@ -48,7 +48,7 @@ export function checkClaim(a: MPlayer, t: MPlayer, m: HitMsg, now: number): stri
   if (!sw) return 'stale';
   if (sw.hits.has(t.id)) return 'repeat';
   if (Math.abs(now - m.at) > A.maxAgeMs) return 'old';
-  const f = framesOf(a.forge.form.stats.moveset, sw.kind, sw.combo), dt = m.at - sw.at;
+  const f = framesFor(a.forge.form, sw.kind, sw.combo), dt = m.at - sw.at;
   if (dt < f.w * 1000 - A.earlyMs || dt > (f.w + f.a) * 1000 + A.lateMs) return 'timing';
   if (flatDist(a, t) > a.forge.form.stats.reach + A.reachTol) return 'reach';
   return null;
@@ -61,7 +61,7 @@ export function defenderView(t: MPlayer, m: HitMsg, now: number, truceUntil: num
     parrying: parryOk(t.parryAt, m.at, t.rtt, parryWindow(passivesOf(def), C.parry.windowS)),
     blocking: (t.st.flags & FLAG.blocking) !== 0,
     immune: (t.stance && t.forge.immune) || now < truceUntil || now < t.ifUntil || now < t.spawnUntil,
-    stamina: t.st.stamina, armorLevel: t.forge.armor,
+    stamina: t.st.stamina, armorLevel: t.forge.armor, taken: traitsOf(def).taken,
   };
 }
 
@@ -73,7 +73,7 @@ export function claimHit(ctx: HitCtx, a: MPlayer, t: MPlayer, m: HitMsg, now: nu
   sw.hits.add(t.id);
   const dist = Math.max(0, Math.min(def.stats.reach, m.dist));
   const shape = attackShape(def, sw.kind, sw.combo, dist);
-  const res = resolveHit({ x: a.st.x, z: a.st.z, shape, weaponLevel: a.forge.blade.level }, defenderView(t, m, now, ctx.truceUntil));
+  const res = resolveHit({ x: a.st.x, z: a.st.z, shape, family: def.family, weaponLevel: a.forge.blade.level }, defenderView(t, m, now, ctx.truceUntil));
   const p: Vec3 = [m.p[0], m.p[1], m.p[2]];
   if (res.r === 'immune') { out.push({ to: a.id, m: { t: 'reject', s: m.s, tg: m.tg, why: 'immune' } }); return; }
   if (res.r === 'parried') {
@@ -85,7 +85,7 @@ export function claimHit(ctx: HitCtx, a: MPlayer, t: MPlayer, m: HitMsg, now: nu
     serverEffects(t, a, parryEffects(passivesOf(t.forge.form)), kn, ctx.list, ctx.harm, out);
     return;
   }
-  const frames = framesOf(def.stats.moveset, sw.kind, sw.combo);
+  const frames = framesFor(def, sw.kind, sw.combo);
   const kn = knockFrom(a.st.x, a.st.z, t, res.r === 'blocked' ? frames.knock * C.block.knockMul : frames.knock);
   const fx: Out[] = [];
   if (res.r !== 'blocked') serverEffects(a, t, hitEffects(passivesOf(def), { kind: sw.kind, combo: sw.combo, dist, reach: def.stats.reach }), kn, ctx.list, ctx.harm, fx);

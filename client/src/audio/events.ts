@@ -10,7 +10,11 @@ import type { Vec3 } from './spatial';
  * Local player's own sounds are 2D; everyone else's are positional. `localId` is the local combatant (0 in dev scenes).
  */
 const R = FEEL.audio.react, MIX = FEEL.audio.mix;
-const SWING: Record<Family, string> = { kiem: 'swing_sword', bua: 'swing_hammer', thuong: 'swing_polearm' };
+/** Swing whoosh per family: dao = the sword whoosh pitched up and quieter, tay = the dark whoosh cut short and high (a punch). */
+const SWING: Record<Family, { ev: string; pitch: number; db: number }> = {
+  kiem: { ev: 'swing_sword', pitch: 1, db: 0 }, bua: { ev: 'swing_hammer', pitch: 1, db: 0 },
+  dao: { ev: 'swing_sword', pitch: 1.32, db: -3 }, tay: { ev: 'swing_polearm', pitch: 1.6, db: -4 },
+};
 const FOOT: Record<string, string> = { stone: 'footstep_stone', metal: 'footstep_metal', grate: 'footstep_metal', wood: 'footstep_wood', gravel: 'footstep_slag' };
 /** Lên is the old Đạt clang (the heavier Tuyệt one in Nhập thần), Vỡ the old Hỏng thud. */
 const STRIKE = { len: 'strike_dat', giu: 'strike_giu', vo: 'strike_hong' } as const;
@@ -52,7 +56,7 @@ export function bindAudio(a: AudioEngine, localId = 0): AudioBinding {
       const ch = charges.get(e.id); if (ch) { ch.stop(0.04); charges.delete(e.id); }
       const pos = own(e.id) ? undefined : at(e);
       if (e.kind === 'heavy') a.play('heavy_release', { pos });
-      else a.play(SWING[e.family], { pos, pitch: 1 + R.comboPitch * e.combo, db: e.kind === 'slide' ? 2 : 0 });
+      else { const s = SWING[e.family]; a.play(s.ev, { pos, pitch: s.pitch * (1 + R.comboPitch * e.combo), db: s.db + (e.kind === 'slide' ? 2 : 0) }); }
     }),
     bus.on('combat:hit', (e) => {
       const pos = own(e.attacker) || own(e.target) ? undefined : at(e);

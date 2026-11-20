@@ -50,8 +50,8 @@ describe('clips', () => {
     'forge_strike', 'heat_hold', 'block', 'parry', 'hit_f', 'hit_b', 'stagger', 'death'];
   it('has every clip of LOOK §4 and every attack slot (hammer chains 2 lights)', () => {
     for (const id of need) expect(hasClip(id), id).toBe(true);
-    expect(ATTACK_SLOTS).toHaveLength(18);
-    for (const id of ATTACK_SLOTS) expect(hasClip(id), id).toBe(id !== 'atk_hammer_light3');
+    expect(ATTACK_SLOTS).toHaveLength(28);
+    for (const id of ATTACK_SLOTS) expect(hasClip(id), id).toBe(!['atk_sword_light4', 'atk_hammer_light3', 'atk_hammer_light4'].includes(id));
     expect(clipIds().length).toBeGreaterThanOrEqual(need.length);
   });
   it('looping clips close: u=0 and u=1 give the same pose', () => {

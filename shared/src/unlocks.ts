@@ -2,7 +2,7 @@ import { FAMILIES, familyForms } from './data/weapons';
 
 /**
  * Match-end unlocks (GDD §9): a form unlocks when its family blade reaches its level in an online match.
- * `best` = highest level per family [kiem, bua, thuong]. Returns the forms newly unlocked and the new bestLevel.
+ * `best` = highest level per family in FAMILIES order [kiem, bua, dao, tay]. Returns the forms newly unlocked and the new bestLevel.
  */
 export function matchUnlocks(best: readonly number[], unlocked: Readonly<Record<string, boolean>>, bestLevel: Readonly<Record<string, number>>): { forms: string[]; bestLevel: Record<string, number> } {
   const forms: string[] = [], bl: Record<string, number> = { ...bestLevel };

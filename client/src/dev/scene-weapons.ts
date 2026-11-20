@@ -5,14 +5,15 @@ import * as P from '../render/geo/procgeo';
 import { LightRig } from '../render/lights';
 import { MaterialLib } from '../render/materials/library';
 import { mesh, slab } from '../render/models/kit';
-import { loadWeapon, setHeat } from '../weapons/weapon';
+import { loadWeapon, modelFor, setHeat } from '../weapons/weapon';
 import { num } from './params';
 import type { SceneFactory } from './scenes';
 
 /**
- * Weapon gallery (phase 07). Default: all 16 forms standing on a rack, grouped phôi | kiếm | búa | thương, in
- * front of a scale board (thin lines every 0.5 m, bold every 1 m), each slowly turning about broadside.
- * `?weapon=<id>&heat=0..1` = one weapon close-up, laid diagonally; long polearms frame their top 1.3 m.
+ * Weapon gallery (phase 07). Default: every form with its OWN model standing on a rack, grouped phôi | kiếm |
+ * búa | dao | tay (`all=1`: all 61 forms, borrowed models included), in front of a scale board (thin lines
+ * every 0.5 m, bold every 1 m), each slowly turning about broadside.
+ * `?weapon=<id>&heat=0..1` = one weapon close-up, laid diagonally; long weapons frame their top 1.3 m.
  * `yaw` adds a turn (rad). `t` freezes the turn.
  */
 const BROAD = -Math.PI / 2; // turns the blade's flat (+X) toward a camera on +Z
@@ -86,7 +87,8 @@ const make: SceneFactory = async ({ pipeline, params, width, height }) => {
     rig.setDir([0.3, 0.8, 0.6], '#c4ccd6', 1.2);
     rig.setFog('#160e0b', 12, 30);
     let x = 0;
-    const groups: string[][] = [['phoi'], ...FAMILIES.map((f) => familyForms(f).map((w) => w.id))];
+    const all = params.get('all') === '1';
+    const groups: string[][] = [['phoi'], ...FAMILIES.map((f) => familyForms(f).filter((w) => all || !modelFor(w).borrowed).map((w) => w.id))];
     const placed: { id: string; x: number }[] = [];
     groups.forEach((ids, gi) => {
       if (gi) x += 0.75;

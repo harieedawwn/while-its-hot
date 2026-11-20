@@ -29,31 +29,39 @@ export const BALANCE = {
 
   /**
    * Weapons (GDD §5, §6). Family movesets are read through shared/src/data/weapons.ts; passive numbers
-   * through shared/src/passives.ts. Damage = base × (1 + levelDmg × level) × armor × passives.
+   * through shared/src/passives.ts. Damage = base × scale(family, level) × armor × passives.
    */
   weapons: {
-    levelDmg: 0.06,
     maxLevel: 45,
-    /** Level at which the blank becomes a family form (the 3-way pick). */
+    /** Level at which the blank becomes a family form (the 4-way pick). Forms change every formEvery levels. */
     familyPick: 3,
+    formEvery: 3,
+    /**
+     * Families (ROUND3 §4). Damage = base × scale(L) with scale = 1 + dmgK·L + dmgQ·L² (L = blade level).
+     * speedUp: attack time ×(1 − k·smoothstep(from, to, form level)). Traits apply only while the weapon is held:
+     * move = run speed ×, airJumps = extra jumps in the air, slide = slide speed/length/cooldown ×, taken = damage taken ×.
+     */
     family: {
-      kiem: { light: 12, comboHits: 3, comboS: 0.38, heavy: 30, heavyKind: 'thrust', reach: 2.3 },
-      bua: { light: 18, comboHits: 2, comboS: 0.62, heavy: 45, heavyKind: 'overhead', reach: 2.0 },
-      thuong: { light: 10, comboHits: 3, comboS: 0.42, heavy: 26, heavyKind: 'sweep', reach: 3.2 },
+      kiem: { light: 12, comboHits: 3, comboS: 0.4, heavy: 30, heavyKind: 'thrust', reach: 2.3, dmgK: 0.045, dmgQ: 0,
+        move: 1, airJumps: 0, slide: { speed: 1, len: 1, cd: 1 }, taken: 1 },
+      bua: { light: 15, comboHits: 2, comboS: 0.7, heavy: 40, heavyKind: 'overhead', reach: 2.0, dmgK: 0.02, dmgQ: 0.0012,
+        speedUp: { k: 0.3, from: 12, to: 30 }, move: 0.92, airJumps: 0, slide: { speed: 1, len: 1, cd: 1 }, taken: 1 },
+      dao: { light: 7, comboHits: 4, comboS: 0.24, heavy: 18, heavyKind: 'lunge', reach: 1.6, dmgK: 0.035, dmgQ: 0,
+        move: 1.2, airJumps: 1, slide: { speed: 1.25, len: 1.3, cd: 0.6 }, taken: 1 },
+      tay: { light: 6, comboHits: 4, comboS: 0.26, heavy: 20, heavyKind: 'punch', reach: 1.5, dmgK: 0.03, dmgQ: 0,
+        move: 1.12, airJumps: 0, slide: { speed: 1, len: 1, cd: 1 }, taken: 1.1 },
     },
-    /** The blank fights like a weak sword. */
+    /** The blank fights like a weak sword (kiem moveset and scaling, no traits). */
     phoi: { light: 9, heavy: 20 },
     passive: {
       combo3Mul: 1.2,
+      combo4Mul: 1.25,
+      afterSlideMul: 1.3,
       parryPlusS: 0.03,
       burn: { dps: 3, durS: 2 },
+      burnStrong: { dps: 4, durS: 2 },
       staggerPlusS: 0.4,
       slamAoe: { dmg: 20, r: 3 },
-      /** "max reach" = the outer (1 − maxReachFrac) of the reach. */
-      maxReach: { frac: 0.85, mul: 1.25 },
-      sweepArcDeg: 220,
-      lungeMul: 1.5,
-      pullM: 2,
       /** bua_de: the target is launched upward; the shockwave only pushes (no damage) everyone else near. */
       launch: { upVel: 9, push: 2, shockR: 2.5, shockPush: 6 },
     },
@@ -126,26 +134,38 @@ export const BALANCE = {
     family: {
       kiem: {
         light: [
-          { w: 0.11, a: 0.09, r: 0.18, arc: { kind: 'slash', from: 62, to: -58, roll: 14 }, knock: 2.2, lungeM: 0.3 },
-          { w: 0.11, a: 0.09, r: 0.18, arc: { kind: 'slash', from: -60, to: 60, roll: 16 }, knock: 2.2, lungeM: 0.3 },
-          { w: 0.11, a: 0.09, r: 0.18, arc: { kind: 'slash', from: 52, to: -40, roll: 62 }, knock: 3.5, lungeM: 0.4 },
+          { w: 0.11, a: 0.09, r: 0.2, arc: { kind: 'slash', from: 62, to: -58, roll: 14 }, knock: 2.2, lungeM: 0.3 },
+          { w: 0.11, a: 0.09, r: 0.2, arc: { kind: 'slash', from: -60, to: 60, roll: 16 }, knock: 2.2, lungeM: 0.3 },
+          { w: 0.11, a: 0.09, r: 0.2, arc: { kind: 'slash', from: 52, to: -40, roll: 62 }, knock: 3.5, lungeM: 0.4 },
         ],
         heavy: { w: 0.1, a: 0.12, r: 0.34, arc: { kind: 'thrust', from: 0.35, to: 1, roll: 0 }, knock: 5, lungeM: 1.3, staggerS: 0.3 },
       },
       bua: {
         light: [
-          { w: 0.22, a: 0.12, r: 0.28, arc: { kind: 'slash', from: 58, to: -50, roll: 32 }, knock: 4, lungeM: 0.3 },
-          { w: 0.22, a: 0.12, r: 0.28, arc: { kind: 'slash', from: -54, to: 52, roll: 28 }, knock: 4.5, lungeM: 0.3 },
+          { w: 0.25, a: 0.13, r: 0.32, arc: { kind: 'slash', from: 58, to: -50, roll: 32 }, knock: 4, lungeM: 0.3 },
+          { w: 0.25, a: 0.13, r: 0.32, arc: { kind: 'slash', from: -54, to: 52, roll: 28 }, knock: 4.5, lungeM: 0.3 },
         ],
         heavy: { w: 0.15, a: 0.12, r: 0.45, arc: { kind: 'slash', from: 70, to: -36, roll: 88 }, knock: 7, lungeM: 0.6, staggerS: 0.6, breaksBlock: true },
       },
-      thuong: {
+      /** Dao: short alternating slashes (reverse grip), a low cross, then a stab; heavy = lunge stab over 3 m. */
+      dao: {
         light: [
-          { w: 0.12, a: 0.1, r: 0.2, arc: { kind: 'thrust', from: 0.4, to: 1, roll: 0 }, knock: 2.5, lungeM: 0.25 },
-          { w: 0.12, a: 0.1, r: 0.2, arc: { kind: 'slash', from: 50, to: -50, roll: -6 }, knock: 3, lungeM: 0.2 },
-          { w: 0.12, a: 0.1, r: 0.2, arc: { kind: 'thrust', from: 0.4, to: 1, roll: 0 }, knock: 4, lungeM: 0.35 },
+          { w: 0.1, a: 0.05, r: 0.09, arc: { kind: 'slash', from: 46, to: -40, roll: 10 }, knock: 1.4, lungeM: 0.25 },
+          { w: 0.1, a: 0.05, r: 0.09, arc: { kind: 'slash', from: -44, to: 40, roll: -14 }, knock: 1.4, lungeM: 0.25 },
+          { w: 0.1, a: 0.05, r: 0.09, arc: { kind: 'slash', from: 40, to: -36, roll: 44 }, knock: 1.6, lungeM: 0.25 },
+          { w: 0.1, a: 0.05, r: 0.09, arc: { kind: 'thrust', from: 0.4, to: 1, roll: 0 }, knock: 2.2, lungeM: 0.45 },
         ],
-        heavy: { w: 0.13, a: 0.16, r: 0.36, arc: { kind: 'slash', from: 80, to: -80, roll: -4 }, knock: 6, lungeM: 0.5, staggerS: 0.3 },
+        heavy: { w: 0.08, a: 0.14, r: 0.3, arc: { kind: 'thrust', from: 0.3, to: 1, roll: 0 }, knock: 3, lungeM: 3, staggerS: 0.2 },
+      },
+      /** Tay: jab L, jab R, hook R, uppercut L (hand = which fist the viewmodel throws); heavy = charged straight R. */
+      tay: {
+        light: [
+          { w: 0.1, a: 0.05, r: 0.11, arc: { kind: 'thrust', from: 0.45, to: 1, roll: 0 }, knock: 2, lungeM: 0.2, hand: 'l' },
+          { w: 0.1, a: 0.05, r: 0.11, arc: { kind: 'thrust', from: 0.45, to: 1, roll: 0 }, knock: 2, lungeM: 0.2 },
+          { w: 0.1, a: 0.05, r: 0.11, arc: { kind: 'slash', from: 50, to: -24, roll: 4 }, knock: 2, lungeM: 0.25 },
+          { w: 0.1, a: 0.05, r: 0.11, arc: { kind: 'slash', from: -36, to: 30, roll: 82 }, knock: 2, lungeM: 0.25, hand: 'l' },
+        ],
+        heavy: { w: 0.08, a: 0.1, r: 0.32, arc: { kind: 'thrust', from: 0.3, to: 1, roll: 0 }, knock: 5, lungeM: 0.9, staggerS: 0.3 },
       },
     },
   },

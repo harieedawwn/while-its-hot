@@ -158,7 +158,8 @@ export const FEEL = {
     /** Hammer swings about the grip (near the smith): head tilt below horizontal (deg, − = raised) at rest and at contact; fall/rise times (s); grip x, height above the face and z, yaw toward the anvil (rad); handle length (m). */
     hammer: { restDeg: -38, hitDeg: 33, fallS: 0.07, riseS: 0.34, raiseDeg: -78, raiseS: 0.12, x: 0.4, gripY: 0.3, gripZ: 0.32, yaw: 0.85, len: 0.5, head: 0.15, idleDeg: 2.5 },
     /** Blade on the anvil: longest length shown (m), and how fast it slides into the brazier (1/s). */
-    blade: { showLen: 1.15, maxScale: 1.4, slideRate: 7, brazierX: -0.88 },
+    /** item*: a bladeless model (gauntlet) lies palm down on the face at this scale and x instead. */
+    blade: { showLen: 1.15, maxScale: 1.4, slideRate: 7, brazierX: -0.88, minLen: 0.15, itemScale: 1.25, itemX: -0.18, itemY: 0.05 },
     /** Camera trauma and hit-stop on a strike, by outcome. */
     strike: { trauma: { len: 0.32, giu: 0.2, vo: 0.4 } as Record<string, number>, frenzyTrauma: 1.7, hitStopMs: 55, levelStopMs: 60, kickBack: 0.05 },
     /** Nhập thần: FOV punch-in (deg, eased in/out), warm edge vignette strength (0..1) pulsing with the marker, music/ambience duck, blade at the white-hot step, restore time (s). */

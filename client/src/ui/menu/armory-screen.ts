@@ -8,11 +8,10 @@ import { STR } from '../strings.vi';
 import type { MenuCtx } from './menu-screens';
 import '../styles/armory.css';
 
-const FIRST = 3, LAST = 18;
 const wname = (id: string) => (STR.weapon as Record<string, string>)[id] ?? id;
 
 /**
- * Armory (LOOK §8): the weapon lineage as three horizontal rails (Kiếm / Búa / Thương), forms placed by minLevel,
+ * Armory (LOOK §8): the weapon lineage as four horizontal rails (Kiếm / Búa / Dao / Tay), forms placed by minLevel,
  * locked ones dark. Tap one → turntable on the anvil + its passive in one line.
  */
 export class ArmoryScreen implements Screen {
@@ -40,17 +39,17 @@ export class ArmoryScreen implements Screen {
     const head = el('div', 'a-fam');
     head.insertAdjacentHTML('beforeend', silhouette(f));
     head.append(el('span', '', STR.family[f]));
-    const track = el('div', 'a-track');
+    const track = el('div', 'a-track'), row = el('div', 'a-row');
+    track.appendChild(row);
     for (const w of familyForms(f)) {
       const t = el('button', 'a-tile k-plate');
       t.type = 'button';
-      t.style.setProperty('--p', String((w.minLevel - FIRST) / (LAST - FIRST)));
       t.setAttribute('aria-label', wname(w.id));
       t.classList.toggle('is-locked', !isUnlocked(w.id));
       t.insertAdjacentHTML('beforeend', silhouette(f));
       t.append(el('span', 'k-num', STR.armory.level(w.minLevel)));
       onPress(t, () => { sfx('tap'); void this.select(w.id); });
-      track.appendChild(t);
+      row.appendChild(t);
       this.tiles.set(w.id, t);
     }
     r.append(head, track);
@@ -62,7 +61,7 @@ export class ArmoryScreen implements Screen {
     this.tiles.forEach((t, k) => t.setAttribute('aria-pressed', String(k === id)));
     const locked = !isUnlocked(id);
     this.name.textContent = `${wname(id)} · ${STR.armory.level(w.minLevel)}${locked ? ` · ${STR.armory.locked}` : ''}`;
-    this.line.textContent = locked ? '' : STR.armory.passive[w.passives[0] ?? 'none'];
+    this.line.textContent = locked ? '' : STR.armory.fx[w.id] ?? STR.armory.none;
     await this.c.turntable.show(id, locked);
   }
 

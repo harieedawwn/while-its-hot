@@ -110,7 +110,7 @@ describe('round flow', () => {
 import { matchUnlocks } from '../unlocks';
 describe('match unlocks', () => {
   it('unlocks the forms a family reached and raises bestLevel', () => {
-    const r = matchUnlocks([8, 0, 0], { phoi: true, kiem_tho: true }, { kiem: 3, bua: 3, thuong: 3 });
+    const r = matchUnlocks([8, 0, 0], { phoi: true, kiem_tho: true }, { kiem: 3, bua: 3, dao: 3, tay: 3 });
     expect(r.forms.length).toBeGreaterThan(0);
     expect(r.forms).not.toContain('kiem_tho');
     expect(r.bestLevel.kiem).toBe(8); expect(r.bestLevel.bua).toBe(3);

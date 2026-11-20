@@ -86,7 +86,7 @@ describe('strike outcomes', () => {
     const a = session(() => 0.0); a.target = 'armor'; a.armor = 10; expect(a.strike(hit(a, T_HIT)).refused).toBe(true); expect(a.armor).toBe(10);
   });
   it('family cap (training) refuses a Lên over the unlocked level', () => {
-    const s = session(() => 0.0, 6); s.caps = { kiem: 6, bua: 3, thuong: 3 } as never;
+    const s = session(() => 0.0, 6); s.caps = { kiem: 6, bua: 3, dao: 3, tay: 3 } as never;
     expect(s.strike(hit(s, T_HIT)).refused).toBe(true);
   });
   it('a blank reaching +3 asks for a family and evolves', () => {

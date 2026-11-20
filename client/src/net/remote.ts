@@ -1,7 +1,7 @@
 import type * as THREE from 'three';
 import { FLAG, mirrorFighter, type NetState, WEAPONS, weaponById } from '@wih/shared';
 import { Combatant } from '../combat/combatant';
-import { gripInHand } from '../combat/dummy';
+import { holdWeapon } from '../weapons/hold';
 import { FighterAnim } from '../combat/fighter-anim';
 import { bus } from '../core/events';
 import type { CollisionWorld } from '../physics/world';
@@ -31,7 +31,7 @@ export class RemotePlayer {
   private animIn = { ...IDLE_INPUT };
   private parity = false;
   private weapon = -1;
-  private model: THREE.Object3D | null = null;
+  private models: THREE.Object3D[] = [];
   private token = 0;
   private phase = 'idle';
 
@@ -96,9 +96,8 @@ export class RemotePlayer {
     const t = ++this.token;
     void this.load(def.id).then((m) => {
       if (t !== this.token) return;
-      if (this.model) { this.model.removeFromParent(); disposeTree(this.model); }
-      this.model = gripInHand(m);
-      this.ch.hold.hand_r.add(m);
+      for (const o of this.models) { o.removeFromParent(); disposeTree(o); }
+      this.models = holdWeapon(this.ch.hold, m, def);
     });
   }
 

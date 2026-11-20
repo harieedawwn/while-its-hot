@@ -10,10 +10,10 @@ export type { Clip } from './types';
 export { CLIP_FAMILY } from './attacks';
 
 /** Weapon families of GDD §5 (clip names; data ids map through CLIP_FAMILY). Attack clips: clips/attacks.ts. */
-export const FAMILIES = ['sword', 'hammer', 'polearm'] as const;
+export const FAMILIES = ['sword', 'hammer', 'knife', 'fist'] as const;
 export type Family = (typeof FAMILIES)[number];
-/** Per family: light ×3 (hammer ×2), heavy charge, heavy release, slide attack. */
-export const ATTACK_PARTS = ['light1', 'light2', 'light3', 'heavy_charge', 'heavy_release', 'slide'] as const;
+/** Per family: light ×N (sword 3, hammer 2, knife/fist 4), heavy charge, heavy release, slide attack. */
+export const ATTACK_PARTS = ['light1', 'light2', 'light3', 'light4', 'heavy_charge', 'heavy_release', 'slide'] as const;
 export type AttackPart = (typeof ATTACK_PARTS)[number];
 export const attackId = (f: Family, p: AttackPart): string => `atk_${f}_${p}`;
 export const ATTACK_SLOTS: readonly string[] = FAMILIES.flatMap((f) => ATTACK_PARTS.map((p) => attackId(f, p)));

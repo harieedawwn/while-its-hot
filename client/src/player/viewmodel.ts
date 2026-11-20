@@ -20,7 +20,11 @@ export class Viewmodel {
   readonly hand = new THREE.Group();
   /** Combat animation pose (view space). null = the rest pose from FEEL.viewmodel.rest. */
   pose: { pos: THREE.Vector3; quat: THREE.Quaternion } | null = null;
+  /** The left gauntlet hand (two-fist weapons), shown while `poseL` is set; same sway/lag as the right hand. */
+  readonly handL = new THREE.Group();
+  poseL: { pos: THREE.Vector3; quat: THREE.Quaternion } | null = null;
   private model: THREE.Object3D;
+  private modelL: THREE.Object3D | null = null;
   private qLag = new THREE.Quaternion();
   private eLag = new THREE.Euler(0, 0, 0, 'YXZ');
   private lagY = new Spring(V.lag.k, V.lag.c);
@@ -42,7 +46,8 @@ export class Viewmodel {
     this.camera.rotation.order = 'YXZ';
     this.model = model;
     this.hand.add(model);
-    this.eye.add(this.hand);
+    this.eye.add(this.hand, this.handL);
+    this.handL.visible = false;
     this.scene.add(this.eye);
   }
 
@@ -51,6 +56,12 @@ export class Viewmodel {
   dispose(): void { disposeTree(this.eye); }
 
   setModel(model: THREE.Object3D): void { this.model.removeFromParent(); disposeTree(this.model); this.model = model; this.hand.add(model); }
+  /** The left-hand model (a mirrored gauntlet) or null for one-handed weapons. */
+  setLeft(model: THREE.Object3D | null): void {
+    if (this.modelL) { this.modelL.removeFromParent(); disposeTree(this.modelL); }
+    this.modelL = model;
+    if (model) this.handL.add(model);
+  }
   /** The held weapon model (trails read its markers). */
   get weapon(): THREE.Object3D { return this.model; }
   /** Add something that lives in view space next to the hand (arms). */
@@ -96,6 +107,12 @@ export class Viewmodel {
       this.qLag.setFromEuler(this.eLag.set(lp + rp * 0.1, ly, this.tilt, 'YXZ'));
       this.hand.quaternion.multiplyQuaternions(this.qLag, this.pose.quat);
     } else this.hand.rotation.set(lp + rp * 0.1, ly, this.tilt, 'YXZ');
+    this.handL.visible = !!this.poseL && !!this.modelL;
+    if (this.poseL && this.pose) {
+      // same sway/bob/lag offsets as the right hand
+      this.handL.position.copy(this.poseL.pos).add(this.hand.position).sub(this.pose.pos);
+      this.handL.quaternion.multiplyQuaternions(this.qLag, this.poseL.quat);
+    }
 
     // follow the world camera's pose (incl. shake) with the viewmodel's own projection
     const w = cam.camera;

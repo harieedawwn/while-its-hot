@@ -16,16 +16,16 @@ export class FighterAnim {
   constructor(private ch: Character) {}
 
   sync(f: Pick<Fighter, 'phase' | 'swingId' | 'kind' | 'combo' | 'weapon'>): void {
-    const fam = CLIP_FAMILY[f.weapon.stats.moveset], a = this.ch.anim;
+    const fam = CLIP_FAMILY[f.weapon.stats.moveset], a = this.ch.anim, speed = 1 / f.weapon.stats.timeMul;
     const p = f.phase, changed = p !== this.phase, swung = f.swingId !== this.swing;
     if (!changed && !swung) return;
     const prev = this.phase;
     this.phase = p; this.swing = f.swingId;
     switch (p) {
       case 'windup':
-        if (f.kind === 'heavy') a.play(attackId(fam, 'heavy_release'), { fadeIn: 0.03 });
-        else if (f.kind === 'slide') a.play(attackId(fam, 'slide'), { fadeIn: 0.03 });
-        else a.play(attackId(fam, `light${f.combo + 1}` as 'light1'), { fadeIn: 0.05 });
+        if (f.kind === 'heavy') a.play(attackId(fam, 'heavy_release'), { fadeIn: 0.03, speed });
+        else if (f.kind === 'slide') a.play(attackId(fam, 'slide'), { fadeIn: 0.03, speed });
+        else a.play(attackId(fam, `light${f.combo + 1}` as 'light1'), { fadeIn: 0.05, speed });
         break;
       case 'charge': a.play(attackId(fam, 'heavy_charge'), { hold: true, fadeIn: 0.08 }); break;
       case 'parry': a.play('parry', { fadeIn: 0.03 }); break;

@@ -105,7 +105,7 @@ export class ForgeHud {
 
   get picking(): boolean { return this.pick !== null; }
 
-  /** The +3 family pick: three stamped tags, the default pre-highlighted, `secs` to choose. 1/2/3 keys and taps work. */
+  /** The +3 family pick: four stamped tags, the default pre-highlighted, `secs` to choose. 1–4 keys and taps work. */
   openPick(def: Family, secs: number, onPick: (f: Family) => void): void {
     this.closePick();
     setModal('pick', true);
@@ -121,7 +121,7 @@ export class ForgeHud {
     });
     el('div', 'fh-count', p).appendChild(document.createElement('i'));
     this.onKey = (e) => {
-      const i = ['Digit1', 'Digit2', 'Digit3'].indexOf(e.code);
+      const i = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code);
       if (i >= 0) choose(FAMILIES[i]); else if (e.code === 'Enter') choose(def);
     };
     addEventListener('keydown', this.onKey);

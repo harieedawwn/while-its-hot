@@ -23,6 +23,7 @@ export const DEMOS: Record<string, Demo> = {
   light1: { front: 'idle', fight: (t) => tap(t, 0) },
   light2: { front: 'idle', fight: (t, w) => tap(t, 0, combo(w) - 0.1) },
   light3: { front: 'idle', fight: (t, w) => tap(t, 0, combo(w) - 0.1, 2 * combo(w) - 0.1) },
+  light4: { front: 'idle', fight: (t, w) => tap(t, 0, combo(w) - 0.1, 2 * combo(w) - 0.1, 3 * combo(w) - 0.1) },
   heavy: { front: 'idle', fight: (t) => ({ ...NO_FIGHT, attackPressed: at(t, 0), attackHeld: t < 0.7 }) },
   charge: { front: 'idle', fight: (t) => ({ ...NO_FIGHT, attackPressed: at(t, 0), attackHeld: true }) },
   slide: { front: 'idle', dist: 4.2, fight: (t) => tap(t, 0.12), move: (t) => ({ my: t < 0.3 ? 1 : 0, slideHeld: t > 0.02 && t < 0.3, slidePressed: at(t, 0.02) }) },

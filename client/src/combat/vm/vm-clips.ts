@@ -1,4 +1,5 @@
 import { type Arc, arcAngle, arcSpan, attackShape, bladeDir, type Family, framesOf, type WeaponDef } from '@wih/shared';
+import { fistSet } from './vm-fists';
 import { clip, type V3, type VmClip, type VmKey } from './vm-pose';
 
 /**
@@ -15,7 +16,7 @@ interface Style {
   /** Blade direction while stabbing (leans so it reads as steel, not a dot). */
   thrustDir: V3;
 }
-const S: Record<Family, Style> = {
+const S: Record<Exclude<Family, 'tay'>, Style> = {
   kiem: {
     rest: { s: 0, p: [0.29, -0.29, -0.44], b: [0.06, 0.6, -0.8], e: [-0.95, -0.1, -0.1] },
     block: { s: 0, p: [0.13, -0.2, -0.4], b: [-0.95, 0.22, -0.18], e: [0, 0.35, -1] },
@@ -30,12 +31,13 @@ const S: Record<Family, Style> = {
     stagger: { s: 0, p: [0.44, -0.55, -0.22], b: [0.6, 0.3, 0.2], e: [0, -0.5, -1] },
     pivot: [0.08, -0.15, 0.04], armR: 0.48, antic: 34, follow: 14, thrust: 0.2, squeeze: 0.75, lead: 18, lift: 0.3, thrustDir: [-0.22, 0.26, -1],
   },
-  thuong: {
-    rest: { s: 0, p: [0.21, -0.37, -0.24], b: [-0.14, 0.17, -0.98], e: [-1, 0, 0.1] },
-    block: { s: 0, p: [0.16, -0.27, -0.3], b: [-0.86, 0.48, -0.18], e: [0, 0.3, -1] },
-    deflect: { s: 0, p: [0.08, -0.22, -0.3], b: [-0.6, 0.72, -0.35], e: [-0.4, -0.2, -1] },
-    stagger: { s: 0, p: [0.4, -0.52, -0.12], b: [0.35, 0.2, -0.9], e: [-1, 0, 0] },
-    pivot: [0.12, -0.32, 0.12], armR: 0.42, antic: 24, follow: 12, thrust: 0.32, squeeze: 0.75, lead: 30, lift: 0.1, thrustDir: [-0.12, 0.13, -1],
+  // dao: short forward grip (FPS knife), tip angled in toward the crosshair; small fast arcs from the wrist
+  dao: {
+    rest: { s: 0, p: [0.25, -0.26, -0.4], b: [-0.3, 0.42, -0.86], e: [-0.9, -0.25, 0.2] },
+    block: { s: 0, p: [0.12, -0.18, -0.36], b: [-0.9, 0.32, -0.2], e: [0, 0.3, -1] },
+    deflect: { s: 0, p: [0.1, -0.17, -0.38], b: [-0.78, 0.52, -0.3], e: [-0.3, -0.3, -1] },
+    stagger: { s: 0, p: [0.4, -0.48, -0.24], b: [0.5, 0.4, 0.1], e: [0, -0.5, -1] },
+    pivot: [0.1, -0.2, 0.02], armR: 0.44, antic: 22, follow: 14, thrust: 0.3, squeeze: 0.72, lead: 30, lift: 0.12, thrustDir: [-0.16, 0.2, -1],
   },
 };
 
@@ -89,11 +91,15 @@ function attackClip(st: Style, arc: Arc, arcDeg: number, start: VmKey, heavy: bo
 export interface VmSet {
   rest: VmKey; block: VmKey; stagger: VmKey; charge: VmKey;
   light: VmClip[]; slide: VmClip; heavy: VmClip; parry: VmClip;
+  /** Both hands are keyed (tay: two gauntlets, no blade). */
+  fists: boolean;
 }
 
 /** The viewmodel clips for a weapon (its family moveset and passive-widened arcs). */
 export function vmSet(def: WeaponDef): VmSet {
-  const fam = def.stats.moveset, st = S[fam];
+  const fam = def.stats.moveset;
+  if (fam === 'tay') return { ...fistSet(), fists: true };
+  const st = S[fam];
   const light = Array.from({ length: def.stats.comboHits }, (_, i) => {
     const arc = framesOf(fam, 'light', i).arc;
     return attackClip(st, arc, attackShape(def, 'light', i).arcDeg, st.rest, false);
@@ -103,7 +109,7 @@ export function vmSet(def: WeaponDef): VmSet {
   const da = framesOf(fam, 'slide', 0).arc;
   const slideStart: VmKey = { ...st.rest, p: [st.rest.p[0] - 0.03, st.rest.p[1] - 0.04, st.rest.p[2] + 0.06] };
   return {
-    rest: st.rest, block: st.block, stagger: st.stagger, charge,
+    rest: st.rest, block: st.block, stagger: st.stagger, charge, fists: false,
     light,
     slide: attackClip(st, da, attackShape(def, 'slide', 0).arcDeg, slideStart, false),
     heavy: attackClip(st, ha, hDeg, charge, true),

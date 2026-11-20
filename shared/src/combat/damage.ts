@@ -1,17 +1,17 @@
 import { BALANCE } from '../balance';
+import { dmgScale, type Family } from '../data/weapons';
 import type { AttackShape } from '../passives';
 
 /**
- * Damage and defense (GDD §5, §7), pure. Damage = base × (1 + 0.06 × level) × armorFactor (passives are
- * already folded into the shape's dmg). Defense order: i-frames → parry (front) → block (front) → hit.
+ * Damage and defense (GDD §5, §7), pure. Damage = base × dmgScale(family, level) × armorFactor × the
+ * defender's taken multiplier (tay +10%); passives are already folded into the shape's dmg. Defense order: i-frames → parry (front) → block (front) → hit.
  */
 const C = BALANCE.combat;
 const D2R = Math.PI / 180;
 
-export const levelFactor = (level: number): number => 1 + BALANCE.weapons.levelDmg * level;
 export const armorFactor = (armorLevel: number): number => 1 - Math.min(C.armor.max, C.armor.perLevel * armorLevel);
-export function damageOf(shape: AttackShape, weaponLevel: number, armorLevel: number): number {
-  return shape.dmg * levelFactor(weaponLevel) * armorFactor(armorLevel);
+export function damageOf(shape: AttackShape, family: Family | null, weaponLevel: number, armorLevel: number, taken = 1): number {
+  return shape.dmg * dmgScale(family, weaponLevel) * armorFactor(armorLevel) * taken;
 }
 
 export interface DefenderView {
@@ -21,8 +21,10 @@ export interface DefenderView {
   stamina: number; armorLevel: number;
   /** Extra block arc (khiên tay: 180°). */
   blockArcDeg?: number;
+  /** Damage taken multiplier from the held family (traitsOf(def).taken). */
+  taken?: number;
 }
-export interface AttackView { x: number; z: number; shape: AttackShape; weaponLevel: number; }
+export interface AttackView { x: number; z: number; shape: AttackShape; family: Family | null; weaponLevel: number; }
 
 export type HitResult =
   | { r: 'immune' }
@@ -42,7 +44,7 @@ export function resolveHit(a: AttackView, d: DefenderView): HitResult {
   if (d.parrying && inFront(d, a.x, a.z, C.parry.frontDeg)) {
     return { r: 'parried', attackerStaggerS: C.parry.staggerS, parrierStamina: C.parry.stamina };
   }
-  const full = damageOf(a.shape, a.weaponLevel, d.armorLevel);
+  const full = damageOf(a.shape, a.family, a.weaponLevel, d.armorLevel, d.taken ?? 1);
   const stagger = a.shape.staggerS;
   if (d.blocking && inFront(d, a.x, a.z, (d.blockArcDeg ?? C.block.frontDeg * 2) / 2)) {
     if (a.shape.ignoresBlock) return { r: 'pierced', dmg: full, staminaCost: 0, staggerS: stagger };

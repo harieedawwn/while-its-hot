@@ -8,8 +8,9 @@ import { cyl } from '../../render/models/kit';
 /** Same work-clothes colors as the body (player/character/body.ts), multiplied by the cloth texture. */
 const C = { shirt: '#e6dcc4', glove: '#cfae8a', skin: '#ecc0a0', belt: '#9a7852' } as const;
 /** Elbow anchors in view space (off screen, below and behind the eye). */
-const ELBOW_R = new THREE.Vector3(0.34, -0.6, 0.2);
-const ELBOW_L = new THREE.Vector3(-0.32, -0.6, 0.16);
+export const ELBOW_R = [0.34, -0.6, 0.2] as const;
+export const ELBOW_L = [-0.32, -0.6, 0.16] as const;
+const ER = new THREE.Vector3(...ELBOW_R), EL = new THREE.Vector3(...ELBOW_L);
 const HALF_PI = Math.PI / 2;
 
 /** One forearm: the mitten fist around the grip at the origin, the bare forearm and cuff running back along +Z. */
@@ -32,7 +33,8 @@ const bladeV = new THREE.Vector3(), vz = new THREE.Vector3(), vy = new THREE.Vec
 
 /**
  * First-person forearms (LOOK §6): the right fist sits on the weapon grip and its forearm points back to
- * an off-screen elbow; the left fist goes to the weapon's `grip_l` marker on two-handers, else stays hidden.
+ * an off-screen elbow; the left fist goes to the weapon's `grip_l` marker on two-handers, or to the left
+ * gauntlet hand (tay), else stays hidden.
  */
 export class VmArms {
   readonly root = new THREE.Group();
@@ -47,15 +49,19 @@ export class VmArms {
 
   get tris(): number { return (this.r.geometry.getAttribute('position').count / 3) * 2; }
 
-  /** hand: the viewmodel hand (eye-local); gripL: the weapon's grip_l marker if it has one. */
-  update(hand: THREE.Object3D, gripL: THREE.Object3D | undefined): void {
+  /** hand: the viewmodel hand (eye-local); gripL: the weapon's grip_l marker if it has one; handL: the left gauntlet hand when shown. */
+  update(hand: THREE.Object3D, gripL: THREE.Object3D | undefined, handL?: THREE.Object3D): void {
     hand.updateMatrix();
     bladeV.set(0, 1, 0).applyQuaternion(hand.quaternion);
-    place(this.r, hand.position, bladeV, ELBOW_R);
-    this.l.visible = !!gripL;
-    if (gripL) {
+    place(this.r, hand.position, bladeV, ER);
+    const left = handL?.visible ? handL : undefined;
+    this.l.visible = !!gripL || !!left;
+    if (left) {
+      bladeV.set(0, 1, 0).applyQuaternion(left.quaternion);
+      place(this.l, left.position, bladeV, EL);
+    } else if (gripL) {
       tmp.copy(gripL.position).applyMatrix4(hand.matrix);
-      place(this.l, tmp, bladeV, ELBOW_L);
+      place(this.l, tmp, bladeV, EL);
     }
   }
 }

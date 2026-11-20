@@ -24,7 +24,7 @@ export class LocalResolver implements HitResolver {
     if (!a || !t || !a.alive || !t.alive) return;
     const shape = attackShape(a.weapon, c.kind, c.combo, c.dist);
     const as = a.body.s, ts = t.body.s;
-    const res = resolveHit({ x: as.pos.x, z: as.pos.z, shape, weaponLevel: a.level }, t.view());
+    const res = resolveHit({ x: as.pos.x, z: as.pos.z, shape, family: a.weapon.family, weaponLevel: a.level }, t.view());
     const [x, y, z] = c.point;
     if (res.r === 'immune') return;
     if (res.r === 'parried') {

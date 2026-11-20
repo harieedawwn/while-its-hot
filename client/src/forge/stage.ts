@@ -61,17 +61,25 @@ export class ForgeStage {
     this.swing(0);
   }
 
-  /** Lay a blade model on the anvil (grip at origin, +Y, edge +Z). Replaces the previous one. */
+  /** Lay a blade model on the anvil (grip at origin, +Y, edge +Z). Replaces the previous one. A model with no
+   *  blade length (a gauntlet: thumb +Y, knuckles +Z, back of the hand +X) lies palm down, knuckles along the face. */
   setBlade(model: THREE.Object3D): void {
     if (this.blade) { this.blade.removeFromParent(); disposeTree(this.blade); }
     this.blade = model;
     const tip = marker(model, 'tip')?.position, base = marker(model, 'base')?.position;
     const len = tip && base ? tip.distanceTo(base) : 1, from = base ?? new THREE.Vector3();
-    this.bladeScale = Math.max(0.4, Math.min(S.blade.maxScale, S.blade.showLen / Math.max(0.2, len)));
-    model.scale.setScalar(this.bladeScale);
-    model.rotation.set(0, 0, -Math.PI / 2);
-    // base of the blade (just above the grip) sits at the left end of the face
-    this.bladeBase.set(-0.5 - from.y * this.bladeScale, ANVIL.faceY + 0.02, 0.02);
+    if (len < S.blade.minLen) {
+      this.bladeScale = S.blade.itemScale;
+      model.scale.setScalar(this.bladeScale);
+      model.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(1, 0, 0)));
+      this.bladeBase.set(S.blade.itemX, ANVIL.faceY + S.blade.itemY, 0.02);
+    } else {
+      this.bladeScale = Math.max(0.4, Math.min(S.blade.maxScale, S.blade.showLen / Math.max(0.2, len)));
+      model.scale.setScalar(this.bladeScale);
+      model.rotation.set(0, 0, -Math.PI / 2);
+      // base of the blade (just above the grip) sits at the left end of the face
+      this.bladeBase.set(-0.5 - from.y * this.bladeScale, ANVIL.faceY + 0.02, 0.02);
+    }
     this.root.add(model);
     this.syncTarget(); this.place(); setHeat(model, this.shownHeat);
   }

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BALANCE } from '@wih/shared';
+import { BALANCE, type FamilyTraits, NO_TRAITS } from '@wih/shared';
 
 /** One sim tick of intent. mx = strafe right, my = forward (stick or WASD, length ≤ 1). Edges are per tick. */
 export interface MoveInput {
@@ -8,7 +8,7 @@ export interface MoveInput {
 }
 export const NO_INPUT: MoveInput = { mx: 0, my: 0, yaw: 0, jumpPressed: false, slidePressed: false, slideHeld: false };
 
-export type JumpKind = 'jump' | 'bounce' | 'slidejump' | 'walljump';
+export type JumpKind = 'jump' | 'bounce' | 'slidejump' | 'walljump' | 'airjump';
 /** What happened this tick; the controller turns these into bus events (camera, audio, VFX listen). */
 export type MoveEvent =
   | { k: 'jump'; kind: JumpKind }
@@ -43,6 +43,8 @@ export interface MoveState {
   low: boolean;
   /** Combat writes these: ground speed multiplier (block, charge) and seconds of weak control after a push. */
   speedMul: number; pushT: number;
+  /** Held weapon family traits (ROUND3 §4): run/slide multipliers, extra air jumps; airJumps = used since landing. */
+  traits: FamilyTraits; airJumps: number;
   events: MoveEvent[];
 }
 
@@ -55,7 +57,7 @@ export function createMoveState(pos: THREE.Vector3Tuple = [0, 0, 0]): MoveState 
     sliding: false, slideT: 0, slideDir: new THREE.Vector3(0, 0, -1), slideCd: 0, slideLock: false,
     slamming: false, sinceSlam: 1e3,
     wallJumps: 0, sinceWall: 1e3, wallN: new THREE.Vector3(),
-    clinging: false, low: false, speedMul: 1, pushT: 0, events: [],
+    clinging: false, low: false, speedMul: 1, pushT: 0, traits: NO_TRAITS, airJumps: 0, events: [],
   };
 }
 

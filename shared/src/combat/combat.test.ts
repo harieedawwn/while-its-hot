@@ -18,22 +18,24 @@ const tap = { attackPressed: true, attackHeld: true };
 
 describe('frame data', () => {
   it('a light swing lasts exactly the family combo time (GDD §5)', () => {
-    for (const fam of ['kiem', 'bua', 'thuong'] as const) {
+    for (const fam of ['kiem', 'bua', 'dao', 'tay'] as const) {
       const fam2 = BALANCE.weapons.family[fam];
       for (let c = 0; c < fam2.comboHits; c++) expect(totalS(framesOf(fam, 'light', c))).toBeCloseTo(fam2.comboS, 6);
       expect(C.family[fam].light.length).toBe(fam2.comboHits);
       // every light windup is long enough for the tap/hold decision
-      for (const l of C.family[fam].light) expect(l.w).toBeGreaterThanOrEqual(C.tapS);
+      for (const l of C.family[fam].light as readonly { w: number }[]) expect(l.w).toBeGreaterThanOrEqual(C.tapS);
     }
   });
   it('shapes: slide +20%, heavy table values, passives fold in', () => {
     expect(attackShape(weaponById('kiem_tho'), 'slide', 0).dmg).toBeCloseTo(12 * 1.2);
-    expect(attackShape(weaponById('bua_ren'), 'heavy', 0).dmg).toBe(45);
+    expect(attackShape(weaponById('bua_ren'), 'heavy', 0).dmg).toBe(40);
     expect(attackShape(weaponById('bua_ren'), 'heavy', 0).breaksBlock).toBe(true);
     expect(attackShape(weaponById('phoi'), 'light', 0).dmg).toBe(9);
     expect(attackShape(weaponById('kiem_thep'), 'light', 2).dmg).toBeCloseTo(12 * 1.2);
-    expect(attackShape(weaponById('kich'), 'heavy', 0).arcDeg).toBe(220);
-    expect(attackShape(weaponById('dai_dao'), 'slide', 0).lungeM).toBeCloseTo(C.slideAtk.lungeM * 1.5);
+    expect(attackShape(weaponById('dao_gam'), 'heavy', 0).lungeM).toBe(3);
+    expect(framesOf('tay', 'light', 0).hand).toBe('l');
+    expect(framesOf('tay', 'light', 1).hand).toBe('r');
+    expect(totalS(framesOf('bua', 'light', 0, 0.7))).toBeCloseTo(0.49, 6);
   });
 });
 
@@ -41,15 +43,15 @@ describe('fighter', () => {
   it('tap chains the light combo at the family rhythm and wraps', () => {
     const f = new Fighter(weaponById('kiem_tho'));
     const combos: number[] = [];
-    for (let i = 0; i < 4; i++) { run(f, 0.38, { attackHeld: false }, { attackPressed: true }); combos.push(f.combo); }
+    for (let i = 0; i < 4; i++) { run(f, 0.4, { attackHeld: false }, { attackPressed: true }); combos.push(f.combo); }
     expect(combos).toEqual([0, 1, 2, 0]);
   });
   it('hammer chains 2 hits; a late press restarts the chain', () => {
     const f = new Fighter(weaponById('bua_ren'));
-    run(f, 0.62, {}, { attackPressed: true });
-    run(f, 0.62, {}, { attackPressed: true });
+    run(f, 0.7, {}, { attackPressed: true });
+    run(f, 0.7, {}, { attackPressed: true });
     expect(f.combo).toBe(1);
-    run(f, 0.62 + C.comboGapS + 0.1);
+    run(f, 0.7 + C.comboGapS + 0.1);
     run(f, 0.1, {}, { attackPressed: true });
     expect(f.combo).toBe(0);
   });
@@ -123,10 +125,14 @@ describe('fighter', () => {
 
 describe('damage', () => {
   const def = (o: Partial<DefenderView> = {}): DefenderView => ({ x: 0, z: 0, yaw: 0, parrying: false, blocking: false, immune: false, stamina: 3, armorLevel: 0, ...o });
-  const atk = (shape = attackShape(weaponById('kiem_tho'), 'light', 0)) => ({ x: 0, z: -2, shape, weaponLevel: 5 });
-  it('formula: base × (1 + 0.06 L) × armor', () => {
+  const atk = (shape = attackShape(weaponById('kiem_tho'), 'light', 0)) => ({ x: 0, z: -2, shape, family: 'kiem' as const, weaponLevel: 5 });
+  const K = 1 + 0.045 * 5;
+  it('formula: base × scale(family, L) × armor × taken', () => {
     expect(armorFactor(10)).toBeCloseTo(0.7); expect(armorFactor(20)).toBeCloseTo(0.7);
-    expect(damageOf(attackShape(weaponById('kiem_tho'), 'light', 0), 5, 4)).toBeCloseTo(12 * 1.3 * 0.88);
+    expect(damageOf(attackShape(weaponById('kiem_tho'), 'light', 0), 'kiem', 5, 4)).toBeCloseTo(12 * K * 0.88);
+    expect(damageOf(attackShape(weaponById('kiem_tho'), 'light', 0), 'kiem', 5, 0, 1.1)).toBeCloseTo(12 * K * 1.1);
+    const tay = resolveHit(atk(), def({ taken: 1.1 }));
+    if (tay.r === 'hit') expect(tay.dmg).toBeCloseTo(12 * K * 1.1);
   });
   it('front checks', () => {
     expect(inFront({ x: 0, z: 0, yaw: 0 }, 0, -1, 80)).toBe(true);
@@ -137,7 +143,7 @@ describe('damage', () => {
     expect(resolveHit(atk(), def({ parrying: true }))).toMatchObject({ r: 'parried', attackerStaggerS: 0.6, parrierStamina: 1 });
     const b = resolveHit(atk(), def({ blocking: true }));
     expect(b).toMatchObject({ r: 'blocked', staminaCost: 1 });
-    if (b.r === 'blocked') expect(b.dmg).toBeCloseTo(12 * 1.3 * 0.3);
+    if (b.r === 'blocked') expect(b.dmg).toBeCloseTo(12 * K * 0.3);
     expect(resolveHit(atk(), def({ blocking: true, stamina: 0.5 })).r).toBe('guardbreak');
     expect(resolveHit(atk(attackShape(weaponById('bua_ren'), 'heavy', 0)), def({ blocking: true })).r).toBe('guardbreak');
     expect(resolveHit(atk(attackShape(weaponById('truong_kiem'), 'heavy', 0)), def({ blocking: true })).r).toBe('pierced');
@@ -174,7 +180,7 @@ describe('sweep', () => {
   });
   it('sliding bodies are shorter: a flat head-height slash passes over', () => {
     const f = swingFrame(eye, 0, 0);
-    const arc = framesOf('thuong', 'light', 1).arc;
+    const arc = { kind: 'slash' as const, from: 50, to: -50, roll: -6 };
     expect(sweepHit(f, arc, 100, 3.2, 0, 1, bodyCapsules([0, 0, -2], 1.0))).toBeNull();
   });
 });

@@ -4,7 +4,8 @@ import { foundryAmbience } from '../audio/places';
 import * as THREE from 'three';
 import { BALANCE, NO_FIGHT, PLAYER_COLORS, WEAPON_IDS, weaponById } from '@wih/shared';
 import { CombatWorld } from '../combat/combat-world';
-import { DUMMY_MODES, Dummy, type DummyMode, gripInHand } from '../combat/dummy';
+import { DUMMY_MODES, Dummy, type DummyMode } from '../combat/dummy';
+import { holdWeapon } from '../weapons/hold';
 import { FighterAnim } from '../combat/fighter-anim';
 import { LocalFighter } from '../combat/local-fighter';
 import { bus } from '../core/events';
@@ -33,7 +34,7 @@ import { disposeTree } from '../render/dispose';
  * Melee test (phase 08): a corner of Arena 1 with training dummies (idle, block, parry, counter, move).
  * KB+mouse or `touch=1` (aim assist on with touch, `aim=0|1` to force). Q cycles the player's weapon form.
  * Params: `weapon=<id>` `level=0..20` `dw=<dummy weapon>` `modes=a,b,..` `tp=1` third person.
- * Frozen shots: `demo=light1|light2|light3|heavy|charge|slide|parry|riposte|block&t=<s>` replays a scripted
+ * Frozen shots: `demo=light1..4|heavy|charge|slide|parry|riposte|block&t=<s>` replays a scripted
  * run to t (after a settle) and freezes; `cam` overrides the camera. R resets, `window.__combat` = counters.
  */
 const ORIGIN = new THREE.Vector3(-18, 0.05, -17);
@@ -76,12 +77,11 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   // third person: the player's own body
   const tp = params.get('tp') ? params.get('tp') === '1' : false;
   const tpCam = new ThirdPersonCamera();
-  let body: Character | null = null, bodyAnim: FighterAnim | null = null, bodyWeapon: THREE.Object3D | null = null;
+  let body: Character | null = null, bodyAnim: FighterAnim | null = null, bodyWeapon: THREE.Object3D[] = [];
   const animIn = { ...IDLE_INPUT };
   if (tp) {
     body = new Character(lib, { color: PLAYER_COLORS[0] });
-    bodyWeapon = gripInHand(await loadWeapon(weaponId, ctx));
-    body.hold.hand_r.add(bodyWeapon);
+    bodyWeapon = holdWeapon(body.hold, await loadWeapon(weaponId, ctx), weaponById(weaponId));
     bodyAnim = new FighterAnim(body);
     scene.add(body.root);
   }
@@ -114,7 +114,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     formIdx = (formIdx + 1) % WEAPON_IDS.length;
     const def = weaponById(WEAPON_IDS[formIdx]);
     lf.setWeapon(def, await loadWeapon(def.id, ctx));
-    if (body && bodyWeapon) { bodyWeapon.removeFromParent(); disposeTree(bodyWeapon); bodyWeapon = gripInHand(await loadWeapon(def.id, ctx)); body.hold.hand_r.add(bodyWeapon); }
+    if (body) { for (const o of bodyWeapon) { o.removeFromParent(); disposeTree(o); } bodyWeapon = holdWeapon(body.hold, await loadWeapon(def.id, ctx), def); }
   };
   const reset = () => {
     player.s.pos.copy(ORIGIN); player.s.vel.set(0, 0, 0); player.yaw = YAW; player.pitch = 0; lf.c.revive();

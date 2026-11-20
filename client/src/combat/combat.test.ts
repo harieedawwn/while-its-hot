@@ -76,15 +76,16 @@ describe('combat world (local resolver)', () => {
     expect(l2.ev[0]).toMatch(/^hit:guardbreak/);
     expect(h.t.fighter.phase === 'stagger' || h.t.fighter.phase === 'idle').toBe(true);
   });
-  it('out of reach: the polearm reaches where the sword whiffs (thuong_thep: +25% at max reach)', () => {
-    const s = duel('kiem_tho', 3.0), l = log();
-    s.step({ attackPressed: true });
-    for (let i = 0; i < 30; i++) s.step();
-    const p = duel('thuong_thep', 3.0);
-    p.step({ attackPressed: true });
-    for (let i = 0; i < 30; i++) p.step();
+  it('out of reach: the sword reaches at 2 m where the knife and the fists whiff', () => {
+    const l = log();
+    for (const w of ['dao_gam', 'gang_sat', 'kiem_tho']) {
+      const s = duel(w, 2.0);
+      s.step({ attackPressed: true });
+      for (let i = 0; i < 30; i++) s.step();
+    }
     l.off();
-    expect(l.ev).toEqual(['hit:hit:12.5']);
+    expect(l.ev).toHaveLength(1);
+    expect(l.ev[0]).toMatch(/^hit:hit:/);
   });
   it('hit-stop spans 50–90 ms by damage', () => {
     expect(hitStopMs(9)).toBe(50); expect(hitStopMs(45)).toBe(90); expect(hitStopMs(100)).toBe(90);

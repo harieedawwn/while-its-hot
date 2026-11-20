@@ -85,5 +85,5 @@ export type MatchServerMsg =
   | { t: 'own'; relics: string[] }
   /** Your HP was raised by the server (dau_toi). */
   | { t: 'heal'; hp: number }
-  /** Match over: the standings, each player's best level per family (kiem, bua, thuong) and their relics. */
+  /** Match over: the standings, each player's best level per family (FAMILIES order: kiem, bua, dao, tay) and their relics. */
   | { t: 'end'; win: number; rows: EndRowNet[] };

@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { weaponById } from '@wih/shared';
+import { familyForms, type WeaponDef, weaponById } from '@wih/shared';
 import type { ModelCtx } from '../render/models/kit';
 import { WEAPON_MODELS } from './models';
+import { BORROW_TINT } from './palette';
 import { setHeat } from './wkit';
 
 /**
@@ -11,10 +12,29 @@ import { setHeat } from './wkit';
  * optional `_HEATMASK` vertex attribute) and falls back to the procedural build.
  */
 export function buildWeapon(id: string, ctx: ModelCtx): THREE.Group {
-  const def = weaponById(id);
-  const m = WEAPON_MODELS[def.model];
-  if (!m) throw new Error(`no model ${def.model} for weapon ${id}`);
-  return m.build(ctx);
+  const def = weaponById(id), src = modelFor(def);
+  const g = WEAPON_MODELS[src.model].build(ctx);
+  if (src.borrowed) tint(g, BORROW_TINT);
+  return g;
+}
+
+/**
+ * Missing-model rule (ROUND3 §4): a form without its own builder borrows the nearest lower form of its family
+ * that has one, tinted one tier brighter so it still reads as the next step up.
+ */
+export function modelFor(def: WeaponDef): { model: string; borrowed: boolean } {
+  if (WEAPON_MODELS[def.model]) return { model: def.model, borrowed: false };
+  const lower = def.family ? familyForms(def.family).filter((w) => w.minLevel < def.minLevel && WEAPON_MODELS[w.model]) : [];
+  const m = lower.length ? lower[lower.length - 1].model : 'phoi';
+  return { model: m, borrowed: true };
+}
+function tint(root: THREE.Object3D, k: number): void {
+  root.traverse((o) => {
+    const c = (o as THREE.Mesh).isMesh ? (o as THREE.Mesh).geometry.getAttribute('color') : null;
+    if (!c) return;
+    for (let i = 0; i < c.count * 3; i++) c.array[i] = Math.min(1, c.array[i] * k);
+    c.needsUpdate = true;
+  });
 }
 
 const glbCache = new Map<string, Promise<THREE.Group | null>>();
@@ -58,6 +78,19 @@ async function fetchGlb(model: string, ctx: ModelCtx): Promise<THREE.Group | nul
 }
 
 const n2 = (m: THREE.Mesh) => m.geometry.getAttribute('position').count;
+
+/**
+ * The left-hand copy of a one-hand model (tay: the gauntlet is modelled for the right hand): mirrored across
+ * its YZ plane, with its own geometry so disposing one never frees the other. three.js flips the winding.
+ */
+export function mirrorLeft(model: THREE.Object3D): THREE.Group {
+  const g = new THREE.Group(), c = model.clone(true);
+  c.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) m.geometry = m.geometry.clone(); });
+  g.name = `${model.name}_l`;
+  g.scale.x = -1;
+  g.add(c);
+  return g;
+}
 
 /** The `tip`/`base`/`grip_l` marker of a built weapon (world-agnostic: local to the weapon root). */
 export function marker(root: THREE.Object3D, name: 'tip' | 'base' | 'grip_l'): THREE.Object3D | undefined {

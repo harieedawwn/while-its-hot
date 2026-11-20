@@ -13,3 +13,5 @@ type V3 = [number, number, number];
 export const outward = (a: number, tilt = 0): V3 => [0, a, -Math.PI / 2 + tilt];
 /** Euler that turns a +Y primitive to point down. */
 export const DOWN: V3 = [Math.PI, 0, 0];
+/** Vertex color gain on a form that borrows a lower form's model (weapon.ts `modelFor`). */
+export const BORROW_TINT = 1.18;

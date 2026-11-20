@@ -1,4 +1,4 @@
-import { framesOf } from '../combat/frames';
+import { framesFor } from '../combat/frames';
 import type { Fighter, FighterPhase } from '../combat/fighter';
 import type { AttackKind } from '../passives';
 
@@ -27,7 +27,7 @@ export function mirrorFighter(f: Fighter, code: number, t: number, parity: boole
   const attack = d.phase === 'windup' || d.phase === 'active' || d.phase === 'recover';
   const newSwing = attack && (parity !== lastParity || !(was === 'windup' || was === 'active' || was === 'recover'));
   f.phase = d.phase; f.kind = d.kind; f.combo = d.combo; f.t = t;
-  if (newSwing) { f.swingId++; f.frames = framesOf(f.weapon.stats.moveset, d.kind, d.combo); }
+  if (newSwing) { f.swingId++; f.frames = framesFor(f.weapon, d.kind, d.combo); }
   f.sweep = null;
   return newSwing;
 }

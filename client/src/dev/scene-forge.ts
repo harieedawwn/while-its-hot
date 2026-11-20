@@ -29,7 +29,7 @@ import type { SceneFactory } from './scenes';
  * anvil enters the stance; there E strikes, hold left mouse (Đánh) heats the blade, Q (Đổi) toggles blade ↔ armor
  * (outside the stance it swaps the two weapon slots), right mouse (Đỡ) starts Nhập thần when the meter is full;
  * the stick, Lướt, Nhảy or Trượt leave. At +3 a 3-way family pick (1/2/3 or tap) opens for 3 s.
- * Presets: `level=0..45` `fam=kiem|bua|thuong` `heat=0..1` `armor=0..10` `mods=a,b` `target=armor`
+ * Presets: `level=0..45` `fam=kiem|bua|dao|tay` `heat=0..1` `armor=0..10` `mods=a,b` `target=armor`
  * `frenzy=1|0` (meter full / active) `caps=1` (training caps) `dummy=<mode>` (a foe that hits you out).
  * `stance=1` starts in the stance with the anvil placed; `placed=1` places only. Frozen shots (`t=`): `ring=0..1`,
  * `zone=0..1`, `frt=<s into Nhập thần>` (frozen clock; with `frenzy=on` the zone size follows it), `pick=1` (family pick open), `hit=<s since strike>` (hammer mid-swing). R resets, `window.__forge`.
@@ -72,7 +72,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   session.armor = Math.max(0, Math.min(BALANCE.forge.armor.maxLevel, Math.floor(num(params, 'armor', 0))));
   session.target = params.get('target') === 'armor' ? 'armor' : 'blade';
   for (const m of (params.get('mods')?.split(',') ?? [])) if ((MODULE_IDS as readonly string[]).includes(m)) session.equip(m as ModuleId);
-  if (params.get('caps') === '1') session.caps = { kiem: 6, bua: 6, thuong: 6 };
+  if (params.get('caps') === '1') session.caps = { kiem: 6, bua: 6, dao: 6, tay: 6 };
   const startForm = formFor(session.blade.family, lvl);
 
   const lf = new LocalFighter(player, world, lib, weaponById(startForm.id), await load(startForm.id), cam, width / height,

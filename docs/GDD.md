@@ -60,15 +60,27 @@ Players do not collide hard with each other (soft push). Fall into molten channe
 - **Đỡ** (tap): parry window 0.16 s. A parried attacker is staggered 0.6 s and takes nothing; the parrier gets
   hit-stop + 1 stamina. Holding Đỡ = block: −70% front damage, drains 1 stamina per blocked hit, slows you 40%.
 - Slide attack: attacking while sliding or within 0.25 s after a slide lunges 2 m (counts as light, +20% dmg).
-- Damage = `base × (1 + 0.06 × level) × armorFactor × passives`. Hit-stop 50–90 ms (local feel only).
+- Damage = `base × scale(family, level) × armorFactor × passives × taken` (scale per family below; taken = the
+  defender's family, tay ×1.1). Hit-stop 50–90 ms (local feel only).
 - Aim assist (setting, default on for touch): slight magnetism + 30% look slowdown on enemies within reach cone.
 
-### Weapon families (pick at +3, see §6)
-| Family | Light dmg | Combo | Heavy | Reach | Identity |
-|---|---|---|---|---|---|
-| **Kiếm** (sword) | 12 | 3 hits, 0.38 s | thrust lunge 30 | 2.3 m | balanced, best parry |
-| **Búa** (hammer) | 18 | 2 hits, 0.62 s | overhead 45, staggers | 2.0 m | slow, breaks blocks |
-| **Thương** (polearm) | 10 | 3 hits, 0.42 s | wide sweep 26 | 3.2 m | reach, spacing |
+### Weapon families (pick at +3, see §6; ROUND3 §4)
+Traits apply only while that weapon is held. Numbers: `BALANCE.weapons.family` + `BALANCE.combat.family`.
+
+| Family | Light | Combo | Heavy | Reach | Move | Traits / scaling |
+|---|---|---|---|---|---|---|
+| **Kiếm** (sword) | 12 | 3 × 0.40 s | thrust 30 | 2.3 m | ×1.0 | balanced, best parry; knock 2.2 (3rd 3.5); dmg ×(1 + 0.045 L) |
+| **Búa** (hammer) | 15 | 2 × 0.70 s | overhead 40, breaks block | 2.0 m | ×0.92 | knock 4–7; dmg ×(1 + 0.02 L + 0.0012 L²); attack time ×(1 − 0.3·smoothstep(12, 30, form level)) |
+| **Dao** (knife) | 7 | 4 × 0.24 s | lunge stab 18 (3 m) | 1.6 m | ×1.2 | one extra air jump; slide speed ×1.25, length ×1.3, cooldown ×0.6; dmg ×(1 + 0.035 L) |
+| **Tay** (fists) | 6 | 4 × 0.26 s | charged straight 20 | 1.5 m | ×1.12 | knock 2; takes +10% damage; dmg ×(1 + 0.03 L); power comes from forms |
+
+- Kiếm: forehand, backhand, overhead diagonal; Búa: two heavy cuts. Dao: short forward-grip slashes R→L,
+  L→R, a low rising cross, a stab; heavy = a lunge stab. Tay: jab L, jab R (cross), hook R, uppercut L; heavy =
+  a charged straight R. Light windups are all ≥ 0.1 s (tap vs hold decision); the rest of the rhythm is in recovery.
+- Tay's forged item is a right gauntlet; the left is its mirror. In the forge stance the gauntlet lies palm down
+  on the anvil and the fists are hidden.
+- DPS check (`weapons.test.ts`, light hits only, no form effects): búa lowest at +3 and highest at +45, tay lowest
+  from +15 on, kiếm linear and never lowest, dao the fastest swing at every level.
 
 The blank `phoi` fights like a weak sword: light 9, heavy 20.
 
@@ -116,32 +128,29 @@ semi-careful +4.3 · solid +4.9 · expert (reacts in ~70 ms) +5.3, and ≥ +7 in
 37 / 45. With ~15–20 s at the anvil per round a solid smith ends round 1 near +12–15 and an expert needs ~4–5 rounds
 for +45; a smith with 100 ms of timing noise plateaus in the mid +20s (the −2 on a Trượt outweighs a falling p).
 
-**Evolution:** reaching +3 opens a quick 3-way pick (Kiếm / Búa / Thương, 3 s, defaults to last used; ROUND3 §4 changes the families in phase 27).
+**Evolution:** reaching +3 opens a quick 4-way pick (Kiếm / Búa / Dao / Tay, 3 s, defaults to last used).
 Forms change at the milestones below. Each form adds its passive (passives stack within a family).
 
-### Weapon roster (16; insert new forms anywhere by `minLevel`, ids never change)
-| id | Name | Family | minLevel | Passive |
-|---|---|---|---|---|
-| phoi | Phôi thép | — | 0 | — |
-| kiem_tho | Kiếm thô | Kiếm | 3 | — |
-| kiem_thep | Kiếm thép | Kiếm | 6 | 3rd combo hit +20% |
-| kiem_ban_rong | Kiếm bản rộng | Kiếm | 10 | parry window +30 ms |
-| truong_kiem | Trường kiếm | Kiếm | 14 | heavy thrust ignores block |
-| kiem_toi_lua | Kiếm tôi lửa | Kiếm | 18 | hits burn 3 dmg/s for 2 s |
-| bua_ren | Búa rèn | Búa | 3 | — |
-| bua_ta | Búa tạ | Búa | 6 | lights break block |
-| chuy_gai | Chùy gai | Búa | 10 | heavy stagger +0.4 s |
-| bua_chien | Búa chiến | Búa | 14 | slam landing deals 20 in 3 m |
-| bua_de | Búa đe | Búa | 18 | heavy launches target + shockwave |
-| giao_sat | Giáo sắt | Thương | 3 | — |
-| thuong_thep | Thương thép | Thương | 6 | hits at max reach +25% |
-| kich | Kích | Thương | 10 | heavy sweep arc 220° |
-| dai_dao | Đại đao | Thương | 14 | slide attack lunge +50% |
-| tram_ma_dao | Trảm mã đao | Thương | 18 | heavy pulls target 2 m toward you |
+### Weapon roster (4 families × 15 forms + phôi; full table with shapes and effects: `docs/ROSTER.md`)
+A form every 3 levels from +3 to +45 (`minLevel = 3 + 3·i`). Each row's effect list is COMPLETE (not cumulative):
+`passivesOf(def)` returns the row's own list. Ids never change; the blank `phoi` is level 0.
+
+| Family | +3 | +6 | +9 | +12 | +15 | +18 … +45 |
+|---|---|---|---|---|---|---|
+| kiem | kiem_tho | kiem_thep | kiem_ban_rong | truong_kiem | kiem_toi_lua | kiem_rang_cua … kiem_mat_troi |
+| bua | bua_ren | bua_ta | chuy_gai | bua_chien | bua_de | bua_piston … bua_sao_lun |
+| dao | dao_gam | dao_phay | dao_moc | dao_hai_luoi | dao_nem | dao_doc … dao_khe_nut |
+| tay | gang_sat | gang_dinh | gang_xich | gang_piston | gang_lua | gang_bang … gang_troi |
+
+Built effects (phase 27): combo3/combo4 bonus, after-slide bonus, parry window, heavy pierce, burn (3/s, 4/s), light
+breaks block, stagger +0.4 s, slam AoE, heavy launch + shockwave. Every other listed effect id is a no-op until
+phase 28 (kiem/bua) / 29 (dao/tay); `pendingPassives()` lists them and a test pins the list.
+Missing model: a form without its own model borrows the nearest lower form of its family that has one, tinted one
+tier brighter (`client/src/weapons/weapon.ts` `modelFor`).
 
 Data shape (`shared/src/data/weapons.ts`): `{ id, name, family, minLevel, stats, passives: PassiveId[], model: id }`.
 Passives are small functions registered by id in `shared/src/passives.ts` with hooks
-(`onHit`, `onParry`, `modifyDamage`, `modifyForgeOdds`, ...). New weapon = new row (+ maybe new passive).
+(`modifyAttack`, `modifyParryWindow`, `onHit`, `onParry`, `onSlamLand`). New weapon = new row (+ maybe new passive).
 
 ## 7. Armor (Giáp) and modules
 Forge target toggle at the anvil: blade or armor. Armor level 0–10 uses the same outcome table (level × 2 for
@@ -185,8 +194,8 @@ Starting relic pool (`shared/src/data/relics.ts`):
 | dinh_tan | Đinh tán | start each round with armor +2 |
 
 ## 9. Profile and unlocks (offline, `localStorage` + Capacitor Preferences)
-`profile = { name, color, unlocked: { phoi: true, <formId>: true }, bestLevel: { kiem, bua, thuong }, stats }`.
-- A form unlocks when you reach it in an online match. Starting profile: `phoi` + the three +3 forms.
+`profile = { name, color, unlocked: { phoi: true, <formId>: true }, bestLevel: { kiem, bua, dao, tay }, stats }`.
+- A form unlocks when you reach it in an online match. Starting profile: `phoi` + the four +3 forms. Old profiles load; unknown ids (the removed thương forms) are dropped.
 - Training yard: the anvil caps each family at your `bestLevel`; a strike past the cap plays a dull "refused"
   hit with no level gain. The weapon rack offers every unlocked form at its minLevel.
 

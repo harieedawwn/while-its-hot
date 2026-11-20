@@ -9,6 +9,7 @@ import { NO_INPUT, type MoveInput } from '../player/move-state';
 import { Player } from '../player/player';
 import type { MaterialLib } from '../render/materials/library';
 import { Combatant } from './combatant';
+import { holdWeapon } from '../weapons/hold';
 import { FighterAnim } from './fighter-anim';
 
 /** Training dummy behaviours (phase 08). `attack` = dev: keeps swinging at the player. */
@@ -17,11 +18,7 @@ export type DummyMode = (typeof DUMMY_MODES)[number];
 
 const AI = { turn: 7, turnBusy: 2.2, react: 0.05, counterDelay: 0.12, keepDist: 2.4, strafeHz: 0.35, attackFirst: 0.8, attackEvery: 2.2 };
 
-/** Hold a weapon (grip at origin, blade +Y, edge +Z) in a character's fist: blade forward when the arm hangs, edge down. */
-export function gripInHand(model: THREE.Object3D): THREE.Object3D {
-  model.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(-1, 0, 0), new THREE.Vector3(0, 0, -1), new THREE.Vector3(0, -1, 0)));
-  return model;
-}
+export { gripInHand } from '../weapons/hold';
 
 /**
  * A blacksmith-shaped training dummy: a real Combatant (same rules, hit capsules, knockback, stagger)
@@ -44,7 +41,7 @@ export class Dummy {
     private home: THREE.Vector3Tuple, private homeYaw: number, public mode: DummyMode, color: string, armor = 0) {
     this.c = new Combatant(id, new Player(world, home, homeYaw, false), weapon, { armor, team: 100 + id });
     this.ch = new Character(lib, { color, armor });
-    this.ch.hold.hand_r.add(gripInHand(model));
+    holdWeapon(this.ch.hold, model, weapon);
     this.anim = new FighterAnim(this.ch);
     this.off = bus.on('combat:hit', (e) => {
       if (e.target !== id) return;

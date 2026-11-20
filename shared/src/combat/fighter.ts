@@ -1,7 +1,7 @@
 import { BALANCE } from '../balance';
 import { passivesOf, type WeaponDef } from '../data/weapons';
 import { type AttackKind, parryWindow } from '../passives';
-import { attackShape, type Frames, framesOf } from './frames';
+import { attackShape, type Frames, framesFor, framesOf } from './frames';
 
 const C = BALANCE.combat;
 
@@ -190,7 +190,7 @@ export class Fighter {
   }
 
   private begin(): void {
-    this.frames = framesOf(this.def.stats.moveset, this.kind, this.combo);
+    this.frames = framesFor(this.def, this.kind, this.combo);
     this.phase = 'windup'; this.t = 0;
     this.swingId++;
     this.events.push({ k: 'swing', kind: this.kind, combo: this.combo, id: this.swingId });

@@ -1,5 +1,6 @@
 import { BALANCE } from '../balance';
 import { framesOf } from '../combat/frames';
+import { FAMILIES } from '../data/weapons';
 import { animCode } from '../match/anim-code';
 import { FLAG, type NetState, type Snapshot } from './codec';
 import type { ClientMsg, ServerMsg } from './protocol';
@@ -81,7 +82,7 @@ export class NetBot {
     if (this.forgeT > on + 1.2 && now - this.lastStrike > 650) {
       this.lastStrike = now;
       this.io.send({ t: 'forge', op: { k: 'strike', at: now / 1000, n: ++this.strikeN } });
-      this.io.send({ t: 'forge', op: { k: 'pick', f: (['kiem', 'bua', 'thuong'] as const)[this.k % 3] } });
+      this.io.send({ t: 'forge', op: { k: 'pick', f: FAMILIES[this.k % FAMILIES.length] } });
     }
     if (this.forgeT > this.forgeFor) {
       this.forgeT = -1;

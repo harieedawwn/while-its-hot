@@ -1,4 +1,4 @@
-import { BALANCE, bodyCapsules, type Capsule, type DefenderView, Fighter, type FighterInput, type PassiveId, passivesOf, type V3, type WeaponDef } from '@wih/shared';
+import { BALANCE, bodyCapsules, type Capsule, type DefenderView, Fighter, type FighterInput, type PassiveId, passivesOf, traitsOf, type V3, type WeaponDef } from '@wih/shared';
 import { bodyHeight } from '../player/move-state';
 import type { Player } from '../player/player';
 
@@ -52,6 +52,7 @@ export class Combatant {
     const s = this.body.s;
     this.sinceSlide = s.sliding ? 0 : this.sinceSlide + dt;
     this.fighter.tick(dt, i);
+    s.traits = traitsOf(this.weapon);
     s.speedMul = this.fighter.speedMul * (this.ghost ? BALANCE.match.ghost.speedMul : 1);
     if (this.burnT > 0) { this.burnT -= dt; this.hp -= this.burnDps * dt; }
     if (this.fighter.dead) this.deadT += dt;
@@ -73,7 +74,7 @@ export class Combatant {
     const s = this.body.s, f = this.fighter;
     return {
       x: s.pos.x, z: s.pos.z, yaw: this.yaw, parrying: f.parrying, blocking: f.blocking,
-      immune: s.iframe > 0 || f.dead || this.ghost || this.invuln, stamina: s.stamina, armorLevel: this.armor, blockArcDeg: this.blockArcDeg,
+      immune: s.iframe > 0 || f.dead || this.ghost || this.invuln, stamina: s.stamina, armorLevel: this.armor, blockArcDeg: this.blockArcDeg, taken: traitsOf(this.weapon).taken,
     };
   }
 

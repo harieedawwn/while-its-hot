@@ -50,7 +50,7 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/render/models/{kit,anvil,brazier,props}.ts` model helpers + anvil, brazier, crate/tub/tools/chain/ingot
 - `client/src/dev/{scene-lookdev,lookdev-room}.ts` lookdev foundry corner · `tools/texbake.mjs` CC0 → crunchy PNGs
 - `client/src/physics/world.ts` CollisionWorld: merged BVH, capsule resolve/probe/overlaps, raycast
-- `client/src/player/{move-state,motor,kinematics}.ts` movement state + pure tick rules + collide-and-slide/step/snap
+- `client/src/player/{move-state,motor,kinematics}.ts` movement state (+ family `traits`) + pure tick rules + collide-and-slide/step/snap · `player/traits.test.ts`
 - `client/src/player/{player,camera,viewmodel,feel-bind}.ts` local player → bus, FP camera feel, viewmodel, bus → feel
 - `client/src/input/{actions,keyboard-mouse}.ts` action layer, dev KB+mouse · `core/{spring,noise}.ts` spring, 1-D noise
 - `client/src/dev/{scene-movement,movement-course,move-hud}.ts` movement course scene, its geometry, dev stamina pips
@@ -64,14 +64,14 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/player/character/{skeleton,skin-batch,body,character}.ts` rigid skeleton + sockets, CPU-skinned batch, base body, assembled Character · `armor-{kit,soft,plate}.ts`, `armor.ts`, `modules.ts` armor tiers + 6 modules
 - `client/src/player/character/{pose,animator,drive}.ts` clip sampling/blend, base+action animator, MoveState → anim · `clips/*.ts` clip data + attack slots · `player/third-person.ts` TP camera · `render/geo/cbox.ts` 44-tri box
 - `shared/src/data/{armor,modules,colors}.ts` armor tiers, module defs, player colors · `dev/scene-character.ts` lineup / `clip=` player
-- `shared/src/data/weapons.ts` 16 forms, formFor/passivesOf · `shared/src/passives.ts` passive hook registry + folds
-- `client/src/weapons/{wkit,shapes,palette,tassel,weapon}.ts` one-mesh builder + atlas UVs/heatMask, blade loft/profile/wrap, colors, tassel, build/load(GLB)/setHeat · `weapons/models/*.ts` 16 builders + index
+- `shared/src/data/weapons.ts` 4 families × 15 forms + phoi (ROSTER), formFor/passivesOf/traitsOf/dmgScale/timeMulAt · `shared/src/passives.ts` passive hook registry + folds, `pendingPassives()` no-op ids
+- `client/src/weapons/{wkit,shapes,palette,tassel,weapon,hold}.ts` one-mesh builder + atlas UVs/heatMask, blade loft/profile/wrap, colors, tassel, build/load(GLB)/setHeat/`modelFor` (borrowed model)/`mirrorLeft`, `gripInHand`/`holdWeapon` (TP hands) · `weapons/models/*.ts` own builders + index
 - `client/src/dev/scene-weapons.ts` rack / `?weapon=&heat=` close-up · `tools/weapon-atlas.mjs` → `public/tex/weapon.png`
 - `shared/src/combat/{frames,fighter,damage,sweep}.ts` frame data + attack shapes, melee state machine, hit/defense rules, blade sweep vs hit capsules
 - `client/src/combat/{combatant,combat-world,resolver}.ts` body+fighter+hp, per-tick sweeps/events/lunges, HitClaim + LocalResolver + passive effects
 - `client/src/combat/{local-fighter,aim-assist,combat-feel,fighter-anim,dummy}.ts` local player melee kit, touch aim assist, hit-stop/trauma, fighter → TP clips, training dummy AI
-- `client/src/combat/vm/{vm-pose,vm-clips,vm-driver,vm-arms}.ts` FP pose keys, per-family FP attack sets from the sweep arcs, fighter → viewmodel, FP forearms
-- `client/src/player/character/clips/attacks.ts` TP attack clips · `dev/{scene-combat,combat-demo}.ts` combat scene + scripted demos
+- `client/src/combat/vm/{vm-pose,vm-clips,vm-fists,vm-driver,vm-arms}.ts` FP pose keys (+ left hand `l`), kiem/bua/dao FP sets from the sweep arcs, tay two-fist set, fighter → viewmodel, FP forearms
+- `client/src/player/character/clips/{attacks,strikes,strikes-blade,strikes-short}.ts` TP attack clip engine + pose data (kiem/bua, dao/tay) · `dev/{scene-combat,combat-demo}.ts` combat scene + scripted demos
 - `shared/src/forge/{odds,ring,session,anvil-rule,sync}.ts` p(L)/zone(L)/heat zone/ForgeMods, clock-driven ring + seeded zones, ForgeSession (blades/armor/heat/frenzy/pick, `strike(at,tol)`/`predict(at)`), anvil timers, ForgeSync · `forge/forge.test.ts` · `BALANCE.forge`
 - `client/src/forge/{anvil,stage,stance-cam,controller}.ts` placed anvil+brazier (solid, lit), blade/hammer on the anvil, stance camera blend + frenzy FOV punch, local forge loop on pointer-down stamps + `ForgeClock` (replaces lf.tick+player.tick) · `physics/blockers.ts` dynamic cylinders in CollisionWorld
 - `client/src/ui/{forge-hud,forge-hud-css}.ts` strike ring, heat meter, frenzy pips, result word, +3 family pick · `dev/scene-forge.ts` forge scene (presets in its header)

@@ -5,7 +5,7 @@ Forms change every 3 levels from +3 to +45. Each row lists the form's FULL effec
 Numbers are starting values; phases 28/29 tune them in `balance.ts`. Family base traits: docs/ROUND3.md §4.
 
 Weapon lab: copy one whole row (from `kiem |` to the end) into the "Dòng roster" field of
-`weapon-lab/PROMPT_FREE_CLAUDE.md`. Rows marked `có` already have a model in the game.
+`weapon-lab/PROMPT_FREE_CLAUDE.md`. Rows marked `có` already have a model in the game; `tạm` = a placeholder in-game model (a weapon-lab model replaces it).
 Rows +30 and up are built by Claude Code (phase 27b); free chats do +3 to +27.
 
 Nhánh | Cấp | id | Tên | Hình dáng & chất liệu | Hiệu ứng | Mẫu
@@ -40,7 +40,7 @@ bua | 36 | bua_mo_neo | Búa mỏ neo | mỏ neo tàu khổng lồ gỉ sét, x�
 bua | 39 | bua_trong_luc | Búa trọng lực | khối lập phương đen lơ lửng giữa hai càng đồng | đập đất: mọi người trong 8 m dính đất 2 s (không nhảy được); slam mạnh gấp đôi; neo | cần
 bua | 42 | bua_nui | Búa núi | đầu là một tảng núi nhỏ có tuyết trên đỉnh và vài cây thông tí hon | đòn nặng tạo khe nứt chạy thẳng 14 m hất tung mọi người trên đường (30, cd 6 s); trọng lực | cần
 bua | 45 | bua_sao_lun | Búa sao lùn | quả cầu sao nén trắng cam kẹp trong lồng kim loại ba càng | đòn nặng: hố đen 3 s r 8 m hút mọi thứ rồi nổ 40 (cd 10 s); mọi đòn nhẹ có sóng đẩy | cần
-dao | 3 | dao_gam | Dao găm | lưỡi ngắn thẳng, chuôi gỗ quấn dây | — | cần
+dao | 3 | dao_gam | Dao găm | lưỡi ngắn thẳng, chuôi gỗ quấn dây | — | tạm
 dao | 6 | dao_phay | Dao phay | dao chặt thịt bản vuông, lỗ treo ở góc | đòn 4 combo +25% | cần
 dao | 9 | dao_moc | Dao móc | lưỡi cong như móng vuốt, vòng xỏ ngón ở chuôi | đòn 4 +25%; đánh từ sau lưng +50% | cần
 dao | 12 | dao_hai_luoi | Dao hai lưỡi | lưỡi ở cả hai đầu, cầm ở giữa | trượt dài thêm 30%; đòn đầu sau khi trượt +30%; đánh lưng +50% | cần
@@ -55,7 +55,7 @@ dao | 36 | dao_dong_ho | Dao đồng hồ | lưỡi là kim đồng hồ to, chu
 dao | 39 | dao_phan_than | Dao phân thân | hai lưỡi tách đôi lơ lửng song song | trượt để lại bản sao đứng yên 3 s, ai chém bản sao bị nổ 10 (cd 4 s); vùng chậm | cần
 dao | 42 | dao_nghin_luoi | Dao nghìn lưỡi | chuôi ngắn, vòng 8 lưỡi nhỏ xoay quanh | đòn nặng: bão dao quanh người 2 s r 2.5 m (8 mỗi 0.25 s, cd 7 s); bản sao | cần
 dao | 45 | dao_khe_nut | Dao rạch không gian | lưỡi là một khe nứt đen viền trắng xám như kính vỡ | đòn nặng: dịch chuyển 12 m theo hướng nhắm, chém mọi người trên đường 25 (cd 4 s); nhảy 3 lần; bão dao | cần
-tay | 3 | gang_sat | Găng sắt | găng giáp tấm cơ bản, đốt ngón chồng lớp | — | cần
+tay | 3 | gang_sat | Găng sắt | găng giáp tấm cơ bản, đốt ngón chồng lớp | — | tạm
 tay | 6 | gang_dinh | Găng đinh | đốt ngón gắn đinh tán nhọn | đòn 4 combo hất văng 3 m | cần
 tay | 9 | gang_xich | Găng xích | xích quấn cổ tay, móc treo | mỗi đòn trúng hồi 1 máu; đòn 4 hất văng | cần
 tay | 12 | gang_piston | Găng piston | piston thép trên mu bàn tay | đòn nặng sạc nhanh 40%, đẩy 6 m; hồi máu; hất văng | cần

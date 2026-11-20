@@ -6,7 +6,7 @@ import type { FirstPersonCamera, ViewState } from '../player/camera';
 import type { Player } from '../player/player';
 import { Viewmodel } from '../player/viewmodel';
 import type { MaterialLib } from '../render/materials/library';
-import { marker } from '../weapons/weapon';
+import { marker, mirrorLeft } from '../weapons/weapon';
 import { AimAssist } from './aim-assist';
 import { sharedControls } from '../input/controls-settings';
 import { bindCombatFeel } from './combat-feel';
@@ -38,6 +38,7 @@ export class LocalFighter {
     this.vm = new Viewmodel(model, aspect);
     this.gripL = marker(model, 'grip_l');
     this.driver = new VmDriver(this.vm, def);
+    this.vm.setLeft(this.driver.fists ? mirrorLeft(model) : null);
     this.arms = new VmArms(lib);
     this.vm.attach(this.arms.root);
     this.aimWanted = o.aim ?? false; this.aim.enabled = this.aimWanted;
@@ -52,6 +53,7 @@ export class LocalFighter {
     this.vm.setModel(model);
     this.gripL = marker(model, 'grip_l');
     this.driver.setWeapon(def);
+    this.vm.setLeft(this.driver.fists ? mirrorLeft(model) : null);
   }
 
   /** Read Đánh/Đỡ from the action layer and run the fighter for one sim tick. */
@@ -90,7 +92,7 @@ export class LocalFighter {
   frame(dt: number, cam: FirstPersonCamera, v: ViewState): void {
     this.driver.update(dt, this.c.fighter, cam.freezeS > 0);
     this.vm.update(dt, cam, v);
-    this.arms.update(this.vm.hand, this.gripL);
+    this.arms.update(this.vm.hand, this.gripL, this.vm.handL);
   }
 
   get armTris(): number { return this.arms.tris; }
