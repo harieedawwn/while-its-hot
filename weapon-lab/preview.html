@@ -228,7 +228,7 @@ function show(w) {
   if (tris < 150) warn('quá ít chi tiết');
   const size = box.getSize(new THREE.Vector3());
   if (Math.abs(size.y - (w.meta.lengthM || size.y)) > 0.35) warn(`dài ${size.y.toFixed(2)} m, meta ghi ${w.meta.lengthM}`);
-  if (!['kiem', 'bua', 'thuong'].includes(w.meta.family)) warn('family phải là kiem/bua/thuong');
+  if (!['kiem', 'bua', 'dao', 'tay'].includes(w.meta.family)) warn('family phải là kiem/bua/dao/tay');
   for (const n of ['base', 'tip']) { const o = g.getObjectByName(n); if (o) { const d = new THREE.Mesh(new THREE.SphereGeometry(0.02), new THREE.MeshBasicMaterial({ color: 0xf26a1b })); d.name = 'dot'; o.add(d); } }
   applyToggles(); setHeat(+heatEl.value);
   const m = w.meta;

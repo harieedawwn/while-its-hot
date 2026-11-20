@@ -20,6 +20,7 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `npm run dev:server` — local Worker + Durable Object (wrangler dev)
 - `node tools/forge-sim.mjs [--n 4000] [--nofrenzy] [--blade|--armor]` — forge EV / level-by-time sim (balance check)
 - `node tools/sweep.mjs [--devices all|a,b] [--only substr]` — every scene x device: stats, errors, DOM fit check → `shots/sweep.json`
+- `node tools/lab-sheet.mjs [substr…]` — check + contact sheet (3 views) for `weapon-lab/weapons/*.js` → `shots/lab/`
 - `node tools/leak.mjs [--cycles 4] [--scenes a,b]` — scene-cycling leak check (GPU counts, heap, DOM) · `node tools/aobake.mjs` — rebake `client/public/ao/*.bin` after changing static foundry/smithy geometry
 
 ## Hard rules
