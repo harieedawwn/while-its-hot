@@ -2,7 +2,7 @@ export { BALANCE } from './balance';
 export * from './world/arenas/foundry';
 export * from './data/armor';
 export * from './data/modules';
-export * from './data/relics';
+export * from './data/cards';
 export * from './data/colors';
 export * from './passives';
 export * from './data/weapons';

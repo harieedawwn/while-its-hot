@@ -4,7 +4,7 @@ import { FLAG } from '../net/codec';
 import type { AtomFx, EBody, ESink, StatusKind } from '../effects/atoms';
 import type { Vec3 } from '../net/match-msgs';
 import type { Harm } from './effects';
-import type { MPlayer, Out } from './mplayer';
+import { hpMax, type MPlayer, type Out } from './mplayer';
 
 /**
  * The server's ESink (phase 28): effect results become messages. Damage goes through the authority's harm (kills,
@@ -46,7 +46,7 @@ export class ServerSink implements ESink {
   heal(t: EBody, hp: number): void {
     const p = this.players.get(t.id);
     if (!p || !p.alive) return;
-    p.hp = Math.min(BALANCE.combat.hp, p.hp + hp);
+    p.hp = Math.min(hpMax(p), p.hp + hp);
     this.out.push({ to: p.id, m: { t: 'heal', hp: p.hp } });
   }
   teleport(t: EBody, to: Vec3, yaw: number): void {

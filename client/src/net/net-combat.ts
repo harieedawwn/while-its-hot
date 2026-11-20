@@ -105,7 +105,7 @@ export class NetCombat implements HitResolver {
   private parried(m: Msg<'parried'>): void {
     const me = this.d.me(), lc = this.d.lf.c;
     if (m.a === me) { this.predicted.delete(`${m.s}:${m.tg}`); lc.fighter.stagger(m.st); }
-    if (m.tg === me) { lc.fighter.parried(); lc.body.s.stamina = Math.min(BALANCE.move.stamina.pips, lc.body.s.stamina + m.stam); }
+    if (m.tg === me) { lc.fighter.parried(); lc.body.s.stamina = Math.min(lc.body.s.staminaMax, lc.body.s.stamina + m.stam); }
     bus.emit('combat:parry', { parrier: this.local(m.tg), attacker: this.local(m.a), x: m.p[0], y: m.p[1], z: m.p[2] });
   }
 

@@ -46,6 +46,8 @@ export class Fighter {
   readonly events: FighterEvent[] = [];
   /** Extra parry window from modules (khiên tay); passives come from the weapon. */
   parryBonusS = 0;
+  /** Heavy charge time × from cards (Đầu nặng). */
+  chargeCard = 1;
   private atkAge = 1e3;
   private parAge = 1e3;
   private released = true;
@@ -127,7 +129,7 @@ export class Fighter {
         case 'charge': {
           const held = this.t;
           if (this.parAge <= buf) { this.events.push({ k: 'feint' }); this.startParry(); continue; }
-          const cm = chargeMulOf(passivesOf(this.def));
+          const cm = chargeMulOf(passivesOf(this.def)) * this.chargeCard;
           if ((this.released && held >= C.heavy.minS * cm) || held >= C.heavy.maxS * cm) { this.release(held); continue; }
           return;
         }

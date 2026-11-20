@@ -3,7 +3,7 @@ import { FAMILIES } from '../data/weapons';
 import { forgeSync, strikeNet } from '../forge/sync';
 import type { ForgeOp } from '../net/match-msgs';
 import { knockFrom } from './effects';
-import type { MPlayer, Out } from './mplayer';
+import { fxOf, type MPlayer, type Out } from './mplayer';
 
 /**
  * Server-authoritative forging (TECH §4): the room's RNG rolls every strike with shared/forge/session.ts.
@@ -35,7 +35,7 @@ export function forgeOp(p: MPlayer, op: ForgeOp, out: Out[], all: readonly MPlay
       const at = Math.max(now - 1, Math.min(now + A.strikeTolS, op.at));
       if (at < s.lastStrikeAt + F.ring.minGapS) break;
       const r = s.strike(at, A.strikeTolS);
-      if (r.outcome === 'vo' && p.fx.wave > 0 && p.anvil) wave(p, all, out);
+      if (r.outcome === 'vo' && fxOf(p).wave > 0 && p.anvil) wave(p, all, out);
       out.push({ to: 'all', m: { t: 'forged', id: p.id, r: strikeNet(r, s.heat), n: op.n } });
       break;
     }
@@ -60,7 +60,7 @@ export function forgeTick(p: MPlayer, dt: number, out: Out[], now = p.forge.time
 function wave(p: MPlayer, all: readonly MPlayer[], out: Out[]): void {
   const a = p.anvil!;
   for (const o of all) {
-    if (o === p || !o.alive || !o.online || Math.hypot(o.st.x - a.p[0], o.st.z - a.p[2]) > p.fx.wave) continue;
+    if (o === p || !o.alive || !o.online || Math.hypot(o.st.x - a.p[0], o.st.z - a.p[2]) > fxOf(p).wave) continue;
     out.push({ to: o.id, m: { t: 'knock', kn: knockFrom(a.p[0], a.p[2], o, 7, 3) } });
   }
 }

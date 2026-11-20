@@ -98,7 +98,8 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height, a
   const roomC = rc;
 
   let forge: ForgeController | null = null;
-  let relicInstant = false;
+  let myHpMax: number = BALANCE.combat.hp;
+  let cardInstant = false;
   let ghost: NetGhost | null = null;
   let forcePain = 0; // preview=ring: pretend we stand outside the fire ring at this dps
   // eslint-disable-next-line prefer-const
@@ -111,9 +112,9 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height, a
     newRound: () => {
       forge?.leave();
       anvil.rule.instant = true; anvil.lift();
-      setTimeout(() => { anvil.rule.instant = relicInstant; }, 150);
+      setTimeout(() => { anvil.rule.instant = cardInstant; }, 150);
     },
-    relicFx: (fx) => { relicInstant = fx.instantAnvil; anvil.rule.instant = relicInstant; },
+    cardFx: (fx, ids) => { cardInstant = fx.instantAnvil; anvil.rule.instant = cardInstant; lf.c.setCards(ids); myHpMax = BALANCE.combat.hp + fx.hpBonus; },
     onPhase: (ph) => { if (ph !== 'fight') ghost?.solid(); },
     leave: () => { const code = roomC.code; void app.go('ui-menu', 'quench', code && code !== 'LOOP' ? { screen: 'online', code } : { screen: 'menu' }); },
   });
@@ -169,7 +170,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height, a
     net.frame(dt, stop);
     forge!.frame(dt, performance.now() / 1000, cam);
     ghost?.frame(dt);
-    hud.set(flow.frame(net.now(), { hp: lf.c.hp, hpMax: BALANCE.combat.hp, stamina: player.s.stamina, staminaMax: BALANCE.move.stamina.pips,
+    hud.set(flow.frame(net.now(), { hp: lf.c.hp, hpMax: myHpMax, stamina: player.s.stamina, staminaMax: player.s.staminaMax,
       level: session.blade.level, family: session.blade.family, roundS: null, ringS: null, lives: null }));
     sa?.frame(dt, cam.camera.position, v.yaw, Math.hypot(player.s.vel.x, player.s.vel.z));
     fxl.update(stop ? 0 : dt, cam.camera);

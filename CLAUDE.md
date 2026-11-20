@@ -29,7 +29,7 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 3. No explanatory text sprinkled in the game. A label only where a player truly needs it. No tooltips everywhere.
 4. Vietnamese strings live ONLY in `client/src/ui/strings.vi.ts`. Never hard-code player-facing text elsewhere.
 5. Tuning numbers live ONLY in `shared/src/balance.ts` (rules) and `client/src/core/feel.ts` (camera/feel).
-6. Game data (weapons, relics, armor modules) lives ONLY in `shared/src/data/*`. Adding an item = one entry
+6. Game data (weapons, cards, armor modules) lives ONLY in `shared/src/data/*`. Adding an item = one entry
    (+ one model file). Never switch-case on item ids in gameplay code; use data fields and passive hooks.
 7. Files ≤ 300 lines, one responsibility each. Prefer a new small file over growing a big one.
 8. Every visual feature must be reachable as a dev scene: `?scene=<name>` (registry: `client/src/dev/scenes.ts`).
@@ -97,9 +97,10 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `shared/src/match/{authority,mplayer,hits,effects,forge-auth,pickups,anim-code}.ts` server MatchAuthority, player record, hit-claim checks, passive effects, server forge rolls, blanks, anim byte · `net/{match-msgs,bot}.ts` · `forge/sync.ts`
 - `client/src/net/{net-match,net-combat,net-forge,net-anvils,pickups}.ts` match session + uplink, predicted hits/verdicts, server-rolled forging, others' anvils, blanks
 - `client/src/net/{remote,remotes,interp,pack,link-sim,loopback,net-debug}.ts` remote player, roster, snapshot interp, local State, lag sim, in-process room, dev overlay · `dev/scene-net.ts` (`net`)
-- `shared/src/match/{flow,rules}.ts` RoundFlow (cage/fight/result/end, lives, ring burn, draft, scoring) + pure rules · `shared/src/data/relics.ts` 14 relics + `foldRelics` · `shared/src/unlocks.ts` match-end unlocks · `match/{flow,bots}.test.ts`
+- `shared/src/match/{flow,rules}.ts` RoundFlow (cage/fight/result/end, lives, ring burn, draft, scoring) + pure rules · `shared/src/data/cards.ts` 34 cards + `foldCards`/`cardChanges` · `shared/src/unlocks.ts` match-end unlocks · `match/{flow,bots}.test.ts`
 - `client/src/net/net-flow.ts` round machine presentation (HUD, doors, ring, draft, result, end) · `ui/hud/{draft,match-end}.ts` + `styles/match.css` draft cards, banner, end screen · `dev/net-preview.ts`
 - `client/src/render/{dispose,geo/ao-cache}.ts` `disposeTree` (geometry-only; call it on any model you replace/drop), pre-baked vertex AO files `public/ao/*.bin` · `tools/{sweep,leak,aobake}.mjs`
+- `shared/src/match/card-tick.ts` Hồi sức + Súng máy vai server tick · `client/src/ui/hud/card-icons.ts` card pictograms · `Combatant.setCards` card effects on movement/parry/charge
 - `client/src/ui/modal.ts` setModal (hides touch layer while a choice is open) · `ui/menu/lobby-settings.ts` host/read-only match settings grid · `core/slice.ts` yieldTask/settleFrames for sliced scene loads
 - `client/src/dev/scene-icon.ts` app icon scene (`icon`) · `tools/icon-gen.mjs` + `tools/icon-src.png` → Android icon mipmaps + splash
 

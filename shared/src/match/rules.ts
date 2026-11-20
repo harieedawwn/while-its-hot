@@ -1,6 +1,5 @@
 import { BALANCE } from '../balance';
-import { MODULE_IDS } from '../data/modules';
-import { RELICS } from '../data/relics';
+import { CARDS, type CardDef } from '../data/cards';
 import type { RandFn } from '../forge/session';
 
 /** Pure round rules (GDD §3, §8): ring size and burn, round winner, Tiếng tăm, draft offers. */
@@ -49,23 +48,23 @@ export function notorietyFor(lead: number): number { return lead >= M.draft.bigW
 /** Kill points: 1 for the kill + 1 per Tiếng tăm stack the victim carried. */
 export function killPoints(victimStacks: number): number { return 1 + Math.max(0, victimStacks); }
 
-function pick<T>(pool: readonly T[], n: number, rand: RandFn): T[] {
-  const a = pool.slice(), out: T[] = [];
-  while (out.length < n && a.length) out.push(a.splice(Math.floor(rand() * a.length), 1)[0]);
-  return out;
-}
+function take<T>(pool: T[], rand: RandFn): T | undefined { return pool.length ? pool.splice(Math.floor(rand() * pool.length), 1)[0] : undefined; }
 /**
- * Offers for one player: normal pool minus what they own; last place draws from the rare pool, and its first
- * `moduleOffers` offers may swap one slot for an armor module (catch-up builds, GDD §8).
+ * Offers for one player (ROUND3 §5): three distinct cards, at least one Vũ khí and one Cơ thể, none they already own
+ * (unless stackable). Last place gets one card from the rare pool in the third slot.
  */
-export function makeOffers(own: readonly string[], lastPlace: boolean, offerNo: number, rand: RandFn): string[] {
-  const free = RELICS.filter((r) => !own.includes(r.id));
-  const rare = free.filter((r) => r.rare).map((r) => r.id as string);
-  const pool = lastPlace && rare.length >= M.draft.offers ? rare : free.map((r) => r.id as string);
-  const ids = pick(pool, M.draft.offers, rand);
-  if (lastPlace && offerNo < M.draft.moduleOffers) {
-    const mods = MODULE_IDS.filter((m) => !own.includes(m));
-    if (mods.length && ids.length) ids[ids.length - 1] = mods[Math.floor(rand() * mods.length)];
-  }
-  return ids;
+export function makeOffers(own: readonly string[], lastPlace: boolean, rand: RandFn): string[] {
+  const free = CARDS.filter((c) => c.stack || !own.includes(c.id));
+  const of = (k: CardDef['kind']): CardDef[] => free.filter((c) => c.kind === k);
+  const w = of('weapon'), b = of('body');
+  const out: CardDef[] = [];
+  const a = take(w, rand), c = take(b, rand);
+  if (a) out.push(a);
+  if (c) out.push(c);
+  const rest = free.filter((x) => !out.includes(x));
+  const rare = rest.filter((x) => x.rare);
+  const third = take(lastPlace && rare.length ? rare : rest, rand);
+  if (third) out.push(third);
+  while (out.length < M.draft.offers) { const x = take(rest.filter((r) => !out.includes(r)), rand); if (!x) break; out.push(x); }
+  return out.map((x) => x.id);
 }

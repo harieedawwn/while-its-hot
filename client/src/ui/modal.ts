@@ -1,5 +1,5 @@
 /**
- * Modal choices (relic draft, +3 family pick, match end): while any is open the touch control layer
+ * Modal choices (card draft, +3 family pick, match end): while any is open the touch control layer
  * stops catching pointers (CSS `.modal-open .tc`) and lets go of fingers it already holds.
  */
 const open = new Set<string>();

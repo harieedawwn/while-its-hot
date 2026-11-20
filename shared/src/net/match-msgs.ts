@@ -33,7 +33,7 @@ export type PhaseName = 'cage' | 'fight' | 'result' | 'end';
 /** Where the round machine is. at = match ms the phase began, end = match ms it ends (0 = open), truce = match ms the truce ends. */
 export interface PhaseNet { ph: PhaseName; n: number; at: number; end: number; truce: number; ring: number; win: number }
 export interface ScoreNet { id: number; pts: number; kills: number; deaths: number; lives: number; wins: number; stacks: number }
-export interface EndRowNet extends ScoreNet { best: [number, number, number]; relics: string[] }
+export interface EndRowNet extends ScoreNet { best: [number, number, number]; cards: string[] }
 
 /** One blade as the server keeps it (shared/forge/session.ts Blade). */
 export interface BladeNet { family: Family | null; level: number; best: number }
@@ -92,7 +92,7 @@ export type MatchServerMsg =
   | { t: 'score'; rows: ScoreNet[] }
   /** Draft offers for you, rerolls left; or the relic/module you now own (own = full list). */
   | { t: 'offer'; ids: string[]; rerolls: number }
-  | { t: 'own'; relics: string[] }
+  | { t: 'own'; cards: string[] }
   /** Your HP was raised by the server (dau_toi). */
   | { t: 'heal'; hp: number }
   /** Match over: the standings, each player's best level per family (FAMILIES order: kiem, bua, dao, tay) and their relics. */

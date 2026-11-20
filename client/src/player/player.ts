@@ -51,7 +51,7 @@ export class Player {
   tick(dt: number, a: Actions, allow = true): void {
     const i = this.input;
     i.mx = a.move.x; i.my = a.move.y; i.yaw = this.yaw;
-    i.jumpPressed = a.take('jump') && allow;
+    i.jumpPressed = a.take('jump') && allow; i.jumpHeld = a.isHeld('jump') && allow;
     i.slidePressed = a.take('slide') && allow; i.slideHeld = a.isHeld('slide') && allow;
     this.tickWith(dt, i);
   }

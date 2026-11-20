@@ -6,6 +6,8 @@ import { type Afflict, newAfflict } from './afflict';
 export interface MoveInput {
   mx: number; my: number; yaw: number;
   jumpPressed: boolean; slidePressed: boolean; slideHeld: boolean;
+  /** Jump held (Bộ phản lực hover). */
+  jumpHeld?: boolean;
 }
 export const NO_INPUT: MoveInput = { mx: 0, my: 0, yaw: 0, jumpPressed: false, slidePressed: false, slideHeld: false };
 
@@ -45,6 +47,8 @@ export interface MoveState {
   low: boolean;
   /** Combat writes these: ground speed multiplier (block, charge) and seconds of weak control after a push. */
   speedMul: number; pushT: number;
+  /** Card body numbers (Combatant sets them): stamina cap, slam bounce ×, hover seconds per jump and left. */
+  staminaMax: number; slamBounceMul: number; hoverMax: number; hoverT: number;
   /** Held weapon family traits (ROUND3 §4): run/slide multipliers, extra air jumps; airJumps = used since landing. */
   traits: FamilyTraits; airJumps: number;
   /** Form-effect statuses (slow, freeze, pin, ice, pull, bounce) — player/afflict.ts. */
@@ -61,7 +65,7 @@ export function createMoveState(pos: THREE.Vector3Tuple = [0, 0, 0]): MoveState 
     sliding: false, slideT: 0, slideDir: new THREE.Vector3(0, 0, -1), slideCd: 0, slideLock: false,
     slamming: false, sinceSlam: 1e3,
     wallJumps: 0, sinceWall: 1e3, wallN: new THREE.Vector3(),
-    clinging: false, low: false, speedMul: 1, pushT: 0, traits: NO_TRAITS, airJumps: 0, af: newAfflict(), events: [],
+    clinging: false, low: false, speedMul: 1, pushT: 0, staminaMax: BALANCE.move.stamina.pips, slamBounceMul: 1, hoverMax: 0, hoverT: 0, traits: NO_TRAITS, airJumps: 0, af: newAfflict(), events: [],
   };
 }
 

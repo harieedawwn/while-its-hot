@@ -15,7 +15,8 @@ import { SAFE_RESPAWN } from '../world/arenas/foundry';
 import { knockFrom, serverEffects } from './effects';
 import { forgeOp, forgeTick, leaveStance } from './forge-auth';
 import { claimHit, recordSwing, type HitCtx } from './hits';
-import { flatDist, newPlayer, type MPlayer, type Out } from './mplayer';
+import { flatDist, fxOf, hpMax, newPlayer, type MPlayer, type Out } from './mplayer';
+import { cardTick } from './card-tick';
 import { Pickups } from './pickups';
 import { ghostLanding } from './rules';
 
@@ -84,7 +85,7 @@ export class MatchAuthority {
   extras(id: number): ServerMsg[] {
     const p = this.players.get(id);
     if (!p) return [];
-    const o: ServerMsg[] = [{ t: 'own', relics: p.relics.slice() }];
+    const o: ServerMsg[] = [{ t: 'own', cards: p.cards.slice() }];
     if (p.offer) o.push({ t: 'offer', ids: p.offer, rerolls: p.rerolls });
     return o;
   }
@@ -135,9 +136,7 @@ export class MatchAuthority {
 
   private forge(p: MPlayer, op: ForgeOp, out: Out[]): void {
     if (!this.flow.fighting) return;
-    const was = p.stance;
     forgeOp(p, op, out, this.ctx.list, this.now / 1000);
-    if (was && !p.stance && p.fx.stanceIframeS > 0) p.ifUntil = this.now + p.fx.stanceIframeS * 1000;
   }
 
   private slam(p: MPlayer, out: Out[]): void {
@@ -160,11 +159,11 @@ export class MatchAuthority {
   /** Damage without defense (and the tail of every melee hit): kill, death loss, respawn timer. */
   private harm(t: MPlayer, dmg: number, by: number, out: Out[]): void {
     if (!t.alive) return;
-    t.hp = Math.max(0, t.hp - dmg);
+    t.hp = Math.max(0, t.hp - dmg); t.hurtAt = this.now;
     const a = this.players.get(by);
     if (a && a !== t) { a.dealt += dmg; a.rDealt += dmg; }
     if (t.hp > 0) return;
-    t.alive = false; t.ghost = false; t.ghostAt = this.now + M.ghost.deadS * 1000; t.spawnAt = this.now + M.ghost.solidS * 1000; t.burnT = 0; t.swings.length = 0;
+    t.alive = false; t.ghost = false; t.ghostAt = this.now + M.ghost.deadS * 1000; t.spawnAt = this.now + (M.ghost.solidS + fxOf(t).ghostPlusS) * 1000; t.burnT = 0; t.swings.length = 0;
     if (a && a !== t) a.kills++;
     leaveStance(t);
     this.flow.onKill(t, a, out);
@@ -175,7 +174,7 @@ export class MatchAuthority {
   private solid(p: MPlayer, now: number, out: Out[]): void {
     const { c, r } = this.flow.ringAt(now), [x, z] = ghostLanding(p.st.x, p.st.z, c, r);
     const moved = Math.hypot(x - p.st.x, z - p.st.z) > 0.01;
-    p.alive = true; p.ghost = false; p.hp = C.hp; p.parryAt = -1e9; p.spawnUntil = now + M.ghost.spawnProtS * 1000;
+    p.alive = true; p.ghost = false; p.hp = hpMax(p); p.parryAt = -1e9; p.spawnUntil = now + M.ghost.spawnProtS * 1000;
     Object.assign(p.st, { x, y: moved ? SPAWN_Y : p.st.y, z, vx: 0, vy: 0, vz: 0 });
     out.push({ to: 'all', m: { t: 'spawn', id: p.id, p: [x, p.st.y, z], yaw: p.st.yaw, hp: p.hp } });
   }
@@ -191,7 +190,7 @@ export class MatchAuthority {
     if (this.flow.fighting) this.effects.tick(dt);
     for (const p of this.players.values()) {
       if (p.alive && p.burnT > 0) { p.burnT -= dt; this.harm(p, p.burnDps * dt, p.burnBy, out); }
-      if (p.alive) forgeTick(p, dt, out, now / 1000);
+      if (p.alive) { forgeTick(p, dt, out, now / 1000); if (this.flow.fighting) cardTick(p, this.players, now, (t, d, by, o) => this.harm(t, d, by, o), out); }
       else if (this.flow.canRespawn(p)) {
         if (!p.ghost && now >= p.ghostAt) { p.ghost = true; out.push({ to: 'all', m: { t: 'ghost', id: p.id } }); }
         if (now >= p.spawnAt) this.solid(p, now, out);

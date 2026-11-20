@@ -1,5 +1,5 @@
 import { BALANCE } from '../balance';
-import { behind, resolveHit, type DefenderView } from '../combat/damage';
+import { behind, damageOf, resolveHit, type DefenderView } from '../combat/damage';
 import { attackShape, framesFor, totalS } from '../combat/frames';
 import { passivesOf, traitsOf } from '../data/weapons';
 import { FLAG } from '../net/codec';
@@ -7,7 +7,7 @@ import type { MatchClientMsg, Vec3 } from '../net/match-msgs';
 import type { Atom } from '../effects/atoms';
 import { hitEffects, killEffects, parryEffects, parryWindow, reachFor } from '../passives';
 import { knockFrom, serverEffects, type Harm } from './effects';
-import { flatDist, type MPlayer, type Out } from './mplayer';
+import { flatDist, fxOf, hpMax, type MPlayer, type Out } from './mplayer';
 
 /**
  * Server-side melee authority (TECH §4): record swings, validate hit claims, resolve parry/block with the
@@ -78,19 +78,25 @@ export function claimHit(ctx: HitCtx, a: MPlayer, t: MPlayer, m: HitMsg, now: nu
   const p: Vec3 = [m.p[0], m.p[1], m.p[2]];
   if (res.r === 'immune') { out.push({ to: a.id, m: { t: 'reject', s: m.s, tg: m.tg, why: 'immune' } }); return; }
   if (res.r === 'parried') {
-    const fx = t.fx;
-    if (fx.parryHp > 0) t.hp = Math.min(C.hp, t.hp + fx.parryHp);
+    const fx = fxOf(t);
+    if (fx.parryHp > 0) t.hp = Math.min(hpMax(t), t.hp + fx.parryHp);
     out.push({ to: 'all', m: { t: 'parried', a: a.id, tg: t.id, st: res.attackerStaggerS, stam: res.parrierStamina + fx.parryStamina, p, s: m.s } });
     if (fx.parryHp > 0) out.push({ to: t.id, m: { t: 'heal', hp: t.hp } });
     const kn: Vec3 = [0, 0, 0];
     serverEffects(t, a, parryEffects(passivesOf(t.forge.form)), kn, ctx.list, ctx.harm, out, ctx.atom);
+    if (fx.parryReflect > 0) {
+      const back = damageOf(shape, def.family, a.forge.blade.level, a.forge.armor) * fx.parryReflect;
+      ctx.harm(a, back, t.id, out);
+      out.push({ to: 'all', m: { t: 'edmg', tg: a.id, by: t.id, dmg: back, k: 'push', hp: a.hp } });
+    }
     return;
   }
   const frames = framesFor(def, sw.kind, sw.combo);
-  const kn = knockFrom(a.st.x, a.st.z, t, res.r === 'blocked' ? frames.knock * C.block.knockMul : frames.knock);
+  const kn = knockFrom(a.st.x, a.st.z, t, (res.r === 'blocked' ? frames.knock * C.block.knockMul : frames.knock) * (sw.combo === 3 ? fxOf(a).knockMul : 1));
   const fx: Out[] = [];
   if (res.r !== 'blocked') serverEffects(a, t, hitEffects(passivesOf(def), { kind: sw.kind, combo: sw.combo, dist, reach: def.stats.reach, back: behind(defenderView(t, m, now, ctx.truceUntil), a.st.x, a.st.z) }), kn, ctx.list, ctx.harm, fx, ctx.atom);
-  const dmg = res.dmg * a.fx.dmgMul;
+  const af = fxOf(a);
+  const dmg = res.dmg * af.dmgMul * (a.hp < af.lowHp ? af.lowHpDmg : 1);
   const hp = Math.max(0, t.hp - dmg);
   out.push({ to: 'all', m: { t: 'dmg', a: a.id, tg: t.id, dmg, r: res.r, zone: m.zone, kind: sw.kind, hp, sc: res.staminaCost, st: res.staggerS, kn, p, s: m.s } });
   ctx.harm(t, dmg, a.id, out);

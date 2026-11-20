@@ -1,4 +1,4 @@
-import { BALANCE, bodyCapsules, type Capsule, type DefenderView, Fighter, type FighterInput, NO_FIGHT, type PassiveId, passivesOf, type StatusKind, traitsOf, type V3, type WeaponDef } from '@wih/shared';
+import { BALANCE, bodyCapsules, type Capsule, type CardFx, foldCards, NO_CARD, NO_TRAITS, type FamilyTraits, type DefenderView, Fighter, type FighterInput, NO_FIGHT, type PassiveId, passivesOf, type StatusKind, traitsOf, type V3, type WeaponDef } from '@wih/shared';
 import { bus } from '../core/events';
 import { afflict } from '../player/afflict';
 import { bodyHeight } from '../player/move-state';
@@ -18,6 +18,7 @@ export class Combatant {
   armor: number;
   team: number;
   blockArcDeg?: number;
+  private baseArc?: number;
   /** Seconds since the last slide ended (0 while sliding): the slide-attack window. */
   sinceSlide = 1e3;
   /** Targets already hit by swing `hitSwing` (one hit per target per swing). */
@@ -36,16 +37,29 @@ export class Combatant {
   /** Hồn (ghost, ROUND3 §2): stands and moves, cannot be hit or act; counts as not alive for every combat rule. */
   ghost = false;
   private eyeV: V3 = [0, 0, 0];
+  /** Owned cards (ids) and their folded effects for the held weapon's family (cached). */
+  private cardIds: readonly string[] = [];
+  private cardKey = '';
+  private cardFx: CardFx = NO_CARD;
+  private tr: FamilyTraits = NO_TRAITS;
+  private trKey: WeaponDef | null = null;
 
   constructor(readonly id: number, readonly body: Player, weapon: WeaponDef, o: CombatantOpts = {}) {
     this.fighter = new Fighter(weapon);
     this.level = o.level ?? 0;
     this.armor = o.armor ?? 0;
     this.team = o.team ?? id;
-    this.blockArcDeg = o.blockArcDeg;
+    this.blockArcDeg = this.baseArc = o.blockArcDeg;
   }
 
   get weapon(): WeaponDef { return this.fighter.weapon; }
+  /** Cards in play (online: the server's `own` list). */
+  setCards(ids: readonly string[]): void { this.cardIds = ids; this.cardKey = ''; }
+  get fx(): CardFx {
+    const key = `${this.weapon.family}|${this.cardIds.join()}`;
+    if (key !== this.cardKey) { this.cardKey = key; this.cardFx = foldCards(this.cardIds, this.weapon.family); this.trKey = null; }
+    return this.cardFx;
+  }
   get passives(): PassiveId[] { return passivesOf(this.weapon); }
   get alive(): boolean { return !this.fighter.dead && !this.ghost; }
   get yaw(): number { return this.body.yaw; }
@@ -56,8 +70,17 @@ export class Combatant {
     const s = this.body.s;
     this.sinceSlide = s.sliding ? 0 : this.sinceSlide + dt;
     this.fighter.tick(dt, s.af.freezeT > 0 ? NO_FIGHT : i);
-    s.traits = traitsOf(this.weapon);
-    s.speedMul = this.fighter.speedMul * (this.ghost ? BALANCE.match.ghost.speedMul : 1);
+    const fx = this.fx;
+    if (this.trKey !== this.weapon) {
+      const t = traitsOf(this.weapon);
+      this.tr = fx.airJumps || fx.slideLen !== 1 ? { ...t, airJumps: t.airJumps + fx.airJumps, slide: { ...t.slide, len: t.slide.len * fx.slideLen } } : t;
+      this.trKey = this.weapon;
+    }
+    s.traits = this.tr;
+    s.speedMul = this.fighter.speedMul * fx.speedMul * (this.ghost ? BALANCE.match.ghost.speedMul * fx.ghostSpeedMul : 1);
+    s.staminaMax = BALANCE.move.stamina.pips + fx.staminaPips; s.slamBounceMul = fx.slamBounceMul; s.hoverMax = fx.hoverS;
+    this.fighter.parryBonusS = fx.parryPlusS; this.fighter.chargeCard = fx.chargeMul;
+    this.blockArcDeg = fx.blockArc || this.baseArc;
     if (this.burnT > 0) { this.burnT -= dt; this.hp -= this.burnDps * dt; }
     this.invisT = Math.max(0, this.invisT - dt);
     if (this.fighter.dead) this.deadT += dt;

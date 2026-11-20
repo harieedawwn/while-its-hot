@@ -1,7 +1,8 @@
 import { BALANCE } from '../balance';
 import { FAMILIES } from '../data/weapons';
 import { MODULE_IDS, type ModuleId } from '../data/modules';
-import { foldRelics, isRelic } from '../data/relics';
+import { fxOf, hpMax } from './mplayer';
+import { cardById } from '../data/cards';
 import { NO_MODS } from '../forge/odds';
 import type { RandFn } from '../forge/session';
 import { forgeSync } from '../forge/sync';
@@ -56,26 +57,26 @@ export class RoundFlow {
       leaveStance(p);
       const c = SPAWN_POINTS[i % SPAWN_POINTS.length];
       p.forge.newRound();
-      p.fx = foldRelics(p.relics);
       this.arm(p);
-      Object.assign(p, { hp: BALANCE.combat.hp, alive: true, lives: this.rules.lives, rKills: 0, rDealt: 0, parryAt: -1e9, burnT: 0, swings: [], ifUntil: 0, ghost: false, ringT: 0, spawnUntil: 0 });
+      Object.assign(p, { hp: hpMax(p), hurtAt: -1e9, alive: true, lives: this.rules.lives, rKills: 0, rDealt: 0, parryAt: -1e9, burnT: 0, swings: [], ifUntil: 0, ghost: false, ringT: 0, spawnUntil: 0 });
       Object.assign(p.st, { x: c.pos[0], y: c.pos[1], z: c.pos[2], vx: 0, vy: 0, vz: 0, yaw: c.yaw });
       out.push({ to: 'all', m: { t: 'spawn', id: p.id, p: c.pos, yaw: c.yaw, hp: p.hp } });
       out.push({ to: p.id, m: { t: 'fsync', s: forgeSync(p.forge, p.forgeOps) } });
       const last = this.n > 1 && standing[0] === p;
-      p.offer = makeOffers(p.relics, last, p.offerNo, this.rand);
+      p.rerolls = last ? M.draft.rerolls : 0;
+      p.offer = makeOffers(p.cards, last, this.rand);
       p.offerNo++;
-      out.push({ to: p.id, m: { t: 'offer', ids: p.offer, rerolls: p.rerolls } }, { to: p.id, m: { t: 'own', relics: p.relics.slice() } });
+      out.push({ to: p.id, m: { t: 'offer', ids: p.offer, rerolls: p.rerolls } }, { to: p.id, m: { t: 'own', cards: p.cards.slice() } });
     });
     out.push({ to: 'all', m: { t: 'phase', f: this.net(), rows: this.rows() } });
   }
 
-  /** Relic effects at the start of a round: mods, charges, starting armor, owned modules. */
+  /** Card effects at the start of a round: mods, charges, starting armor, owned modules. */
   private arm(p: MPlayer): void {
-    const f = p.forge, x = p.fx;
+    const f = p.forge, x = fxOf(p);
     f.mods = { ...NO_MODS, costMul: x.costMul, decayMul: x.decayMul, heatMul: x.heatMul, zoneMul: x.zoneMul, frenzyFillMul: x.frenzyFillMul, frenzyPlusS: x.frenzyPlusS,
       guardVo: x.guardVo, plus2Once: x.plus2Once, sureAfterVo: x.sureAfterVo, notoriety: p.stacks }; f.armor = Math.max(f.armor, Math.min(BALANCE.forge.armor.maxLevel, x.armorStart));
-    f.modules = p.relics.filter((r): r is ModuleId => (MODULE_IDS as readonly string[]).includes(r));
+    f.modules = p.cards.filter((r): r is ModuleId => (MODULE_IDS as readonly string[]).includes(r));
   }
 
   draft(p: MPlayer, m: Extract<MatchClientMsg, { t: 'draft' }>, out: Out[]): void {
@@ -83,15 +84,16 @@ export class RoundFlow {
     if (m.reroll) {
       if (p.rerolls <= 0) return;
       p.rerolls--;
-      p.offer = makeOffers(p.relics, false, 99, this.rand);
+      p.offer = makeOffers(p.cards, false, this.rand);
       out.push({ to: p.id, m: { t: 'offer', ids: p.offer, rerolls: p.rerolls } });
     } else if (typeof m.pick === 'string' && p.offer.includes(m.pick)) this.take(p, m.pick, out);
   }
   private take(p: MPlayer, id: string, out: Out[]): void {
     p.offer = null;
-    if (!p.relics.includes(id) && (isRelic(id) || (MODULE_IDS as readonly string[]).includes(id))) p.relics.push(id);
-    p.fx = foldRelics(p.relics); this.arm(p);
-    out.push({ to: p.id, m: { t: 'own', relics: p.relics.slice() } }, { to: p.id, m: { t: 'fsync', s: forgeSync(p.forge, p.forgeOps) } });
+    const c = cardById(id);
+    if (c && (c.stack || !p.cards.includes(id))) p.cards.push(id);
+    this.arm(p); p.hp = Math.min(hpMax(p), p.hp + (c?.fx.hpBonus ?? 0));
+    out.push({ to: p.id, m: { t: 'own', cards: p.cards.slice() } }, { to: p.id, m: { t: 'fsync', s: forgeSync(p.forge, p.forgeOps) } });
   }
 
   /** A kill: points (+ bounty), a life, kill levels. */
@@ -99,7 +101,9 @@ export class RoundFlow {
     t.deaths++; t.lives = Math.max(0, t.lives - 1);
     if (a && a !== t) {
       a.pts += killPoints(t.stacks); a.rKills++;
-      if (a.fx.killLevels > 0 && a.alive) { const b = a.forge.blade; b.level = Math.min(BALANCE.weapons.maxLevel, b.level + a.fx.killLevels); b.best = Math.max(b.best, b.level); out.push({ to: a.id, m: { t: 'fsync', s: forgeSync(a.forge, a.forgeOps) } }); }
+      const kh = fxOf(a).killHeal;
+      if (kh > 0 && a.alive) { a.hp = Math.min(hpMax(a), a.hp + kh); out.push({ to: a.id, m: { t: 'heal', hp: a.hp } }); }
+      if (fxOf(a).killLevels > 0 && a.alive) { const b = a.forge.blade; b.level = Math.min(BALANCE.weapons.maxLevel, b.level + fxOf(a).killLevels); b.best = Math.max(b.best, b.level); out.push({ to: a.id, m: { t: 'fsync', s: forgeSync(a.forge, a.forgeOps) } }); }
     }
     out.push({ to: 'all', m: { t: 'score', rows: this.rows() } });
   }
@@ -132,13 +136,13 @@ export class RoundFlow {
     const s = this.fightS(now), { c, r } = this.ringAt(now);
     for (const p of this.players.values()) {
       const outside = r > 0 && Math.hypot(p.st.x - c[0], p.st.z - c[1]) > r;
-      p.forge.mods.decayMul = p.fx.decayMul * (outside ? M.ring.heatMul : 1);
+      p.forge.mods.decayMul = fxOf(p).decayMul * (outside ? M.ring.heatMul : 1);
       if (!outside || !p.alive || now < this.truceEnd) { p.ringT = 0; continue; }
       p.ringT += dt;
       while (p.ringT >= M.ring.tickS - 1e-6 && p.alive) {
         p.ringT -= M.ring.tickS;
         out.push({ to: 'all', m: { t: 'rtick', id: p.id } });
-        this.harm(p, ringTickDmg(s), 0, out);
+        this.harm(p, ringTickDmg(s) * fxOf(p).ringMul, 0, out);
       }
     }
   }
@@ -157,11 +161,10 @@ export class RoundFlow {
     const carry: CarryNet[] = [];
     for (const p of list) {
       p.stacks = p.id === this.win ? notorietyFor(r.lead) : 0;
-      p.rerolls = p.id === this.win ? 0 : M.draft.rerolls;
       for (const b of p.forge.blades) if (b.family) { const i = FAMILIES.indexOf(b.family); p.best[i] = Math.max(p.best[i], b.best); }
       leaveStance(p);
       if (this.matchWin) continue;
-      const fams = p.forge.blades.map((b) => b.family), l = p.forge.carryLoss(bladeLoss(this.n), armorLoss(this.n));
+      const fams = p.forge.blades.map((b) => b.family), l = p.forge.carryLoss(Math.round(bladeLoss(this.n) * fxOf(p).carryMul), Math.round(armorLoss(this.n) * fxOf(p).carryMul));
       carry.push({ id: p.id, blades: l.blades.map(([from, to], i) => ({ family: fams[i], from, to })), armor: l.armor });
       out.push({ to: p.id, m: { t: 'fsync', s: forgeSync(p.forge, p.forgeOps) } });
     }
@@ -173,7 +176,7 @@ export class RoundFlow {
   private over(now: number, out: Out[]): void {
     this.ph = 'end'; this.at = now; this.end = now + M.endHoldS * 1000;
     const rows = [...this.players.values()].map((p) => ({
-      id: p.id, pts: p.pts, kills: p.kills, deaths: p.deaths, lives: p.lives, wins: p.wins, stacks: p.stacks, best: p.best.slice() as [number, number, number], relics: p.relics.slice(),
+      id: p.id, pts: p.pts, kills: p.kills, deaths: p.deaths, lives: p.lives, wins: p.wins, stacks: p.stacks, best: p.best.slice() as [number, number, number], cards: p.cards.slice(),
     }));
     out.push({ to: 'all', m: { t: 'phase', f: this.net(), rows: this.rows() } }, { to: 'all', m: { t: 'end', win: this.matchWin, rows } });
   }

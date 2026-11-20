@@ -277,7 +277,9 @@ export const BALANCE = {
     cageS: 10, roundS: 180, resultS: 5, lives: 3, winsToWin: 3, endHoldS: 25,
     /** Fire ring: appears at startS, closes to minR by closedS (fight clock). Outside: dps + step per everyS since startS, dealt in a tick every tickS (dps × tickS); blade heat decays heatMul×. */
     ring: { startS: 60, closedS: 170, maxR: 38, minR: 2.5, dps: 6, step: 2, everyS: 10, heatMul: 3, tickS: 0.5 },
-    /** Draft: offers per player, rerolls for those below the round winner, kills lead that earns the second Tiếng tăm stack. */
-    draft: { offers: 3, rerolls: 1, bigWin: 3, moduleOffers: 2 },
+    /** Card draft (ROUND3 §5): offers per player, rerolls for last place only, kills lead that earns the second Tiếng tăm stack. */
+    draft: { offers: 3, rerolls: 1, bigWin: 3 },
   },
+  /** Card numbers that are not a plain multiplier (cards.ts holds the multipliers): Hồi sức idle time, Súng máy vai shot, Hồn nhanh/Phổi bễ live in the card rows. */
+  cards: { regenIdleS: 4, gunRange: 22, gunDmg: 8, gunKnock: 7 },
 } as const;

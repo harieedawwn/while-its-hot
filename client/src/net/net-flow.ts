@@ -1,4 +1,4 @@
-import { BALANCE, DEFAULT_RULES, type MatchRules, ringSpan, type EndRowNet, foldRelics, type RelicFx, matchUnlocks, type MatchServerMsg, type PhaseNet, burnDps, FOUNDRY, ringRadius, type CarryNet, type ScoreNet, type Vec3 } from '@wih/shared';
+import { BALANCE, DEFAULT_RULES, type MatchRules, ringSpan, type EndRowNet, foldCards, type CardFx, matchUnlocks, type MatchServerMsg, type PhaseNet, burnDps, FOUNDRY, ringRadius, type CarryNet, type ScoreNet, type Vec3 } from '@wih/shared';
 import { clock } from '../core/clock';
 import { profile, setProfile } from '../core/profile';
 import type { Player } from '../player/player';
@@ -23,8 +23,8 @@ export interface FlowDeps {
   weaponOf(id: number): { family: ScoreRow['family']; level: number };
   /** A new round starts (cage): put the anvil away, leave the stance. */
   newRound(): void;
-  /** Our relic effects changed (Đe nhẹ makes the anvil instant). */
-  relicFx(fx: RelicFx): void;
+  /** Our cards changed (Đe nhẹ makes the anvil instant, body cards change movement). */
+  cardFx(fx: CardFx, ids: readonly string[]): void;
   /** Leave the match (back to the lobby screen). */
   leave(): void;
   /** The phase changed (the ghost resets on result/cage). */
@@ -32,7 +32,7 @@ export interface FlowDeps {
 }
 
 /**
- * The round machine as the client sees it (GDD §3, §8): cage countdown + relic draft, doors, fire ring size,
+ * The round machine as the client sees it (GDD §3, §8): cage countdown + card draft, doors, fire ring size,
  * lives and timers on the HUD, result beat with scoreboard, match end with unlocks. The server decides; this
  * only presents and pins the player to the cage until the doors open.
  */
@@ -41,7 +41,7 @@ export class NetFlow {
   rules: MatchRules = DEFAULT_RULES;
   f: PhaseNet = { ph: 'cage', n: 0, at: 0, end: 0, truce: 0, ring: 0, win: 0 };
   rows: ScoreNet[] = [];
-  relics: string[] = [];
+  cards: string[] = [];
   private draft: Draft;
   readonly banner: Banner;
   /** What each player lost at the end of the last round (result screen). */
@@ -79,7 +79,7 @@ export class NetFlow {
       case 'phase': this.phase(m.f, m.rows); break;
       case 'score': this.rows = m.rows; break;
       case 'offer': this.draft.show(m.ids, m.rerolls); break;
-      case 'own': this.relics = m.relics; this.d.relicFx(foldRelics(m.relics)); break;
+      case 'own': this.cards = m.cards; this.d.cardFx(foldCards(m.cards), m.cards); break;
       case 'carry': this.carry = new Map(m.rows.map((r) => [r.id, r])); if (this.board.visible) this.board.show(this.scoreRows()); break;
       case 'end': this.end(m); break;
       default: break;
@@ -124,7 +124,7 @@ export class NetFlow {
       const u = matchUnlocks(mine.best, profile.unlocked, profile.bestLevel);
       forms = u.forms;
       const unlocked = { ...profile.unlocked }; for (const id of forms) unlocked[id] = true;
-      const drafted = [...new Set([...profile.drafted, ...mine.relics.filter((r) => r in STR.module)])];
+      const drafted = [...new Set([...profile.drafted, ...mine.cards.filter((r) => r in STR.module)])];
       setProfile({ unlocked, bestLevel: u.bestLevel as typeof profile.bestLevel, drafted, stats: { kills: profile.stats.kills + mine.kills, deaths: profile.stats.deaths + mine.deaths, matches: profile.stats.matches + 1 } });
     }
     this.unlocked = forms;

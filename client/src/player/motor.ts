@@ -87,6 +87,8 @@ export function stepMove(s: MoveState, input: MoveInput, dt: number, kin: Kinema
   // posture: low while sliding, and until there is room to stand
   s.low = s.sliding || (s.low && !kin.fits(s.pos, M.body.height));
 
+  // Bộ phản lực: hold Nhảy in the air to hover (sink slowly) for a short while
+  if (input.jumpHeld && s.hoverT > 0 && !s.grounded && !s.slamming && !frozen && s.vel.y < 0.5) { s.hoverT -= dt; s.vel.y = Math.max(s.vel.y, -0.6); }
   wellPull(s, dt);
   const vyBefore = s.vel.y, wasGrounded = s.grounded, vx0 = s.vel.x, vz0 = s.vel.z;
   kin.move(s, dt);
@@ -103,7 +105,7 @@ export function stepMove(s: MoveState, input: MoveInput, dt: number, kin: Kinema
   if (s.grounded) {
     s.coyote = M.coyoteS;
     if (!wasGrounded) {
-      s.wallJumps = 0; s.airJumps = 0;
+      s.wallJumps = 0; s.airJumps = 0; s.hoverT = s.hoverMax;
       if (s.slamming) {
         s.slamming = false; s.sinceSlam = 0;
         s.events.push({ k: 'slam', pos: s.pos.clone() });
@@ -114,7 +116,7 @@ export function stepMove(s: MoveState, input: MoveInput, dt: number, kin: Kinema
     s.coyote = Math.max(0, s.coyote - dt);
     if (s.sliding && s.coyote <= 0) endSlide(s);
   }
-  if (!s.sliding) s.stamina = Math.min(M.stamina.pips, s.stamina + dt / M.stamina.regenS);
+  if (!s.sliding) s.stamina = Math.min(s.staminaMax, s.stamina + dt / M.stamina.regenS);
 }
 
 function tryJump(s: MoveState): void {
@@ -123,7 +125,7 @@ function tryJump(s: MoveState): void {
     const bounce = s.sinceSlam <= M.slam.bounceS;
     const slid = s.sliding;
     if (slid) endSlide(s);
-    s.vel.y = M.jumpVel * (bounce ? M.slam.bounceMul : 1);
+    s.vel.y = M.jumpVel * (bounce ? M.slam.bounceMul * s.slamBounceMul : 1);
     return jumped(s, bounce ? 'bounce' : slid ? 'slidejump' : 'jump');
   }
   if (s.sinceWall <= M.wall.graceS && s.wallJumps < M.wall.jumps) {

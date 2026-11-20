@@ -41,12 +41,13 @@ describe('round rules', () => {
     expect(roundWinner([r(1, 4, 3, 0), r(2, 1, 3, 0)]).lead).toBe(3);
     expect(notorietyFor(2)).toBe(1); expect(notorietyFor(3)).toBe(2);
   });
-  it('offers: three distinct, last place gets rare relics and early modules', () => {
+  it('offers: three distinct, one of each kind, last place gets a rare card', () => {
     const r = rng();
-    const o = makeOffers([], false, 5, r);
+    const o = makeOffers([], false, r);
     expect(new Set(o).size).toBe(3);
-    const l = makeOffers(['an_sat'], true, 0, r);
-    expect(l).toHaveLength(3); expect(l).not.toContain('an_sat');
+    const l = makeOffers(['an_sat'], true, r);
+    expect(l).toHaveLength(3); expect(new Set(l).size).toBe(3);
+    expect(l.some((id) => cardById(id)?.rare)).toBe(true);
   });
 });
 
@@ -65,10 +66,10 @@ describe('round flow', () => {
     expect(a.flow.ph).toBe('cage');
     expect(p1.offer).toHaveLength(3);
     a.msg(1, { t: 'draft', pick: p1.offer![1] }, t);
-    expect(p1.relics).toHaveLength(1);
+    expect(p1.cards).toHaveLength(1);
     t = runTo(a, t, M.cageS * 1000, out);
     expect(a.flow.ph).toBe('fight');
-    expect(p2.relics).toHaveLength(1); // auto-picked
+    expect(p2.cards).toHaveLength(1); // auto-picked
     for (let round = 1; round <= 3; round++) {
       expect(a.flow.n).toBe(round);
       p2.lives = 1; p3.lives = 1;
@@ -118,18 +119,19 @@ describe('match unlocks', () => {
   });
 });
 
-import { foldRelics, RELICS } from '../data/relics';
+import { cardById, foldCards } from '../data/cards';
 import { NO_MODS } from '../forge/odds';
 import { ForgeSession } from '../forge/session';
-describe('relics', () => {
-  it('fold combines effects; every relic changes something', () => {
-    const f = foldRelics(['an_sat', 'vong_da', 'dinh_tan', 'dau_toi']);
-    expect(f.dmgMul).toBeCloseTo(1.1); expect(f.costMul).toBeCloseTo(0.75); expect(f.armorStart).toBe(2); expect(f.parryHp).toBe(5);
-    for (const r of RELICS) expect(foldRelics([r.id])).not.toEqual(foldRelics([]));
+describe('cards', () => {
+  it('fold combines effects', () => {
+    const f = foldCards(['an_sat', 'an_sat', 'kim_giu_nhiet', 'giap_day', 'dau_toi', 'tim_sat', 'tim_sat']);
+    expect(f.dmgMul).toBeCloseTo(1.21); expect(f.costMul).toBeCloseTo(0.7); expect(f.decayMul).toBeCloseTo(0.5);
+    expect(f.armorStart).toBe(2); expect(f.parryHp).toBe(5); expect(f.hpBonus).toBe(40);
   });
-  it('da_niem turns one Vỡ into Giữ, hon_than_do makes one Lên a +2', () => {
-    const mods = foldRelics(['da_niem', 'hon_than_do']);
-    const s = new ForgeSession(() => 0.99, 1); s.mods = { ...NO_MODS, guardVo: mods.guardVo };
+  it('da_niem turns Vỡ into Giữ, hon_than_do makes one Lên a +2', () => {
+    const mods = foldCards(['da_niem', 'hon_than_do']);
+    expect(mods.guardVo).toBe(3);
+    const s = new ForgeSession(() => 0.99, 1); s.mods = { ...NO_MODS, guardVo: 1 };
     s.zoneC = 0.9; s.blades[0] = { family: 'kiem', level: 4, best: 4 };
     expect(s.strike(0).outcome).toBe('giu'); expect(s.strike(3).outcome).toBe('vo');
     const t = new ForgeSession(() => 0.0, 1); t.mods = { ...NO_MODS, plus2Once: mods.plus2Once }; t.zoneC = 0.5; t.heat = 0.7;
