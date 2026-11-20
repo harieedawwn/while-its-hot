@@ -111,14 +111,8 @@ describe('passive hooks', () => {
     expect(hitEffects(passivesOf(weaponById('kiem_toi_lua')), { kind: 'light', combo: 0, dist: 1, reach: 2 })[0].type).toBe('burn');
     expect(hitEffects(passivesOf(weaponById('kiem_rang_cua')), { kind: 'light', combo: 0, dist: 1, reach: 2 })[0]).toMatchObject({ dps: P.burnStrong.dps });
   });
-  it('lists the ids that are still no-ops (phase 28: kiem/bua, phase 29: dao/tay empty this list)', () => {
-    expect(pendingPassives().sort()).toEqual([
-      'backstab_bonus', 'blade_storm', 'combo4_knock', 'fireball_heavy', 'freeze_combo4', 'giant_hand', 'gravity_well_throw',
-      'heal_on_hit', 'heal_on_hit_2', 'heavy_push', 'heavy_push_far', 'hook_lunge', 'iceball_heavy', 'kill_full_heal',
-      'light_pull', 'magnet_punch', 'meteor_combo4', 'meteor_rain', 'parry_blink', 'piston_charge', 'poison_on_hit', 'rift_dash',
-      'rocket_fist', 'shadow_invis', 'sky_hand', 'slide_decoy', 'slide_fire_trail', 'slide_long', 'spark_on_hit', 'speed_stacks',
-      'stone_wall', 'throw_burn', 'throw_knife', 'throw_poison', 'time_slow_heavy', 'triple_jump',
-    ]);
+  it('no passive is a no-op any more (phases 28 and 29 emptied the list)', () => {
+    expect(pendingPassives()).toEqual([]);
     // every id is used by at least one row
     const used = new Set(WEAPONS.flatMap((w) => w.passives));
     for (const id of PASSIVE_IDS) expect(used.has(id)).toBe(true);

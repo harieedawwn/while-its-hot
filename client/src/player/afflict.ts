@@ -15,10 +15,12 @@ export interface Afflict {
   wellT: number; wellV: number; wx: number; wy: number; wz: number;
   /** Reflect off walls while a big knock carries the body (bua_cao_su). */
   bounceT: number;
+  /** Run speed × while hasteT runs (dao_ngoc / dao_dong_ho stacks). */
+  hasteT: number; hasteMul: number;
 }
-export const newAfflict = (): Afflict => ({ slowT: 0, slowMul: 1, freezeT: 0, pinT: 0, slipT: 0, grip: 1, wellT: 0, wellV: 0, wx: 0, wy: 0, wz: 0, bounceT: 0 });
+export const newAfflict = (): Afflict => ({ slowT: 0, slowMul: 1, freezeT: 0, pinT: 0, slipT: 0, grip: 1, wellT: 0, wellV: 0, wx: 0, wy: 0, wz: 0, bounceT: 0, hasteT: 0, hasteMul: 1 });
 
-export type AfflictKind = 'slow' | 'freeze' | 'pin' | 'slip' | 'well' | 'shake';
+export type AfflictKind = 'slow' | 'freeze' | 'pin' | 'slip' | 'well' | 'shake' | 'haste' | 'invis' | 'poison';
 
 /** Apply one status (shake is camera-only: the caller handles it). */
 export function afflict(a: Afflict, k: AfflictKind, s: number, v: number, p?: readonly number[]): void {
@@ -28,7 +30,8 @@ export function afflict(a: Afflict, k: AfflictKind, s: number, v: number, p?: re
     case 'pin': a.pinT = Math.max(a.pinT, s); break;
     case 'slip': a.slipT = Math.max(a.slipT, s); a.grip = v; break;
     case 'well': if (p) { a.wellT = s; a.wellV = v; a.wx = p[0]; a.wy = p[1]; a.wz = p[2]; } break;
-    case 'shake': break;
+    case 'haste': a.hasteT = s; a.hasteMul = v; break;
+    case 'shake': case 'invis': case 'poison': break;
   }
 }
 
@@ -39,10 +42,11 @@ export function tickAfflict(a: Afflict, dt: number): void {
   a.slipT = Math.max(0, a.slipT - dt);
   a.wellT = Math.max(0, a.wellT - dt);
   a.bounceT = Math.max(0, a.bounceT - dt);
+  a.hasteT = Math.max(0, a.hasteT - dt); if (a.hasteT <= 0) a.hasteMul = 1;
 }
 
-/** Ground speed multiplier from statuses. */
-export const afflictSpeed = (a: Afflict): number => (a.freezeT > 0 ? 0 : a.slowT > 0 ? a.slowMul : 1);
+/** Ground speed multiplier from statuses (slow and haste multiply). */
+export const afflictSpeed = (a: Afflict): number => (a.freezeT > 0 ? 0 : (a.slowT > 0 ? a.slowMul : 1) * (a.hasteT > 0 ? a.hasteMul : 1));
 export const canJump = (a: Afflict): boolean => a.pinT <= 0 && a.freezeT <= 0;
 
 /** Black-hole pull: steer the velocity toward the center (strong, but the body keeps falling). */

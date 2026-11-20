@@ -92,6 +92,52 @@ export function columnGeo(): THREE.BufferGeometry {
   return mergeAll(parts);
 }
 
+/** A clenched fist from above, knuckles down (-Y): unit size, scaled by the entity's radius. */
+export function handGeo(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+  const box = (w: number, h: number, d: number, x: number, y: number, z: number, ry = 0) => {
+    const b = new THREE.BoxGeometry(w, h, d);
+    b.rotateY(ry); b.translate(x, y, z);
+    parts.push(b);
+  };
+  box(1.5, 0.95, 1.25, 0, 0.55, 0.05, 0.12);
+  for (let i = 0; i < 4; i++) box(0.3, 0.6, 0.46, -0.58 + i * 0.39, -0.02 - (i === 1 || i === 2 ? 0.08 : 0), -0.42, (i - 1.5) * 0.06);
+  box(0.36, 0.34, 0.8, 0.88, 0.42, -0.18, 0.35);
+  return mergeAll(parts);
+}
+/** The hand's forearm (hexagonal, +Y up) and its wider cuff: separate meshes so they take their own colors. */
+export function armGeo(): THREE.BufferGeometry {
+  const arm = new THREE.CylinderGeometry(0.46, 0.58, 3.6, 6);
+  arm.rotateY(Math.PI / 6); arm.translate(0, 3.0, 0.1);
+  return arm;
+}
+export function cuffGeo(): THREE.BufferGeometry {
+  const cuff = new THREE.CylinderGeometry(0.8, 0.8, 0.4, 6);
+  cuff.rotateY(Math.PI / 6); cuff.translate(0, 1.3, 0.08);
+  return cuff;
+}
+
+/** A standing silhouette for the slide decoy (feet at 0, 1.8 m): legs, torso, arms, head. */
+export function decoyGeo(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+  const box = (w: number, h: number, d: number, x: number, y: number) => { const b = new THREE.BoxGeometry(w, h, d); b.translate(x, y, 0); parts.push(b); };
+  box(0.22, 0.85, 0.24, -0.14, 0.43); box(0.22, 0.85, 0.24, 0.14, 0.43);
+  box(0.56, 0.68, 0.3, 0, 1.2); box(0.16, 0.62, 0.18, -0.38, 1.2); box(0.16, 0.62, 0.18, 0.38, 1.2);
+  box(0.3, 0.3, 0.3, 0, 1.68);
+  return mergeAll(parts);
+}
+
+/** Three ragged stone slabs side by side across X (the Găng đá wall, width w, height h). */
+export function wallGeo(w: number, h: number): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [], n = 3, sw = w / n;
+  for (let i = 0; i < n; i++) {
+    const hh = h * (0.82 + 0.18 * Math.abs(Math.sin(i * 2.1 + 0.4))), b = new THREE.BoxGeometry(sw * 1.02, hh, 0.7);
+    b.rotateY((i - 1) * 0.12); b.translate((i - 1) * sw, hh / 2, 0);
+    parts.push(b);
+  }
+  return mergeAll(parts);
+}
+
 function mergeAll(list: THREE.BufferGeometry[]): THREE.BufferGeometry {
   const pos: number[] = [];
   for (const g of list) {

@@ -67,6 +67,7 @@ export class RemotePlayer {
     this.parity = parity;
     this.c.ghost = ghost;
     if (ghost !== this.ch.ghost) this.ch.setGhost(ghost);
+    this.ch.setVeil(this.c.invisT > 0 && !ghost);
     if (f.phase !== this.phase) {
       if (f.phase === 'parry') bus.emit('combat:guard', { id: this.id, act: 'parry' });
       else if (f.phase === 'block') bus.emit('combat:guard', { id: this.id, act: 'block_on' });
@@ -78,6 +79,7 @@ export class RemotePlayer {
 
   /** Per render frame, after apply(). */
   render(dt: number, frozen: boolean): void {
+    this.c.invisT = Math.max(0, this.c.invisT - dt);
     this.ch.root.visible = this.mode !== 'none'; // 'hold' = frozen in place (TECH §4), still drawn
     if (!this.ch.root.visible) return;
     const s = this.c.body.s;

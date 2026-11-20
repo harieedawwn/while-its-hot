@@ -4,7 +4,8 @@ import { bus } from '../core/events';
 import { FEEL } from '../core/feel';
 import { HEAT_LINEAR } from '../render/heat';
 import type { LightRig } from '../render/lights';
-import { anchorGeo, bladeGeo, columnGeo, crescentGeo, ringGeo, rockGeo } from './effect-meshes';
+import { anchorGeo, armGeo, bladeGeo, columnGeo, crescentGeo, cuffGeo, decoyGeo, handGeo, ringGeo, rockGeo, wallGeo } from './effect-meshes';
+import { appearB, type BCtx, drawB, lifeB, makeB } from './effect-view-b';
 import { effectMat, type EffectMat } from './effect-mat';
 import type { FxWorld } from './fx-world';
 
@@ -26,6 +27,7 @@ function lifeOf(e: Ent): number {
     case 'anchor': return E.anchor.range / E.anchor.speed;
     case 'crack': return E.crack.len / E.crack.speed;
     case 'orbit': return 1e6;
+    default: return lifeB(e);
   }
 }
 
@@ -39,11 +41,13 @@ export class EffectView {
   readonly root = new THREE.Group();
   private vis = new Map<number, Vis>();
   private free = new Map<EntKind, Vis[]>();
-  private geo = { slash: crescentGeo(), rock: rockGeo(0.75), spike: rockGeo(0.45, 7), blade: bladeGeo(), anchor: anchorGeo(), ring: ringGeo(), column: columnGeo(), ball: new THREE.IcosahedronGeometry(1, 1), torus: new THREE.TorusGeometry(1, 0.08, 4, 16) };
+  private geo = { slash: crescentGeo(), rock: rockGeo(0.75), spike: rockGeo(0.45, 7), blade: bladeGeo(), anchor: anchorGeo(), ring: ringGeo(), column: columnGeo(), ball: new THREE.IcosahedronGeometry(1, 1), torus: new THREE.TorusGeometry(1, 0.08, 4, 16), hand: handGeo(), arm: armGeo(), cuff: cuffGeo(), decoy: decoyGeo(), wall: wallGeo(BALANCE.effects.tay.wall.w, BALANCE.effects.tay.wall.h) };
   private v = new THREE.Vector3();
+  private bctx!: BCtx;
 
   constructor(private rig: LightRig, private fx: FxWorld, private source: () => Ent[], private posOf: (id: number) => THREE.Vector3 | null, private floorAt: (p: THREE.Vector3) => number) {
     this.root.name = 'fx:effects';
+    this.bctx = { fx, v: this.v, geo: this.geo, m: (c, heat = 0, shade = 1) => effectMat(this.rig, c, heat, shade), mesh: (g, m, p) => this.mesh(g, m, p), posOf, floorAt };
   }
 
   update(dt: number): void {
@@ -87,6 +91,7 @@ export class EffectView {
       case 'anchor': { this.mesh(this.geo.anchor, m(X.anchor), g); this.mesh(new THREE.BoxGeometry(0.05, 0.05, 1), m('#3c3630'), g); break; }
       case 'crack': for (let i = 0; i < 3; i++) this.mesh(this.geo.spike, m(X.rock), g); break;
       case 'lava': case 'ice': break;
+      default: makeB(e, { ...this.bctx, m: (c, heat = 0, shade = 1) => m(c, heat, shade) }, g);
     }
     this.root.add(g);
     return { k: e.k, obj: g, mats, seen: true, acc: 0, lx: e.x, lz: e.z };
@@ -95,6 +100,7 @@ export class EffectView {
   /** One-time marks when an entity first shows up (fields are decals: their whole life is known now). */
   private appear(e: Ent, _v: Vis): void {
     const fx = this.fx, life = lifeOf(e) - e.age, floor = this.floorAt(this.v.set(e.x, e.y + 0.5, e.z)) + 0.004;
+    appearB(e, this.bctx);
     if (e.k === 'lava') {
       fx.decals.spawn({ x: e.x, y: floor, z: e.z, r0: e.r * 0.4, r1: e.r, growS: 0.25, steps: 3, life, fadeS: 0.6, alpha: 1, color: LAVA_DARK, shape: 0, seed: fx.rnd() });
       fx.decals.spawn({ x: e.x, y: floor + 0.003, z: e.z, r0: e.r * 0.2, r1: e.r * 0.62, growS: 0.3, steps: 3, life: life * 0.9, fadeS: 0.6, alpha: 1, color: LAVA, shape: 0, seed: fx.rnd() });
@@ -138,6 +144,7 @@ export class EffectView {
         break;
       case 'meteor': {
         const rock = o.children[0], ring = o.children[1], k = 1 - u;
+        rock.scale.setScalar(e.r / E.meteor.r);
         rock.position.set(0, X.meteor.dropH * k * k, X.meteor.dropH * 0.35 * k * k);
         rock.rotation.set(e.age * 5, e.age * 3, 0);
         ring.scale.setScalar(e.r * (0.9 + 0.1 * Math.sin(e.age * 30)));
@@ -198,6 +205,7 @@ export class EffectView {
         break;
       }
       case 'ice': break;
+      default: drawB(e, v, dt, this.bctx);
     }
   }
 

@@ -68,6 +68,8 @@ export type MatchServerMsg =
   | { t: 'spawn'; id: number; p: Vec3; yaw: number; hp: number }
   /** ps = push seconds (weak control; default pushS), b = bounce off walls meanwhile (bua_cao_su). */
   | { t: 'knock'; kn: Vec3; ps?: number; b?: 1 }
+  /** Blink / rift dash: put the body at p facing yaw (its client finds a safe spot at or before p). */
+  | { t: 'tp'; p: Vec3; yaw: number }
   /** Effect damage (phase 28 toolkit: slashes, meteors, waves; no defense): tg's hp after it. */
   | { t: 'edmg'; tg: number; by: number; dmg: number; k: EntKind | AtomFxKind; hp: number }
   /** A movement status on tg (its client applies it; everyone may show it): s seconds, v = slow mul / pull m/s, p = well center. */

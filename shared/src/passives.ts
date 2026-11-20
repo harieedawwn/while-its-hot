@@ -1,6 +1,8 @@
 import { BALANCE } from './balance';
 import type { Atom } from './effects/atoms';
 import { ROW_PASSIVES } from './effects/rows';
+import { DAO_PASSIVES } from './effects/rows-dao';
+import { TAY_PASSIVES } from './effects/rows-tay';
 
 /**
  * Weapon passives (GDD §6): small hook objects registered by id. Gameplay code never asks "which weapon";
@@ -11,11 +13,13 @@ const PB = BALANCE.weapons.passive;
 
 export type AttackKind = 'light' | 'heavy' | 'slide';
 /** What the attacker is doing when the hit lands. combo = 0-based index inside the light chain. */
-export interface AttackCtx { kind: AttackKind; combo: number; dist: number; reach: number; }
+export interface AttackCtx { kind: AttackKind; combo: number; dist: number; reach: number; /** The blow lands from behind the defender (on-hit hooks only). */ back?: boolean; }
 /** The attack as combat resolves it. Base values come from the family moveset (phase 08). */
 export interface AttackShape {
   dmg: number; arcDeg: number; lungeM: number; staggerS: number;
   ignoresBlock: boolean; breaksBlock: boolean;
+  /** Damage × when the attacker stands behind the defender (resolveHit). */
+  backMul?: number;
 }
 export type HitEffect =
   | { type: 'burn'; dps: number; durS: number }
@@ -40,6 +44,16 @@ export interface PassiveHooks {
   onSlamLand?(out: HitEffect[]): void;
   /** Effects when an attack strikes (hit or miss): projectiles, waves, holes. Fired at the end of the windup. */
   onSwing?(c: AttackCtx, out: HitEffect[]): void;
+  /** Effects when this attack kills (target = the one just killed). */
+  onKill?(out: HitEffect[]): void;
+  /** Movement trait changes while held. */
+  traits?: { airJumps?: number; slideLen?: number };
+  /** Heavy charge time × (piston). */
+  chargeMul?: number;
+  /** Slide behaviour: fire trail while sliding / a decoy left where the slide starts. */
+  slide?: 'trail' | 'decoy';
+  /** What a thrown knife also does. */
+  knife?: 'poison' | 'burn';
   /** Reach of one attack kind. */
   modifyReach?(r: number, kind: AttackKind): number;
   /** Always-on entity that follows the owner. */
@@ -47,9 +61,6 @@ export interface PassiveHooks {
 }
 
 const heavy = (c: AttackCtx) => c.kind === 'heavy';
-/** Listed in a ROSTER row but not built yet (phases 28/29 give them hooks). `passives.test.ts` keeps the list. */
-const PENDING: PassiveHooks = {};
-
 export const PASSIVES = {
   // built: attack shape, parry window, on-hit status, slam
   combo3_bonus: { modifyAttack: (a, c) => { if (c.kind === 'light' && c.combo === 2) a.dmg *= PB.combo3Mul; } },
@@ -70,22 +81,15 @@ export const PASSIVES = {
   },
   // kiem + bua 18–45 (phase 28): effects/rows.ts
   ...ROW_PASSIVES,
-  // dao (phase 29)
-  backstab_bonus: PENDING, slide_long: PENDING, throw_knife: PENDING, poison_on_hit: PENDING, throw_poison: PENDING,
-  shadow_invis: PENDING, hook_lunge: PENDING, parry_blink: PENDING, slide_fire_trail: PENDING, throw_burn: PENDING,
-  speed_stacks: PENDING, triple_jump: PENDING, time_slow_heavy: PENDING, slide_decoy: PENDING, blade_storm: PENDING,
-  rift_dash: PENDING,
-  // tay (phase 29)
-  combo4_knock: PENDING, heal_on_hit: PENDING, heal_on_hit_2: PENDING, piston_charge: PENDING, heavy_push: PENDING,
-  fireball_heavy: PENDING, freeze_combo4: PENDING, iceball_heavy: PENDING, spark_on_hit: PENDING, stone_wall: PENDING,
-  heavy_push_far: PENDING, magnet_punch: PENDING, rocket_fist: PENDING, kill_full_heal: PENDING, giant_hand: PENDING,
-  gravity_well_throw: PENDING, light_pull: PENDING, meteor_combo4: PENDING, meteor_rain: PENDING, sky_hand: PENDING,
+  // dao + tay (phase 29): effects/rows-dao.ts, rows-tay.ts
+  ...DAO_PASSIVES,
+  ...TAY_PASSIVES,
 } as const satisfies Record<string, PassiveHooks>;
 export type PassiveId = keyof typeof PASSIVES;
 export const PASSIVE_IDS = Object.keys(PASSIVES) as PassiveId[];
 
 const hooks = (id: PassiveId): PassiveHooks => PASSIVES[id] as PassiveHooks;
-/** Ids that do nothing yet (no hook): the list phases 28/29 empty out. */
+/** Ids that do nothing (no hook): empty since phase 29, kept as a guard (test). */
 export const pendingPassives = (): PassiveId[] => PASSIVE_IDS.filter((id) => Object.keys(hooks(id)).length === 0);
 
 /** Fold modifyAttack over the passives; returns a new shape. */
@@ -127,4 +131,29 @@ export function slamEffects(ids: readonly PassiveId[]): HitEffect[] {
   const out: HitEffect[] = [];
   for (const id of ids) hooks(id).onSlamLand?.(out);
   return out;
+}
+
+export function killEffects(ids: readonly PassiveId[]): HitEffect[] {
+  const out: HitEffect[] = [];
+  for (const id of ids) (hooks(id) as PassiveHooks).onKill?.(out);
+  return out;
+}
+/** Folded trait changes: extra air jumps and slide length ×. */
+export function traitMods(ids: readonly PassiveId[]): { airJumps: number; slideLen: number } {
+  let airJumps = 0, slideLen = 1;
+  for (const id of ids) { const t = (hooks(id) as PassiveHooks).traits; if (t) { airJumps = Math.max(airJumps, t.airJumps ?? 0); slideLen *= t.slideLen ?? 1; } }
+  return { airJumps, slideLen };
+}
+export function chargeMulOf(ids: readonly PassiveId[]): number {
+  let m = 1;
+  for (const id of ids) m *= (hooks(id) as PassiveHooks).chargeMul ?? 1;
+  return m;
+}
+export function slideOf(ids: readonly PassiveId[]): PassiveHooks['slide'] {
+  for (const id of ids) { const a = (hooks(id) as PassiveHooks).slide; if (a) return a; }
+  return undefined;
+}
+export function knifeOf(ids: readonly PassiveId[]): PassiveHooks['knife'] {
+  for (const id of ids) { const a = (hooks(id) as PassiveHooks).knife; if (a) return a; }
+  return undefined;
 }

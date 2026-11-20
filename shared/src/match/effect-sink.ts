@@ -1,4 +1,6 @@
+import { BALANCE } from '../balance';
 import { passivesOf } from '../data/weapons';
+import { FLAG } from '../net/codec';
 import type { AtomFx, EBody, ESink, StatusKind } from '../effects/atoms';
 import type { Vec3 } from '../net/match-msgs';
 import type { Harm } from './effects';
@@ -18,7 +20,7 @@ export class ServerSink implements ESink {
     for (const p of this.players.values()) {
       if (!p.online) continue;
       const s = p.st;
-      list.push({ id: p.id, team: p.id, x: s.x, y: s.y, z: s.z, yaw: s.yaw, pitch: s.pitch, alive: p.alive, passives: passivesOf(p.forge.form) });
+      list.push({ id: p.id, team: p.id, x: s.x, y: s.y, z: s.z, yaw: s.yaw, pitch: s.pitch, alive: p.alive, passives: passivesOf(p.forge.form), sliding: (s.flags & FLAG.sliding) !== 0, swinging: [1, 2, 3].includes((s.anim >> 4) & 15) });
     }
     return list;
   }
@@ -40,6 +42,18 @@ export class ServerSink implements ESink {
     const p = this.players.get(t.id);
     if (!p || (p.burnT > 0 && p.burnDps > dps)) return;
     p.burnT = Math.max(p.burnT, s); p.burnDps = dps; p.burnBy = by;
+  }
+  heal(t: EBody, hp: number): void {
+    const p = this.players.get(t.id);
+    if (!p || !p.alive) return;
+    p.hp = Math.min(BALANCE.combat.hp, p.hp + hp);
+    this.out.push({ to: p.id, m: { t: 'heal', hp: p.hp } });
+  }
+  teleport(t: EBody, to: Vec3, yaw: number): void {
+    const p = this.players.get(t.id);
+    if (!p || !p.alive) return;
+    p.st.x = to[0]; p.st.y = to[1]; p.st.z = to[2];
+    this.out.push({ to: p.id, m: { t: 'tp', p: [to[0], to[1], to[2]], yaw } });
   }
   fx(a: AtomFx): void { this.out.push({ to: 'all', m: { t: 'atom', a } }); }
 }

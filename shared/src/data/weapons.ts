@@ -1,5 +1,5 @@
 import { BALANCE } from '../balance';
-import type { PassiveId } from '../passives';
+import { type PassiveId, traitMods } from '../passives';
 
 /**
  * Weapon roster (ROUND3 §4, docs/ROSTER.md): 4 families × 15 forms, one form every 3 levels from +3 to +45.
@@ -145,8 +145,8 @@ export interface FamilyTraits { move: number; airJumps: number; slide: { speed: 
 export const NO_TRAITS: FamilyTraits = { move: 1, airJumps: 0, slide: { speed: 1, len: 1, cd: 1 }, taken: 1 };
 export function traitsOf(def: WeaponDef): FamilyTraits {
   if (def.family === null) return NO_TRAITS;
-  const f = W.family[def.family];
-  return { move: f.move, airJumps: f.airJumps, slide: f.slide, taken: f.taken };
+  const f = W.family[def.family], m = traitMods(def.passives);
+  return { move: f.move, airJumps: Math.max(f.airJumps, m.airJumps), slide: m.slideLen === 1 ? f.slide : { ...f.slide, len: f.slide.len * m.slideLen }, taken: f.taken };
 }
 /** Damage scale by blade level: 1 + dmgK·L + dmgQ·L² of the family (the blank scales like a sword). */
 export function dmgScale(family: Family | null, level: number): number {

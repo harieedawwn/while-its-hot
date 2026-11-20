@@ -39,12 +39,15 @@ export function inFront(d: { x: number; z: number; yaw: number }, x: number, z: 
   return (vx * fx + vz * fz) / l >= Math.cos(halfDeg * D2R);
 }
 
+/** The attacker at (x, z) stands behind the defender: outside ±backHalfDeg of its facing (dao backstab). */
+export const behind = (d: { x: number; z: number; yaw: number }, x: number, z: number): boolean => !inFront(d, x, z, BALANCE.effects.dao.backHalfDeg);
+
 export function resolveHit(a: AttackView, d: DefenderView): HitResult {
   if (d.immune) return { r: 'immune' };
   if (d.parrying && inFront(d, a.x, a.z, C.parry.frontDeg)) {
     return { r: 'parried', attackerStaggerS: C.parry.staggerS, parrierStamina: C.parry.stamina };
   }
-  const full = damageOf(a.shape, a.family, a.weaponLevel, d.armorLevel, d.taken ?? 1);
+  const full = damageOf(a.shape, a.family, a.weaponLevel, d.armorLevel, d.taken ?? 1) * (a.shape.backMul && behind(d, a.x, a.z) ? a.shape.backMul : 1);
   const stagger = a.shape.staggerS;
   if (d.blocking && inFront(d, a.x, a.z, (d.blockArcDeg ?? C.block.frontDeg * 2) / 2)) {
     if (a.shape.ignoresBlock) return { r: 'pierced', dmg: full, staminaCost: 0, staggerS: stagger };

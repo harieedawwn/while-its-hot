@@ -1,4 +1,4 @@
-import { attackShape, BALANCE, type AttackKind, type HitEffect, hitEffects, parryEffects, resolveHit, type V3, type Zone } from '@wih/shared';
+import { attackShape, BALANCE, behind, type AttackKind, type HitEffect, hitEffects, killEffects, parryEffects, resolveHit, type V3, type Zone } from '@wih/shared';
 import type { LocalEffects } from './local-effects';
 import { bus } from '../core/events';
 import { pushMove } from '../player/move-state';
@@ -43,9 +43,12 @@ export class LocalResolver implements HitResolver {
     // knockback away from the attacker; a clean block only rocks the defender
     const frames = a.fighter.frames;
     knock(a, t, res.r === 'blocked' ? frames.knock * C.block.knockMul : frames.knock);
-    if (res.r !== 'blocked') applyEffects(a, t, hitEffects(a.passives, { kind: c.kind, combo: c.combo, dist: c.dist, reach: a.weapon.stats.reach }), this.list, this.effects);
+    if (res.r !== 'blocked') applyEffects(a, t, hitEffects(a.passives, { kind: c.kind, combo: c.combo, dist: c.dist, reach: a.weapon.stats.reach, back: behind({ x: ts.pos.x, z: ts.pos.z, yaw: t.yaw }, as.pos.x, as.pos.z) }), this.list, this.effects);
     bus.emit('combat:hit', { attacker: a.id, target: t.id, dmg: res.dmg, zone: c.zone, kind: c.kind, result: res.r, x, y, z });
-    if (t.hp <= 0) { t.hp = 0; t.fighter.kill(); bus.emit('combat:kill', { target: t.id, by: a.id }); }
+    if (t.hp <= 0) {
+      t.hp = 0; t.fighter.kill(); bus.emit('combat:kill', { target: t.id, by: a.id });
+      if (res.r !== 'blocked') applyEffects(a, t, killEffects(a.passives), this.list, this.effects);
+    }
   }
 }
 

@@ -1,17 +1,18 @@
 import { BALANCE } from '../balance';
 import type { EBody } from './atoms';
 import { awayFrom } from './cast';
+import { tickEntB } from './ents-b';
 import { type EffectWorld, flat, type Live } from './world';
 
 const E = BALANCE.effects, B = BALANCE.weapons.passive.burnStrong;
 
 /** Body overlap of a point-ish entity: horizontal within r + body radius, height between the feet and the head. */
-function touches(b: EBody, x: number, y: number, z: number, r: number): boolean {
+export function touches(b: EBody, x: number, y: number, z: number, r: number): boolean {
   return flat(b.x, b.z, x, z) <= r + BALANCE.move.body.radius && y >= b.y - 0.3 && y <= b.y + BALANCE.move.body.height + 0.3;
 }
 
 /** Hits of a travelling entity: every foe it touches, once. */
-function sweep(w: EffectWorld, e: Live, o: EBody, r: number, flatOnly: boolean, hit: (b: EBody) => void): void {
+export function sweep(w: EffectWorld, e: Live, o: EBody, r: number, flatOnly: boolean, hit: (b: EBody) => void): void {
   for (const b of w.foes(o)) {
     if (e.hits.has(b.id)) continue;
     if (flatOnly ? flat(b.x, b.z, e.x, e.z) > r + BALANCE.move.body.radius : !touches(b, e.x, e.y, e.z, r)) continue;
@@ -69,8 +70,8 @@ export function tickEnt(w: EffectWorld, e: Live, dt: number): void {
         s.fx({ k: 'orbit_hit', o: e.o, p: [b.x, b.y + 1.1, b.z] });
       }
       return;
-    case 'eclipse': case 'star': {
-      const H = e.k === 'eclipse' ? E.eclipse : E.star;
+    case 'eclipse': case 'star': case 'gravity': {
+      const H = e.k === 'eclipse' ? E.eclipse : e.k === 'star' ? E.star : E.tay.gravity;
       if (!o) return;
       // each body is pulled once per hole, for at most capS: the cap can never be exceeded
       for (const b of w.foes(o)) {
@@ -124,5 +125,6 @@ export function tickEnt(w: EffectWorld, e: Live, dt: number): void {
       return;
     case 'column':
       return;
+    default: tickEntB(w, e, dt);
   }
 }

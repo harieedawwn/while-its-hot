@@ -199,6 +199,8 @@ export const FEEL = {
       steel: '#c9ced2', ice: '#b8d4de', iceFloor: '#9fc0cc', sun: '#f2e6b8', lava: '#3a1810', bolt: '#e8eef2', hole: '#050407',
       rimEclipse: '#c7a24a', rimStar: '#f4d9a0', rock: '#3b3734', anchor: '#5a4a3c', blade: '#d6dade', pin: '#2c2a33', wave: '#8a8178',
       bell: '#b08a48', column: 0.74, slashBurn: 0.7, star: 0.9,
+      /** Phase 29: poison puffs, thrown knife, fireball/rocket heat, stone wall, hand (stone / sky bronze), time field, decoy silhouette, bone dust for heals. */
+      poison: '#6b8a3a', knife: '#d6dade', fireHeat: 0.85, rocketHeat: 0.6, stone: '#6e6a62', handGiant: '#8a8070', handGiantArm: '#4a443c', handGiantCuff: '#2a2622', handSky: '#c9a06a', handSkyArm: '#7a5a34', handSkyCuff: '#e8d29a', clock: '#a39c8c', decoy: '#2a2630', bone: '#d8d0b8', veilAlpha: 0.12,
       slash: { w: 1.7, arcDeg: 130, thick: 0.24 }, meteor: { dropH: 16 }, lavaEmbersPerS: 10, boltS: 0.26, whipS: 0.2,
     },
   },

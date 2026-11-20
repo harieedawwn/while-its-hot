@@ -5,9 +5,12 @@ import { FX_COMMON } from '../../fx/glsl';
  * The Hồn (ghost) body (ROUND3 §2): a pale flat-shaded silhouette drawn through the Bayer screen door at ~40 % (never blended,
  * no glow). One shared material for every ghost; the character swaps its meshes onto it and back.
  */
-let shared: THREE.ShaderMaterial | null = null;
-export function ghostMaterial(alpha = 0.4): THREE.ShaderMaterial {
-  return (shared ??= new THREE.ShaderMaterial({
+let shared: THREE.ShaderMaterial | null = null, veil: THREE.ShaderMaterial | null = null;
+export function ghostMaterial(alpha = 0.4): THREE.ShaderMaterial { return (shared ??= makeMat(alpha)); }
+/** The invisible (dao_bong…) body: the same Bayer door at ~12 %, a sliver you can still catch moving. */
+export function veilMaterial(alpha: number): THREE.ShaderMaterial { return (veil ??= makeMat(alpha)); }
+function makeMat(alpha: number): THREE.ShaderMaterial {
+  return (new THREE.ShaderMaterial({
     uniforms: { uAlpha: { value: alpha }, uHeatRamp: { value: [] }, uFogColor: { value: new THREE.Color() }, uFog: { value: new THREE.Vector2(1, 2) } },
     vertexShader: /* glsl */ `
       varying vec3 vP;

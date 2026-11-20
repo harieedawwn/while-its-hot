@@ -16,10 +16,16 @@ const ENT_ON: Partial<Record<EntKind, Cue>> = {
   meteor: { ev: 'slam_fall', pitch: 0.7, db: -2 }, column: { ev: 'bomb', pitch: 1.3, db: -2 },
   anchor: { ev: 'swing_hammer', pitch: 0.6, db: 2 }, crack: { ev: 'strike_hong', pitch: 0.55, db: 2 },
   eclipse: { ev: 'heavy_charge', pitch: 0.45, db: 0 }, star: { ev: 'heavy_charge', pitch: 0.38, db: 2 },
+  // phase 29: re-pitched takes again (a later audio pass can record dedicated ones)
+  knife: { ev: 'swing_polearm', pitch: 1.8, db: -2 }, fireball: { ev: 'heavy_release', pitch: 0.8, db: 0 }, iceball: { ev: 'hit_armor', pitch: 1.5, db: -2 },
+  rocket: { ev: 'heavy_release', pitch: 0.55, db: 3 }, hand: { ev: 'slam_fall', pitch: 0.55, db: 2 }, timefield: { ev: 'heavy_charge', pitch: 0.7, db: -6 },
+  storm: { ev: 'swing_sword', pitch: 1.5, db: -2 }, decoy: { ev: 'steam_vent', pitch: 1.2, db: -8 }, wall: { ev: 'land_hard', pitch: 0.6, db: 3 },
+  gravity: { ev: 'heavy_charge', pitch: 0.45, db: 0 },
 };
 /** Entities that hum while alive. */
 const ENT_LOOP: Partial<Record<EntKind, Cue>> = {
   eclipse: { ev: 'frenzy_loop', pitch: 0.5, db: -6 }, star: { ev: 'frenzy_loop', pitch: 0.42, db: -3 }, orbit: { ev: 'heavy_charge', pitch: 1.6, db: -16 },
+  gravity: { ev: 'frenzy_loop', pitch: 0.5, db: -6 }, storm: { ev: 'heavy_charge', pitch: 1.9, db: -14 }, timefield: { ev: 'frenzy_loop', pitch: 1.4, db: -14 },
 };
 const ATOM: Record<string, Cue> = {
   chain: { ev: 'hit_blocked', pitch: 1.9, db: 3 }, whip: { ev: 'swing_polearm', pitch: 1.4, db: 0 },
@@ -27,6 +33,8 @@ const ATOM: Record<string, Cue> = {
   pin: { ev: 'land_hard', pitch: 0.5, db: 3 }, magnet: { ev: 'heavy_release', pitch: 0.6, db: 0 },
   boom: { ev: 'bomb', pitch: 0.8, db: 4 }, meteor_hit: { ev: 'bomb', pitch: 1, db: 3 }, anchor_hit: { ev: 'land_hard', pitch: 0.8, db: 2 },
   orbit_hit: { ev: 'hit_blocked', pitch: 1.5, db: -6 }, freeze: { ev: 'hit_armor', pitch: 1.45, db: -2 }, push: { ev: 'land_soft', pitch: 1.2, db: -4 },
+  hook: { ev: 'swing_polearm', pitch: 1.6, db: 0 }, blink: { ev: 'steam_vent', pitch: 1.6, db: 0 }, vanish: { ev: 'steam_vent', pitch: 2, db: -6 },
+  rift: { ev: 'swing_sword', pitch: 1.5, db: 3 }, heal: { ev: 'land_soft', pitch: 1.6, db: -6 }, ice_boom: { ev: 'hit_armor', pitch: 1.1, db: 2 },
 };
 
 export function bindEffectAudio(a: AudioEngine, localId = 0): () => void {
@@ -43,8 +51,8 @@ export function bindEffectAudio(a: AudioEngine, localId = 0): () => void {
       if (l) loops.set(e.id, a.loop(l.ev, { pitch: l.pitch, db: l.db, pos: own && k === 'orbit' ? undefined : { x: e.x, y: e.y, z: e.z } }));
     }),
     bus.on('fx:atom', (e) => {
-      play(ATOM[e.k], e.o === localId && e.k !== 'meteor_hit' && e.k !== 'boom', e.p[0], e.p[1], e.p[2]);
-      if (e.k === 'boom' || e.k === 'meteor_hit') a.duck();
+      play(ATOM[e.k], e.o === localId && e.k !== 'meteor_hit' && e.k !== 'boom' && e.k !== 'ice_boom', e.p[0], e.p[1], e.p[2]);
+      if (e.k === 'boom' || e.k === 'meteor_hit' || e.k === 'rift') a.duck();
     }),
     bus.on('fx:dmg', (e) => { if (e.target === localId) buzz(e.dmg >= 20 ? 'heavy' : 'light'); }),
     bus.on('fx:status', (e) => { if (e.id === localId && (e.k === 'freeze' || e.k === 'pin')) buzz('medium'); }),

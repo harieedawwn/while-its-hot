@@ -105,7 +105,8 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 
 - `client/src/input/controls-settings.ts` `sharedControls()` the one live Controls · `layout-store.ts` `reload()` · `pictograms.ts` flame/eye/slot variants, `TouchControls.setIcon/setDim` · `ForgeSession.swapSlot/filled/swapT`
 - `shared/src/match/rules.ts` also `ghostLanding/ringTickDmg/bladeLoss/armorLoss` · `match/ghost.test.ts` · `ForgeSession.newRound/carryLoss` · msgs `ghost/rtick/carry` (`net/match-msgs.ts`), `FLAG.ghost`
-- `shared/src/effects/{atoms,rows,cast,ents,world}.ts` form-effect toolkit: types+ESink, kiem/bua row hooks, atom casts, entity rules, EffectWorld (cds, caps) · `match/effect-sink.ts` server ESink (edmg/status/atom msgs)
+- `shared/src/effects/{atoms,rows,cast,ents,world}.ts` form-effect toolkit: types+ESink, kiem/bua row hooks, atom casts, entity rules, EffectWorld (cds, caps) · `match/effect-sink.ts` server ESink (edmg/status/atom/heal/tp msgs)
+- `shared/src/effects/{rows-dao,rows-tay,cast-b,ents-b,slides,test-kit}.ts` dao/tay hooks, their atoms and entities (knife, projectiles, hands, field, storm, decoy), slide trail/decoy rules, shared test sink · `client/src/player/blink.ts` safe landing for tp (+test) · `fx/{effect-view-b,wall-blockers}.ts` phase-29 entity drawing, solid stone walls · `Character.setVeil` + `veilMaterial` invisible body
 - `client/src/combat/local-effects.ts` offline EffectWorld / snapshot ents · `player/afflict.ts` movement statuses (MoveState.af) · `fx/effect-{view,atoms,meshes,mat}.ts` ents → meshes, instant atoms, geometry, material · `audio/events-effects.ts`
 - `client/src/net/net-ghost.ts` local dead/Hồn presentation + ring pain vignette · `render/materials/ghost.ts` Bayer pale ghost body (`Character.setGhost`) · `Pipeline.setVignette` (`uVig`), `FirstPersonCamera.hurt/dead`, `TouchControls.setGhost`
 

@@ -1,11 +1,12 @@
 import { BALANCE } from '../balance';
 import type { Atom, EBody } from './atoms';
+import { castB } from './cast-b';
 import { aimOf, type EffectWorld, eyeY, flat, fwdOf } from './world';
 
 const E = BALANCE.effects, PUSH_S = BALANCE.combat.pushS;
 
 /** Velocity that carries t to (x, z) in ps seconds (pull-to-point knocks). */
-function toward(t: EBody, x: number, z: number, ps: number, vy = 0): [number, number, number] {
+export function toward(t: EBody, x: number, z: number, ps: number, vy = 0): [number, number, number] {
   return [(x - t.x) / ps, vy, (z - t.z) / ps];
 }
 /** Velocity straight away from (x, z) at speed. */
@@ -17,7 +18,7 @@ export function awayFrom(t: EBody, x: number, z: number, speed: number, vy = 0):
 }
 
 /** Bodies of `o`'s foes within r of (x, z), nearest first. */
-function near(w: EffectWorld, o: EBody, x: number, z: number, r: number): EBody[] {
+export function near(w: EffectWorld, o: EBody, x: number, z: number, r: number): EBody[] {
   return w.foes(o).filter((b) => flat(b.x, b.z, x, z) <= r).sort((a, b) => flat(a.x, a.z, x, z) - flat(b.x, b.z, x, z));
 }
 
@@ -88,7 +89,7 @@ export function castAtom(w: EffectWorld, src: EBody, t: EBody | null, a: Atom): 
       return;
     }
     case 'hole': {
-      const H = a.k === 'eclipse' ? E.eclipse : E.star;
+      const H = a.k === 'eclipse' ? E.eclipse : a.k === 'star' ? E.star : E.tay.gravity;
       if (!w.ready(`${a.k}:${src.id}`, H.cd)) return;
       w.spawn(a.k, src.id, src.x + fx * H.ahead, src.y + 1.1, src.z + fz * H.ahead, src.yaw, H.s, H.r);
       return;
@@ -129,7 +130,7 @@ export function castAtom(w: EffectWorld, src: EBody, t: EBody | null, a: Atom): 
       if (t) s.knock(t, awayFrom(t, src.x, src.z, E.rubber.push, E.rubber.up), E.rubber.bounceS, true);
       return;
     case 'push':
-      if (t) { s.knock(t, awayFrom(t, src.x, src.z, E.lightPush.push, 1), PUSH_S); s.fx({ k: 'push', o: src.id, p: [t.x, t.y + 1, t.z] }); }
+      if (t) { s.knock(t, awayFrom(t, src.x, src.z, a.v ?? E.lightPush.push, 1), PUSH_S); s.fx({ k: 'push', o: src.id, p: [t.x, t.y + 1, t.z] }); }
       return;
     case 'chain': {
       if (!w.ready(`chain:${src.id}`, E.chain.cd)) return;
@@ -164,5 +165,6 @@ export function castAtom(w: EffectWorld, src: EBody, t: EBody | null, a: Atom): 
       w.spawn('crack', src.id, src.x + fx, src.y, src.z + fz, src.yaw, C.len / C.speed, C.w, [fx * C.speed, 0, fz * C.speed], C.dmg);
       return;
     }
+    default: castB(w, src, t, a);
   }
 }

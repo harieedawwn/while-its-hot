@@ -1,11 +1,11 @@
 import { BALANCE } from '../balance';
-import { resolveHit, type DefenderView } from '../combat/damage';
+import { behind, resolveHit, type DefenderView } from '../combat/damage';
 import { attackShape, framesFor, totalS } from '../combat/frames';
 import { passivesOf, traitsOf } from '../data/weapons';
 import { FLAG } from '../net/codec';
 import type { MatchClientMsg, Vec3 } from '../net/match-msgs';
 import type { Atom } from '../effects/atoms';
-import { hitEffects, parryEffects, parryWindow, reachFor } from '../passives';
+import { hitEffects, killEffects, parryEffects, parryWindow, reachFor } from '../passives';
 import { knockFrom, serverEffects, type Harm } from './effects';
 import { flatDist, type MPlayer, type Out } from './mplayer';
 
@@ -89,10 +89,11 @@ export function claimHit(ctx: HitCtx, a: MPlayer, t: MPlayer, m: HitMsg, now: nu
   const frames = framesFor(def, sw.kind, sw.combo);
   const kn = knockFrom(a.st.x, a.st.z, t, res.r === 'blocked' ? frames.knock * C.block.knockMul : frames.knock);
   const fx: Out[] = [];
-  if (res.r !== 'blocked') serverEffects(a, t, hitEffects(passivesOf(def), { kind: sw.kind, combo: sw.combo, dist, reach: def.stats.reach }), kn, ctx.list, ctx.harm, fx, ctx.atom);
+  if (res.r !== 'blocked') serverEffects(a, t, hitEffects(passivesOf(def), { kind: sw.kind, combo: sw.combo, dist, reach: def.stats.reach, back: behind(defenderView(t, m, now, ctx.truceUntil), a.st.x, a.st.z) }), kn, ctx.list, ctx.harm, fx, ctx.atom);
   const dmg = res.dmg * a.fx.dmgMul;
   const hp = Math.max(0, t.hp - dmg);
   out.push({ to: 'all', m: { t: 'dmg', a: a.id, tg: t.id, dmg, r: res.r, zone: m.zone, kind: sw.kind, hp, sc: res.staminaCost, st: res.staggerS, kn, p, s: m.s } });
   ctx.harm(t, dmg, a.id, out);
   out.push(...fx);
+  if (!t.alive && res.r !== 'blocked') serverEffects(a, t, killEffects(passivesOf(def)), kn, ctx.list, ctx.harm, out, ctx.atom);
 }

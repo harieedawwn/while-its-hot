@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { disposeTree } from '../../render/dispose';
 import type { ModuleId } from '@wih/shared';
-import { ghostMaterial } from '../../render/materials/ghost';
+import { FEEL } from '../../core/feel';
+import { ghostMaterial, veilMaterial } from '../../render/materials/ghost';
 import type { MaterialLib } from '../../render/materials/library';
 import { type AnimInput, Animator } from './animator';
 import { buildArmor } from './armor';
@@ -27,6 +28,7 @@ export class Character {
   armorLevel = -1;
   get ghost(): boolean { return this.ghosted; }
   private ghosted = false;
+  private veiled = false;
   modules: readonly ModuleId[] = [];
 
   constructor(private lib: MaterialLib, o: CharacterOpts = {}) {
@@ -54,18 +56,24 @@ export class Character {
       this.armor.push(sm); this.root.add(sm.mesh);
     }
     this.armorLevel = level; this.modules = [...modules];
-    if (this.ghosted) this.skin(true);
+    if (this.ghosted || this.veiled) this.skin(true);
     this.refresh();
   }
 
   /** Hồn: the body and armor are drawn pale and see-through (Bayer screen door); the held item is hidden. */
   setGhost(on: boolean): void {
     if (on === this.ghosted) return;
-    this.ghosted = on; this.skin(on); this.skeleton.hold.hand_r.visible = this.skeleton.hold.hand_l.visible = !on;
+    this.ghosted = on; this.skin(on || this.veiled); this.skeleton.hold.hand_r.visible = this.skeleton.hold.hand_l.visible = !(on || this.veiled);
+  }
+  /** Invisible (phase 29): drawn at a sliver of the Bayer door, weapon hidden; a Hồn keeps its own look. */
+  setVeil(on: boolean): void {
+    if (on === this.veiled) return;
+    this.veiled = on; this.skin(this.ghosted || on); this.skeleton.hold.hand_r.visible = this.skeleton.hold.hand_l.visible = !(on || this.ghosted);
   }
   private skin(on: boolean): void {
-    this.body.mesh.material = on ? ghostMaterial() : this.lib.get('cloth');
-    for (const a of this.armor) a.mesh.material = on ? ghostMaterial() : this.lib.get('steel');
+    const m = this.ghosted ? ghostMaterial() : this.veiled ? veilMaterial(FEEL.fx.effects.veilAlpha) : null;
+    this.body.mesh.material = on && m ? m : this.lib.get('cloth');
+    for (const a of this.armor) a.mesh.material = on && m ? m : this.lib.get('steel');
   }
 
   /** Advance the animation by dt and re-pose the meshes. */

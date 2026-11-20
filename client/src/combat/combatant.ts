@@ -27,6 +27,8 @@ export class Combatant {
   invuln = false;
   burnT = 0;
   burnDps = 0;
+  /** Seconds left invisible (dao_bong…): remotes and dummies draw it veiled; 0 = visible. */
+  invisT = 0;
   /** Seconds dead (respawn timing belongs to the owner). */
   deadT = 0;
   /** Online: hp, death and revive come from the server; CombatWorld never kills this one by itself. */
@@ -57,6 +59,7 @@ export class Combatant {
     s.traits = traitsOf(this.weapon);
     s.speedMul = this.fighter.speedMul * (this.ghost ? BALANCE.match.ghost.speedMul : 1);
     if (this.burnT > 0) { this.burnT -= dt; this.hp -= this.burnDps * dt; }
+    this.invisT = Math.max(0, this.invisT - dt);
     if (this.fighter.dead) this.deadT += dt;
   }
 
@@ -83,11 +86,12 @@ export class Combatant {
   /** A form-effect status on this body (offline sink or the server's `status`); everyone's presentation hears it. */
   status(k: StatusKind, s: number, v: number, p?: readonly number[]): void {
     afflict(this.body.s.af, k, s, v, p);
+    if (k === 'invis') this.invisT = s;
     const q = this.body.s.pos;
     bus.emit('fx:status', { id: this.id, k, s, x: q.x, y: q.y, z: q.z });
   }
 
-  revive(): void { this.ghost = false; this.hp = BALANCE.combat.hp; this.burnT = 0; this.deadT = 0; Object.assign(this.body.s.af, { slowT: 0, freezeT: 0, pinT: 0, slipT: 0, wellT: 0, bounceT: 0 }); this.fighter.revive(); }
+  revive(): void { this.ghost = false; this.hp = BALANCE.combat.hp; this.burnT = 0; this.invisT = 0; this.deadT = 0; Object.assign(this.body.s.af, { slowT: 0, freezeT: 0, pinT: 0, slipT: 0, wellT: 0, bounceT: 0, hasteT: 0 }); this.fighter.revive(); }
 }
 
 /** Fighter input from button states (local player) — kept here so dummies and players share the shape. */

@@ -3,6 +3,7 @@ import type { CombatWorld } from '../combat/combat-world';
 import type { LocalFighter } from '../combat/local-fighter';
 import type { HitClaim, HitResolver } from '../combat/resolver';
 import { bus } from '../core/events';
+import { blinkTo } from '../player/blink';
 import { pushMove } from '../player/move-state';
 import type { Hud } from '../ui/hud/hud';
 import type { Remotes } from './remotes';
@@ -70,6 +71,7 @@ export class NetCombat implements HitResolver {
         if (m.b) st.af.bounceT = m.ps ?? 1;
         break;
       }
+      case 'tp': blinkTo(this.d.lf.c.body, m.p[0], m.p[1], m.p[2], m.yaw); break;
       case 'status': this.d.world.byId(this.local(m.tg))?.status(m.k, m.s, m.v, m.p); break;
       case 'atom': bus.emit('fx:atom', { ...m.a, o: this.local(m.a.o) }); break;
       case 'edmg': {

@@ -109,6 +109,7 @@ export class Dummy {
   /** Per render frame: pose the body (frozen while its own hit-stop runs). */
   render(dt: number, alpha: number, frozen: boolean): void {
     const v = this.c.body.viewState(alpha);
+    this.ch.setVeil(this.c.invisT > 0);
     this.ch.root.position.copy(v.pos);
     this.ch.root.rotation.y = v.yaw;
     this.ch.update(frozen ? 0 : dt, animInputFromMove(this.c.body.s, v.yaw, this.animIn));

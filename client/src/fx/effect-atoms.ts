@@ -6,7 +6,7 @@ import type { FxWorld } from './fx-world';
 
 const X = FEEL.fx.effects;
 const col = (h: string) => new THREE.Color(h);
-const BOLT = col(X.bolt), WAVE = col(X.wave), BELL = col(X.bell), PIN = col(X.pin), ICE = col(X.ice), DUST = col('#6a6258'), SCORCH = col('#1a1512');
+const POISON = col(X.poison), BONE = col(X.bone), SMOKE = col('#26222a'), BOLT = col(X.bolt), WAVE = col(X.wave), BELL = col(X.bell), PIN = col(X.pin), ICE = col(X.ice), DUST = col('#6a6258'), SCORCH = col('#1a1512');
 const MAX_SEG = 64;
 
 /**
@@ -74,6 +74,18 @@ export function bindEffectAtoms(fx: FxWorld, floorAt: (p: THREE.Vector3) => numb
       case 'orbit_hit': fx.spray(vec(p), 4, [1.5, 3], [0.1, 0.25], floor(p), 0.1); break;
       case 'freeze': for (let i = 0; i < 8; i++) fx.puffs.spawn({ x: p[0], y: p[1] + 0.3 + fx.rnd() * 1.4, z: p[2], vx: (fx.rnd() - 0.5) * 2, vy: 0.3, vz: (fx.rnd() - 0.5) * 2, size: 0.14, grow: 0.3, life: 0.7, alpha: 0.9, color: ICE, drag: 3, seed: fx.rnd() }); break;
       case 'push': dust(p, 5, 3); break;
+      case 'hook': if (a.q) { bolt(p, a.q, 0.18); dust(a.q, 4, 3); } break;
+      case 'blink': case 'vanish': dust(p, a.k === 'blink' ? 12 : 7, 2.5, SMOKE); if (a.k === 'blink') ring(p, 1.4, SMOKE, 0.3, 0.08); break;
+      case 'rift': {
+        const q = a.q ?? p;
+        bolt(p, q, 0.3); bolt(p, q, 0.22); bolt(p, q, 0.14);
+        for (let i = 0; i < 8; i++) { const u = i / 7; dust([p[0] + (q[0] - p[0]) * u, p[1] - 0.8, p[2] + (q[2] - p[2]) * u], 2, 2.5, SMOKE); }
+        ring(q, 2, SMOKE, 0.3, 0.1); fx.spray(vec(q), 10, [2, 5], [0.2, 0.5], floor(q), 0.4);
+        if (near(q, 14)) bus.emit('cam:trauma', { amount: 0.25 });
+        break;
+      }
+      case 'heal': for (let i = 0; i < 6; i++) fx.puffs.spawn({ x: p[0] + (fx.rnd() - 0.5) * 0.6, y: p[1] - 0.6 + fx.rnd() * 0.8, z: p[2] + (fx.rnd() - 0.5) * 0.6, vx: 0, vy: 1.1, vz: 0, size: 0.1, grow: 0.2, life: 0.8, alpha: 0.9, color: BONE, drag: 1, seed: fx.rnd() }); break;
+      case 'ice_boom': ring(p, r, ICE, 0.35, 0.12); dust(p, 10, 5, ICE); for (let i = 0; i < 10; i++) fx.puffs.spawn({ x: p[0], y: p[1] + fx.rnd(), z: p[2], vx: (fx.rnd() - 0.5) * 5, vy: 1 + fx.rnd() * 2, vz: (fx.rnd() - 0.5) * 5, size: 0.14, grow: 0.3, life: 0.7, alpha: 0.9, color: ICE, drag: 2, seed: fx.rnd() }); break;
     }
   };
   const offs = [
@@ -83,6 +95,9 @@ export function bindEffectAtoms(fx: FxWorld, floorAt: (p: THREE.Vector3) => numb
       if (e.k === 'shake' && e.id === localId) bus.emit('cam:trauma', { amount: 0.45 });
       if (e.k === 'pin') fx.decals.spawn({ x: e.x, y: e.y + 0.01, z: e.z, r0: 0.5, r1: 0.6, growS: 0.05, steps: 1, life: e.s, fadeS: 0.3, alpha: 0.9, color: PIN, shape: 1, seed: fx.rnd(), width: 0.25 });
       if (e.k === 'well') fx.spray(v.set(e.x, e.y + 1, e.z), 3, [1, 2], [0.2, 0.4], -1e3, 0.5, 2);
+      if (e.k === 'poison') for (let i = 0; i < 4; i++) fx.puffs.spawn({ x: e.x + (fx.rnd() - 0.5) * 0.5, y: e.y + 0.6 + fx.rnd() * 1.0, z: e.z + (fx.rnd() - 0.5) * 0.5, vx: 0, vy: 0.7, vz: 0, size: 0.1, grow: 0.25, life: 0.7, alpha: 0.9, color: POISON, drag: 1, seed: fx.rnd() });
+      if (e.k === 'haste') fx.spray(v.set(e.x, e.y + 0.2, e.z), 2, [1, 2], [0.1, 0.2], -1e3, 0.1, 0);
+      if (e.k === 'invis' && e.s > 0) for (let i = 0; i < 6; i++) fx.puffs.spawn({ x: e.x + (fx.rnd() - 0.5) * 0.6, y: e.y + fx.rnd() * 1.6, z: e.z + (fx.rnd() - 0.5) * 0.6, vx: (fx.rnd() - 0.5), vy: 0.4, vz: (fx.rnd() - 0.5), size: 0.16, grow: 0.5, life: 0.5, alpha: 0.8, color: SMOKE, drag: 2, seed: fx.rnd() });
     }),
   ];
   return {

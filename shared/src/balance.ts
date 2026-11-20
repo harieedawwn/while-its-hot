@@ -101,6 +101,45 @@ export const BALANCE = {
     slamDouble: { mul: 2 },
     crack: { len: 14, speed: 22, w: 1.3, dmg: 30, up: 9, cd: 6 },
     lightWave: { r: 2.5, push: 6 },
+    /**
+     * Dao (phase 29). back = attacker outside ±backHalfDeg of the defender's facing takes backMul. Poison = burn over time
+     * that stacks (dps per stack). haste = speed per stack for s after the last hit. Knife flies range m out and back (life = 2·range/speed).
+     */
+    dao: {
+      backMul: 1.5, backHalfDeg: 105, slideLen: 1.3,
+      poison: { dps: 2, s: 4, max: 3 },
+      haste: { per: 0.06, s: 3, max: 5 },
+      invis: { s: 2, parryS: 1 },
+      knife: { range: 15, speed: 30, r: 0.6, dmg: 12, cd: 1.5 },
+      hook: { range: 7, dot: 0.7, stop: 1.1, dur: 0.25, cd: 3 },
+      blink: { behind: 1.3, cd: 1 },
+      trail: { every: 0.25, r: 1, s: 2, dps: 6 },
+      timefield: { r: 4, s: 2, slow: 0.5, cd: 8, every: 0.2 },
+      decoy: { s: 3, dmg: 10, r: 2.2, trigger: 2, cd: 4 },
+      storm: { s: 2, r: 2.5, dmg: 8, every: 0.25, cd: 7, n: 8 },
+      rift: { range: 12, w: 1.1, dmg: 25, cd: 4 },
+    },
+    /**
+     * Tay (phase 29). push speeds come from metres: ~2.25 m/s per metre. Projectiles fly range m at speed and explode (boomR) on the
+     * first foe or at the end. hand = giant fist from above after `delay`; ahead/range = where it lands along the aim.
+     */
+    tay: {
+      mToV: 2.25, combo4Knock: 3, pistonPush: 6, farPush: 8, lightPull: 1, chargeMul: 0.6,
+      heal: { hit: 1, hit2: 2 },
+      proj: {
+        fireball: { range: 14, speed: 22, r: 0.7, dmg: 16, boomR: 2, cd: 2, burnDps: 3, burnS: 2 },
+        iceball: { range: 14, speed: 20, r: 0.7, dmg: 12, boomR: 2, cd: 2, slow: 0.5, slowS: 2 },
+        rocket: { range: 20, speed: 28, r: 0.7, dmg: 25, boomR: 3, cd: 4 },
+      },
+      spark: { dmg: 8, r: 8, cd: 0.35 },
+      wall: { s: 4, cd: 6, w: 3.2, ahead: 2.4, h: 2.3, lookDown: -0.55 },
+      magnetPunch: { r: 8, to: 1.6, cd: 4, dmg: 18, delay: 0.3, push: 8 },
+      giant: { r: 4, dmg: 30, delay: 0.5, range: 5, cd: 6, push: 7 },
+      sky: { r: 7, dmg: 50, delay: 0.9, range: 7, cd: 9, push: 9 },
+      gravity: { s: 2.5, r: 6, ahead: 5, pull: 6, capS: 1.2, cd: 8 },
+      meteorSmall: { delay: 0.6, r: 1.8, dmg: 20, cd: 1 },
+      rain: { n: 5, spread: 3, every: 0.25, delay: 0.7, r: 2, dmg: 20, cd: 8 },
+    },
     /** Hard caps: live effect entities per world, per owner. */
     maxEnts: 48, maxPerOwner: 8,
   },

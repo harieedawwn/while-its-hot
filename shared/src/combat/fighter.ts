@@ -1,6 +1,6 @@
 import { BALANCE } from '../balance';
 import { passivesOf, type WeaponDef } from '../data/weapons';
-import { type AttackKind, parryWindow } from '../passives';
+import { type AttackKind, chargeMulOf, parryWindow } from '../passives';
 import { attackShape, type Frames, framesFor, framesOf } from './frames';
 
 const C = BALANCE.combat;
@@ -127,7 +127,8 @@ export class Fighter {
         case 'charge': {
           const held = this.t;
           if (this.parAge <= buf) { this.events.push({ k: 'feint' }); this.startParry(); continue; }
-          if ((this.released && held >= C.heavy.minS) || held >= C.heavy.maxS) { this.release(held); continue; }
+          const cm = chargeMulOf(passivesOf(this.def));
+          if ((this.released && held >= C.heavy.minS * cm) || held >= C.heavy.maxS * cm) { this.release(held); continue; }
           return;
         }
         case 'parry':

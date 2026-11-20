@@ -5,6 +5,7 @@ import type { CollisionWorld } from '../physics/world';
 import type { LightRig } from '../render/lights';
 import type { Pipeline } from '../render/pipeline';
 import { bindEffectAtoms } from './effect-atoms';
+import { WallBlockers } from './wall-blockers';
 import { EffectView } from './effect-view';
 import { bindFx, ringFx } from './fx-bind';
 import { FxWorld } from './fx-world';
@@ -28,6 +29,7 @@ export class FxLayer {
   readonly effects: EffectView | null = null;
   private atoms: ReturnType<typeof bindEffectAtoms> | null = null;
   private cam = new THREE.Vector3();
+  private walls: WallBlockers | null = null;
 
   constructor(private o: FxLayerOpts) {
     this.fx = new FxWorld(o.rig, o.seed ?? 1);
@@ -43,6 +45,7 @@ export class FxLayer {
       this.effects = new EffectView(o.rig, this.fx, () => combat.effects.ents(performance.now() / 1000), (id) => combat.byId(id)?.body.s.pos ?? null, floorAt);
       o.scene.add(this.effects.root);
     }
+    if (combat && o.world) this.walls = new WallBlockers(o.world);
     this.atoms = bindEffectAtoms(this.fx, floorAt, () => this.cam);
   }
 
@@ -57,11 +60,12 @@ export class FxLayer {
   update(dt: number, camera: THREE.PerspectiveCamera): void {
     this.cam.setFromMatrixPosition(camera.matrixWorld);
     this.effects?.update(dt);
+    if (this.walls && this.o.combat) this.walls.sync(this.o.combat.effects.ents(performance.now() / 1000));
     this.atoms?.update(dt);
     this.fx.update(dt, camera, this.o.pipeline.height);
     for (const t of this.trails) t.update(dt);
     if (this.o.ring) ringFx(this.fx, this.o.pipeline, this.o.ring, camera.position, dt);
   }
 
-  dispose(): void { this.unbind(); this.effects?.dispose(); this.atoms?.dispose(); this.trails.forEach((t) => t.dispose()); this.fx.dispose(); if (this.o.ring) this.o.pipeline.setHeatTint(0); }
+  dispose(): void { this.walls?.dispose(); this.unbind(); this.effects?.dispose(); this.atoms?.dispose(); this.trails.forEach((t) => t.dispose()); this.fx.dispose(); if (this.o.ring) this.o.pipeline.setHeatTint(0); }
 }

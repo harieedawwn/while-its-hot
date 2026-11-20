@@ -8,11 +8,13 @@ import type { PassiveId } from '../passives';
  */
 
 /** Movement statuses the target's own client applies (movement is client-authoritative). */
-export type StatusKind = 'slow' | 'freeze' | 'pin' | 'slip' | 'well' | 'shake';
-export const STATUS_KINDS: readonly StatusKind[] = ['slow', 'freeze', 'pin', 'slip', 'well', 'shake'];
+export type StatusKind = 'slow' | 'freeze' | 'pin' | 'slip' | 'well' | 'shake' | 'haste' | 'invis' | 'poison';
+export const STATUS_KINDS: readonly StatusKind[] = ['slow', 'freeze', 'pin', 'slip', 'well', 'shake', 'haste', 'invis', 'poison'];
 
 /** Entities: things that exist for a while and travel in the snapshot. Order = wire code. */
-export const ENT_KINDS = ['slash', 'slash_burn', 'slash_ice', 'slash_sun', 'lava', 'ice', 'meteor', 'orbit', 'eclipse', 'column', 'anchor', 'crack', 'star'] as const;
+export const ENT_KINDS = ['slash', 'slash_burn', 'slash_ice', 'slash_sun', 'lava', 'ice', 'meteor', 'orbit', 'eclipse', 'column', 'anchor', 'crack', 'star',
+  // phase 29 (appended: the wire code is the index)
+  'knife', 'fireball', 'iceball', 'rocket', 'hand', 'timefield', 'storm', 'decoy', 'wall', 'gravity'] as const;
 export type EntKind = typeof ENT_KINDS[number];
 export type SlashVariant = 'slash' | 'slash_burn' | 'slash_ice' | 'slash_sun';
 
@@ -20,7 +22,8 @@ export type SlashVariant = 'slash' | 'slash_burn' | 'slash_ice' | 'slash_sun';
 export interface Ent { id: number; k: EntKind; o: number; x: number; y: number; z: number; vx: number; vy: number; vz: number; yaw: number; age: number; life: number; r: number }
 
 /** Instant moments for presentation only (sounds, sparks): sent as `atom` msgs online, bus events offline. */
-export type AtomFxKind = 'chain' | 'wave' | 'bell' | 'pin' | 'magnet' | 'whip' | 'boom' | 'meteor_hit' | 'anchor_hit' | 'orbit_hit' | 'freeze' | 'push';
+export type AtomFxKind = 'chain' | 'wave' | 'bell' | 'pin' | 'magnet' | 'whip' | 'boom' | 'meteor_hit' | 'anchor_hit' | 'orbit_hit' | 'freeze' | 'push'
+  | 'hook' | 'blink' | 'rift' | 'heal' | 'ice_boom' | 'vanish';
 export interface AtomFx { k: AtomFxKind; o: number; p: Vec3; r?: number; /** extra points (chain lightning hops, whip end) as flat xyz */ q?: number[] }
 
 /**
@@ -33,22 +36,43 @@ export type Atom =
   | { type: 'whip' }
   | { type: 'field'; k: 'lava_crack' | 'lava_pool' | 'lava_big' }
   | { type: 'meteor' }
-  | { type: 'hole'; k: 'eclipse' | 'star' }
+  | { type: 'hole'; k: 'eclipse' | 'star' | 'gravity' }
   | { type: 'column' }
   | { type: 'wave'; k: 'piston' | 'bell_wave' | 'light_wave' }
   | { type: 'magnet' }
   | { type: 'bounce' }
-  | { type: 'push' }
+  | { type: 'push'; /** m/s; default BALANCE.effects.lightPush.push */ v?: number }
   | { type: 'chain' }
   | { type: 'anchor' }
   | { type: 'pin_all' }
-  | { type: 'crack' };
+  | { type: 'crack' }
+  // dao (phase 29)
+  | { type: 'poison' }
+  | { type: 'haste' }
+  | { type: 'invis'; s: number }
+  | { type: 'knife' }
+  | { type: 'hook' }
+  | { type: 'blink' }
+  | { type: 'rift' }
+  | { type: 'storm' }
+  | { type: 'timefield' }
+  // tay (phase 29)
+  | { type: 'heal'; hp: number }
+  | { type: 'proj'; k: 'fireball' | 'iceball' | 'rocket' }
+  | { type: 'spark' }
+  | { type: 'wall' }
+  | { type: 'magnet_punch' }
+  | { type: 'hand'; k: 'giant' | 'sky' }
+  | { type: 'meteor_small' }
+  | { type: 'meteor_rain' };
 export type AtomType = Atom['type'];
 
 /** A body the effect world can touch (a player or a dummy). y = feet. */
 export interface EBody {
   id: number; team: number; x: number; y: number; z: number; yaw: number; pitch: number;
   alive: boolean; passives: readonly PassiveId[];
+  /** Sliding / mid-swing right now (slide effects, decoys); absent = false. */
+  sliding?: boolean; swinging?: boolean;
 }
 
 /** How a world applies results. The server sends messages; offline the client edits combatants and emits bus events. */
@@ -62,5 +86,9 @@ export interface ESink {
   /** s = seconds; mag = slow multiplier / pull speed; p = well center. */
   status(t: EBody, k: StatusKind, s: number, mag: number, p?: Vec3): void;
   burn(t: EBody, dps: number, s: number, by: number): void;
+  /** Heal t by hp (clamped to full). */
+  heal(t: EBody, hp: number): void;
+  /** Put t at p facing yaw (its own client finds a safe spot at or before p on the way back to where it was). */
+  teleport(t: EBody, p: Vec3, yaw: number): void;
   fx(a: AtomFx): void;
 }

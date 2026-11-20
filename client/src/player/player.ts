@@ -36,6 +36,11 @@ export class Player {
     this.view = { pos: new THREE.Vector3(), yaw, pitch: 0, vel: this.s.vel, grounded: false, low: false, sliding: false, clinging: false, wallN: this.s.wallN };
   }
 
+  /** Put the body at (x, y, z) facing yaw with no smear in the interpolated view (respawn, blink). */
+  place(x: number, y: number, z: number, yaw: number): void {
+    this.s.pos.set(x, y, z); this.prev.copy(this.s.pos); this.yaw = yaw;
+  }
+
   /** Look in radians: dx > 0 turns right, dy > 0 looks up. Applied per render frame (lowest latency). */
   look(dx: number, dy: number): void {
     this.yaw -= dx;

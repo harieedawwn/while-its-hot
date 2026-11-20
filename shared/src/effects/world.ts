@@ -4,6 +4,7 @@ import { auraOf, isInline, swingAtoms } from '../passives';
 import type { Atom, EBody, Ent, EntKind, ESink } from './atoms';
 import { castAtom } from './cast';
 import { tickEnt } from './ents';
+import { tickSlide } from './slides';
 
 const E = BALANCE.effects;
 
@@ -26,6 +27,10 @@ export class EffectWorld {
   private nextId = 1;
   private cds = new Map<string, number>();
   private later: { at: number; fn: () => void }[] = [];
+  private stacks = new Map<string, { n: number; until: number }>();
+  /** Per-body scratch of the slide rules (slides.ts) and invisible-until times. */
+  readonly mem = new Map<string, number>();
+  private veil = new Map<number, number>();
 
   constructor(readonly sink: ESink) {}
 
@@ -44,11 +49,31 @@ export class EffectWorld {
     return true;
   }
 
+  /** A stackable timed counter (poison, haste): +1 up to max, expiring s after the latest add. Returns the new count. */
+  stack(key: string, max: number, s: number): number {
+    const e = this.stacks.get(key), n = e && e.until > this.time ? Math.min(max, e.n + 1) : 1;
+    this.stacks.set(key, { n, until: this.time + s });
+    return n;
+  }
+
+  /** Invisible for s seconds (a new call keeps the longer); `unveil` ends it (an attack, damage dealt). */
+  hide(b: EBody, s: number): void {
+    this.veil.set(b.id, Math.max(this.veil.get(b.id) ?? 0, this.time + s));
+    this.sink.status(b, 'invis', s, 1);
+  }
+  unveil(b: EBody): void {
+    if ((this.veil.get(b.id) ?? 0) <= this.time) return;
+    this.veil.delete(b.id);
+    this.sink.status(b, 'invis', 0, 0);
+    this.sink.fx({ k: 'vanish', o: b.id, p: [b.x, b.y + 1, b.z] });
+  }
+
   /** Seconds left on a cooldown (tests, HUD). */
   cdLeft(key: string): number { return Math.max(0, (this.cds.get(key) ?? -1e9) - this.time); }
 
   /** An attack starts: its swing atoms fire at the strike moment (delayS = windup). */
   swing(src: EBody, kind: AttackKind, combo: number, delayS: number): void {
+    this.unveil(src);
     const atoms = swingAtoms(src.passives, { kind, combo, dist: 0, reach: 0 }).filter((a): a is Atom => !isInline(a));
     if (!atoms.length) return;
     const id = src.id;
@@ -79,14 +104,15 @@ export class EffectWorld {
       this.later = this.later.filter((l) => l.at > this.time);
       for (const l of due) l.fn();
     }
-    this.auras();
+    this.auras(dt);
     for (const e of this.live) { e.age += dt; tickEnt(this, e, dt); }
     for (let i = this.live.length - 1; i >= 0; i--) if (this.live[i].age >= this.live[i].life) this.live.splice(i, 1);
   }
 
-  /** Orbiting blades follow every living owner whose form has them. */
-  private auras(): void {
+  /** Orbiting blades follow every living owner whose form has them; slide effects (slides.ts). */
+  private auras(dt: number): void {
     for (const b of this.sink.bodies()) {
+      tickSlide(this, b, dt);
       const want = b.alive && auraOf(b.passives) === 'orbit';
       const has = this.live.find((e) => e.k === 'orbit' && e.o === b.id);
       if (want && !has) this.spawn('orbit', b.id, b.x, b.y, b.z, 0, 1e6, E.orbit.ring);
@@ -95,7 +121,7 @@ export class EffectWorld {
   }
 
   /** Drop everything (round reset, scene reset). */
-  clear(): void { this.live.length = 0; this.later.length = 0; this.cds.clear(); }
+  clear(): void { this.live.length = 0; this.later.length = 0; this.cds.clear(); this.stacks.clear(); this.mem.clear(); this.veil.clear(); }
 
   /** Wire view: the shared Ent fields only. */
   ents(): Ent[] {
