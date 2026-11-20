@@ -119,20 +119,20 @@ describe('match unlocks', () => {
 });
 
 import { foldRelics, RELICS } from '../data/relics';
+import { NO_MODS } from '../forge/odds';
 import { ForgeSession } from '../forge/session';
 describe('relics', () => {
   it('fold combines effects; every relic changes something', () => {
     const f = foldRelics(['an_sat', 'vong_da', 'dinh_tan', 'dau_toi']);
-    expect(f.dmgMul).toBeCloseTo(1.1); expect(f.cadenceMul).toBeCloseTo(0.8); expect(f.armorStart).toBe(2); expect(f.parryHp).toBe(5);
+    expect(f.dmgMul).toBeCloseTo(1.1); expect(f.costMul).toBeCloseTo(0.75); expect(f.armorStart).toBe(2); expect(f.parryHp).toBe(5);
     for (const r of RELICS) expect(foldRelics([r.id])).not.toEqual(foldRelics([]));
   });
-  it('da_niem prevents one Gãy, hon_than_do guarantees one Tuyệt', () => {
-    const s = new ForgeSession(() => 0.99); // always rolls Hỏng
-    s.noBreak = 1;
-    expect(s.strike('miss').broke).toBe(false);
-    expect(s.strike('miss').broke).toBe(true);
-    const t = new ForgeSession(() => 0.99); t.tuyet = 1;
-    expect(t.strike('miss').outcome).toBe('tuyet');
-    expect(t.strike('miss').outcome).toBe('hong');
+  it('da_niem turns one Vỡ into Giữ, hon_than_do makes one Lên a +2', () => {
+    const mods = foldRelics(['da_niem', 'hon_than_do']);
+    const s = new ForgeSession(() => 0.99, 1); s.mods = { ...NO_MODS, guardVo: mods.guardVo };
+    s.zoneC = 0.9; s.blades[0] = { family: 'kiem', level: 4, best: 4 };
+    expect(s.strike(0).outcome).toBe('giu'); expect(s.strike(3).outcome).toBe('vo');
+    const t = new ForgeSession(() => 0.0, 1); t.mods = { ...NO_MODS, plus2Once: mods.plus2Once }; t.zoneC = 0.5; t.heat = 0.7;
+    expect(t.strike(0.75).delta).toBe(2); t.zoneC = 0.5; expect(t.strike(3.75).delta).toBe(1);
   });
 });

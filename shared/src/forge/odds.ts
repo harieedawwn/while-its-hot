@@ -1,24 +1,28 @@
 import { BALANCE } from '../balance';
-import { forgeOdds, type ForgeOdds, type PassiveId } from '../passives';
 
-/** Forge outcome odds (GDD §6): base row by level → heat → ring timing → passives → relic mods → Tiếng tăm. */
-const F = BALANCE.forge;
+/** Forge rules as pure functions (ROUND3 §1, GDD §6): p(L), zone(L), heat bands, mods. No randomness here. */
+const F = BALANCE.forge, W = BALANCE.weapons;
 
-export type Outcome = 'tuyet' | 'dat' | 'giu' | 'hong';
+/** Lên = +1 (a card may make it +2), Giữ = 0, Vỡ = −2 (level clamps at 0, a blade is never destroyed). */
+export type Outcome = 'len' | 'giu' | 'vo';
 export type ForgeTarget = 'blade' | 'armor';
-/** perfect/miss = where the marker was; auto = a frenzy auto-strike (no timing shift). */
-export type Timing = 'perfect' | 'miss' | 'auto';
-export const OUTCOME_DELTA: Record<Outcome, number> = { tuyet: 2, dat: 1, giu: 0, hong: -1 };
+/** Where the marker was when the hammer fell. */
+export type Timing = 'hit' | 'miss';
 
-/** Relic / round modifiers as plain numbers, so relic data (phase 18) never needs a branch in the rules. */
+/** Card / relic / round modifiers as plain numbers, so item data never needs a branch in the rules (ROUND3 §5). */
 export interface ForgeMods {
   /** Tiếng tăm stacks. */
   notoriety: number;
-  /** Points moved from Hỏng to Giữ (Mối hàn). */
-  mercy: number;
-  zoneMul: number; cadenceMul: number; heatGainMul: number; heatDecayMul: number;
+  zoneMul: number; heatMul: number; decayMul: number; costMul: number;
+  frenzyFillMul: number; frenzyPlusS: number;
+  /** Charges: Vỡ becomes Giữ / the next Lên is +2. */
+  guardVo: number; plus2Once: number;
+  /** After a Vỡ the next Trúng is a sure Lên. */
+  sureAfterVo: boolean;
 }
-export const NO_MODS: ForgeMods = { notoriety: 0, mercy: 0, zoneMul: 1, cadenceMul: 1, heatGainMul: 1, heatDecayMul: 1 };
+export const NO_MODS: ForgeMods = {
+  notoriety: 0, zoneMul: 1, heatMul: 1, decayMul: 1, costMul: 1, frenzyFillMul: 1, frenzyPlusS: 0, guardVo: 0, plus2Once: 0, sureAfterVo: false,
+};
 
 export type HeatBand = 'cold' | 'dull' | 'forging' | 'burning';
 export function heatBand(h: number): HeatBand {
@@ -26,50 +30,27 @@ export function heatBand(h: number): HeatBand {
   if (h < F.heat.dull) return 'dull';
   return h > F.heat.burning ? 'burning' : 'forging';
 }
-
-/** Base odds row for a level. Armor passes level × rowMul (0..10 → 0..20). */
-export function baseOdds(level: number): ForgeOdds {
-  const l = Math.max(0, Math.floor(level));
-  const r = F.rows.find((x) => l <= x.upTo) ?? F.rows[F.rows.length - 1];
-  return { tuyet: r.tuyet, dat: r.dat, giu: r.giu, hong: r.hong };
+/** Zone multiplier of a heat band: forging = full, dull ×0.8, cold or burning ×0.6. */
+export function heatZoneMul(h: number): number {
+  const b = heatBand(h);
+  return b === 'forging' ? 1 : b === 'dull' ? F.zone.dullMul : F.zone.offMul;
 }
 
-type Key = keyof ForgeOdds;
-const SUCCESS: Key[] = ['tuyet', 'dat', 'giu'];
-/** Take up to `pts` points proportionally from `from`; returns what was taken. */
-function take(o: ForgeOdds, from: Key[], pts: number): number {
-  const tot = from.reduce((s, k) => s + o[k], 0), m = Math.min(pts, tot);
-  if (m <= 0) return 0;
-  for (const k of from) o[k] -= (o[k] * m) / tot;
-  return m;
+/** The level the curves read: blades use their level, armor (0..10) is stretched over the same range. */
+export function curveLevel(level: number, target: ForgeTarget): number {
+  return Math.max(0, target === 'armor' ? level * F.armor.levelMul : level);
 }
+const along = (a: number, b: number, level: number): number => a + (b - a) * Math.min(1, level / (W.maxLevel - 1));
 
-export interface OddsInput {
-  level: number; target: ForgeTarget; heat: number; timing: Timing;
-  passives?: readonly PassiveId[]; mods?: ForgeMods;
-}
-/** The final odds in points (always sums to 100, never negative). */
-export function oddsFor(i: OddsInput): ForgeOdds {
-  const mods = i.mods ?? NO_MODS;
-  const lvl = i.target === 'armor' ? i.level * F.armor.rowMul : i.level;
-  let o = baseOdds(lvl);
-  const band = heatBand(i.heat);
-  const shift = band === 'cold' ? F.heat.coldShift : band === 'dull' ? F.heat.dullShift : band === 'burning' ? F.heat.burnShift : 0;
-  if (shift > 0) o.hong += take(o, SUCCESS, shift);
-  if (i.timing === 'perfect') {
-    const m = Math.min(F.strike.perfectShift, o.hong);
-    o.hong -= m; o.dat += m * F.strike.perfectDatShare; o.tuyet += m * (1 - F.strike.perfectDatShare);
-  } else if (i.timing === 'miss') o.hong += take(o, SUCCESS, F.strike.missShift);
-  if (i.passives?.length) o = forgeOdds(i.passives, o, i.level);
-  if (mods.notoriety > 0) o.hong += take(o, ['dat'], F.notorietyShift * mods.notoriety);
-  if (mods.mercy > 0) { const m = Math.min(mods.mercy, o.hong); o.hong -= m; o.giu += m; }
-  return o;
-}
+/** Chance that a Trúng is a Lên. */
+export function pLen(level: number, target: ForgeTarget = 'blade'): number { return along(F.p.p0, F.p.pEnd, curveLevel(level, target)); }
+/** Sweet-zone size at a level as a fraction of the ring, before heat and mods. */
+export function zoneFrac(level: number, target: ForgeTarget = 'blade'): number { return along(F.zone.z0, F.zone.zEnd, curveLevel(level, target)); }
 
-/** Roll an outcome from odds with a uniform rand in [0,1). */
-export function rollOutcome(o: ForgeOdds, rand: number): Outcome {
-  const total = o.tuyet + o.dat + o.giu + o.hong;
-  let r = rand * total;
-  for (const k of ['tuyet', 'dat', 'giu'] as const) { if (r < o[k]) return k; r -= o[k]; }
-  return 'hong';
+/** Frenzy zone size (fraction of the ring) `age` seconds after it started: full, then a linear shrink. */
+export function frenzyZone(age: number, durS: number = F.frenzy.durS): number {
+  const f = F.frenzy;
+  if (age <= f.shrinkAtS) return f.zoneFull;
+  const k = Math.min(1, (age - f.shrinkAtS) / Math.max(1e-6, durS - f.shrinkAtS));
+  return f.zoneFull + (f.zoneEnd - f.zoneFull) * k;
 }

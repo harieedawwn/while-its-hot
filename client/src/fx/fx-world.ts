@@ -65,9 +65,9 @@ export class FxWorld {
     }
   }
 
-  /** Forge strike at the anvil face: count by outcome; Hỏng throws fewer, duller sparks lower. */
-  forgeStrike(p: THREE.Vector3, outcome: string, floor: number): void {
-    const n = X.strike.count[outcome] ?? 16, dull = outcome === 'hong';
+  /** Forge strike at the anvil face: count by outcome (×3 in Nhập thần); Vỡ throws fewer, duller sparks lower. */
+  forgeStrike(p: THREE.Vector3, outcome: string, floor: number, frenzy = false): void {
+    const n = Math.round((X.strike.count[outcome] ?? 16) * (frenzy ? X.strike.frenzyMul : 1)), dull = outcome === 'vo';
     this.spray(p, n, dull ? [1.4, 3.2] : X.strike.speed, dull ? [0.25, 0.5] : X.strike.life, floor, dull ? 0.05 : 0.25);
   }
 

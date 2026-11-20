@@ -29,10 +29,10 @@ import type { SceneFactory } from './scenes';
  * anvil enters the stance; there E strikes, hold left mouse (Đánh) heats the blade, Q (Đổi) toggles blade ↔ armor
  * (outside the stance it swaps the two weapon slots), right mouse (Đỡ) starts Nhập thần when the meter is full;
  * the stick, Lướt, Nhảy or Trượt leave. At +3 a 3-way family pick (1/2/3 or tap) opens for 3 s.
- * Presets: `level=0..20` `fam=kiem|bua|thuong` `heat=0..1` `armor=0..10` `mods=a,b` `target=armor`
+ * Presets: `level=0..45` `fam=kiem|bua|thuong` `heat=0..1` `armor=0..10` `mods=a,b` `target=armor`
  * `frenzy=1|0` (meter full / active) `caps=1` (training caps) `dummy=<mode>` (a foe that hits you out).
  * `stance=1` starts in the stance with the anvil placed; `placed=1` places only. Frozen shots (`t=`): `ring=0..1`,
- * `zone=0..1`, `pick=1` (family pick open), `hit=<s since strike>` (hammer mid-swing). R resets, `window.__forge`.
+ * `zone=0..1`, `frt=<s into Nhập thần>` (frozen clock; with `frenzy=on` the zone size follows it), `pick=1` (family pick open), `hit=<s since strike>` (hammer mid-swing). R resets, `window.__forge`.
  */
 const ORIGIN = new THREE.Vector3(-18, 0.05, -17);
 const YAW = 0;
@@ -51,6 +51,8 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   const load = (id: string) => loadWeapon(id, ctx);
 
   const frozen = params.t !== null;
+  /** Frozen shots run the ring on a fixed clock so the marker and the shrinking zone are reproducible. */
+  let ft = num(params, 'frt', 0);
   const world = new CombatWorld();
   const c = params.cam;
   const player = new Player(arena.world, c ? [c[0], c[1] - FEEL.camera.eye, c[2]] : ORIGIN.toArray(), c && c.length >= 4 ? c[3] : YAW);
@@ -86,7 +88,8 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   // the smith's own body is invisible in first person; keep one hidden Character only to prove armor builds at every level
   const body = new Character(lib, { armor: session.armor, modules: session.modules });
   const forge = new ForgeController({
-    player, lf, anvil, stage, session, hud, touch: input.touch ?? undefined, loadModel: load,
+    player, lf, anvil, stage, session, hud, touch: input.touch ?? undefined, loadModel: load, look: (k) => pipeline.setWarm(k),
+    clock: frozen ? { now: () => ft, at: () => ft } : undefined,
     onArmor: (l) => body.setArmor(l, session.modules),
   });
 
@@ -97,10 +100,10 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
     : null;
   if (dummy) { world.add(dummy.c); scene.add(dummy.ch.root); }
 
-  const stats = { strikes: 0, last: '', get session() { return `${session.blade.family}+${session.blade.level} best ${session.blade.best} armor ${session.armor} heat ${session.heat.toFixed(2)} meter ${session.frenzyMeter}`; }, get anvil() { return anvil.phase; }, get stance() { return forge.inStance; } };
+  const stats = { strikes: 0, last: '', get session() { return `${session.blade.family}+${session.blade.level} best ${session.blade.best} armor ${session.armor} heat ${session.heat.toFixed(2)} meter ${session.frenzyMeter}`; }, get ring() { return `t ${session.time.toFixed(2)} marker ${session.marker.toFixed(2)} zone ${session.zoneC.toFixed(2)}±${session.zoneHalf.toFixed(3)} frenzy ${session.frenzy} left ${session.frenzyT.toFixed(2)}`; }, get anvil() { return anvil.phase; }, get stance() { return forge.inStance; } };
   (window as unknown as { __forge: unknown }).__forge = stats;
   const offs = [
-    bus.on('forge:strike', (e) => { stats.strikes++; stats.last = `${e.target} ${e.outcome}${e.perfect ? '!' : ''}${e.refused ? ' refused' : ''}${e.broke ? ' BROKE' : ''} +${e.level}`; }),
+    bus.on('forge:strike', (e) => { stats.strikes++; stats.last = `${e.target} ${e.outcome}${e.hit ? '!' : ''}${e.frenzy ? ' FR' : ''}${e.refused ? ' refused' : ''} +${e.level}`; }),
   ];
 
   const reset = () => {
@@ -143,10 +146,10 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   }
   session.heat = Math.max(0, Math.min(1, num(params, 'heat', 0)));
   if (params.get('frenzy') === '1') session.frenzyMeter = BALANCE.forge.frenzy.full;
-  if (params.get('frenzy') === 'on') { session.frenzyMeter = BALANCE.forge.frenzy.full; session.activateFrenzy(); }
+  if (params.get('frenzy') === 'on') { session.frenzyMeter = BALANCE.forge.frenzy.full; session.setTime(frozen ? 0 : performance.now() / 1000); session.activateFrenzy(session.time); }
   if (frozen) {
     for (let i = 0; i < 12; i++) frame(step, 1);
-    session.ring = num(params, 'ring', 0.12); session.zoneC = num(params, 'zone', 0.5);
+    session.setTime(ft); session.ring = { p0: num(params, 'ring', 0.12), t0: ft, lap: session.ring.lap }; session.zoneC = num(params, 'zone', 0.5);
     if (params.get('hit')) { stage.strike(); time = 0; }
     time = params.t ?? 0;
     if (params.get('pick') === '1' && lvl >= BALANCE.weapons.familyPick) { session.pendingPick = 0; hud.openPick(session.lastFamily, BALANCE.forge.stance.pickS, (f) => { session.pickFamily(f); }); }

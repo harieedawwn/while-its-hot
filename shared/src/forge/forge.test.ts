@@ -1,151 +1,191 @@
 import { describe, expect, it } from 'vitest';
 import { BALANCE } from '../balance';
 import { AnvilRule } from './anvil-rule';
-import { baseOdds, heatBand, NO_MODS, type Outcome, oddsFor, rollOutcome } from './odds';
+import { frenzyZone, heatBand, heatZoneMul, NO_MODS, pLen, zoneFrac } from './odds';
+import { hash01, phaseAt, ringDist, zoneAfter } from './ring';
 import { ForgeSession, moduleSlots } from './session';
+import { applyForgeSync, forgeSync } from './sync';
 
-const sum = (o: { tuyet: number; dat: number; giu: number; hong: number }) => o.tuyet + o.dat + o.giu + o.hong;
+const F = BALANCE.forge;
 function rng(seed: number) { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
-const seq = (...v: number[]) => { let i = 0; return () => v[i++ % v.length]; };
+/** A session at forging heat with the zone parked at 0.5 (marker 0.5 at t = 0.75 s: phase = t / 1.5). */
+function session(rand: () => number = rng(7), level = 0): ForgeSession {
+  const s = new ForgeSession(rand, 1234); s.heat = 0.7; s.zoneC = 0.5; s.blades[0] = { family: 'kiem', level, best: level }; return s;
+}
+const T_HIT = 0.75, T_MISS = 0.0;
+/** Park the zone under the marker at time t (a perfect timing), return t. */
+const hit = (s: ForgeSession, t: number): number => { s.zoneC = phaseAt(s.ring, t); return t; };
 
-describe('odds table (GDD §6)', () => {
-  it('matches the four level rows', () => {
-    expect(baseOdds(0)).toEqual({ tuyet: 12, dat: 55, giu: 18, hong: 15 });
-    expect(baseOdds(4)).toEqual({ tuyet: 12, dat: 55, giu: 18, hong: 15 });
-    expect(baseOdds(5)).toEqual({ tuyet: 6, dat: 38, giu: 20, hong: 36 });
-    expect(baseOdds(12)).toEqual({ tuyet: 4, dat: 25, giu: 22, hong: 49 });
-    expect(baseOdds(19)).toEqual({ tuyet: 2, dat: 16, giu: 22, hong: 60 });
+describe('curves (ROUND3 §1)', () => {
+  it('p(L) 0.75 at +0 falling linearly to 0.38 at +44; zone 0.22 → 0.10', () => {
+    expect(pLen(0)).toBeCloseTo(0.75); expect(pLen(44)).toBeCloseTo(0.38); expect(pLen(22)).toBeCloseTo(0.565);
+    expect(zoneFrac(0)).toBeCloseTo(0.22); expect(zoneFrac(44)).toBeCloseTo(0.10);
+    expect(BALANCE.weapons.maxLevel).toBe(45);
   });
-  it('heat bands', () => {
+  it('heat bands: forging = full zone, dull ×0.8, cold or burning ×0.6', () => {
     expect([0.1, 0.3, 0.5, 0.9, 0.95].map(heatBand)).toEqual(['cold', 'dull', 'forging', 'forging', 'burning']);
+    expect([0.1, 0.3, 0.7, 0.95].map(heatZoneMul)).toEqual([0.6, 0.8, 1, 0.6]);
   });
-  it('heat moves 20 / 8 / 0 / 10 points to Hỏng', () => {
-    const at = (heat: number) => oddsFor({ level: 0, target: 'blade', heat, timing: 'auto' }).hong;
-    expect(at(0.1)).toBeCloseTo(35); expect(at(0.3)).toBeCloseTo(23); expect(at(0.7)).toBeCloseTo(15); expect(at(0.95)).toBeCloseTo(25);
+  it('armor stretches 0..10 over the same curves', () => {
+    expect(pLen(0, 'armor')).toBeCloseTo(0.75); expect(pLen(10, 'armor')).toBeCloseTo(0.38);
   });
-  it('perfect timing: 15 points Hỏng → Đạt/Tuyệt 2:1; a miss moves 15 to Hỏng', () => {
-    const p = oddsFor({ level: 5, target: 'blade', heat: 0.7, timing: 'perfect' });
-    expect(p.hong).toBeCloseTo(21); expect(p.dat).toBeCloseTo(48); expect(p.tuyet).toBeCloseTo(11);
-    const m = oddsFor({ level: 5, target: 'blade', heat: 0.7, timing: 'miss' });
-    expect(m.hong).toBeCloseTo(51); expect(sum(m)).toBeCloseTo(100);
+  it('frenzy zone: half the ring until 2.4 s, then shrinks linearly to 0.12 at 4 s', () => {
+    expect(frenzyZone(0)).toBe(0.5); expect(frenzyZone(2.4)).toBe(0.5);
+    expect(frenzyZone(3.2)).toBeCloseTo(0.31); expect(frenzyZone(4)).toBeCloseTo(0.12);
   });
-  it('perfect cannot move more than the Hỏng that is there', () => {
-    const p = oddsFor({ level: 0, target: 'blade', heat: 0.7, timing: 'perfect' });
-    expect(p.hong).toBeCloseTo(0); expect(sum(p)).toBeCloseTo(100);
+});
+
+describe('the ring is a function of the clock', () => {
+  it('marker: one lap per 1.5 s, wraps, same answer for any caller', () => {
+    const b = { p0: 0, t0: 0, lap: F.ring.lapS };
+    expect(phaseAt(b, 0.75)).toBeCloseTo(0.5); expect(phaseAt(b, 1.5)).toBeCloseTo(0, 6); expect(phaseAt(b, 2.25)).toBeCloseTo(0.5);
+    expect(ringDist(0.02, 0.97)).toBeCloseTo(0.05);
   });
-  it('armor looks up level × 2', () => {
-    const a = oddsFor({ level: 3, target: 'armor', heat: 0.7, timing: 'auto' });
-    expect(a).toEqual(baseOdds(6));
-    expect(oddsFor({ level: 10, target: 'armor', heat: 0.7, timing: 'auto' })).toEqual(baseOdds(19));
+  it('the zone sequence is seeded: same seed, same zones', () => {
+    expect([0, 1, 2, 3].map((k) => hash01(9, k))).toEqual([0, 1, 2, 3].map((k) => hash01(9, k)));
+    expect(hash01(9, 0)).not.toBe(hash01(10, 0));
   });
-  it('passive, notoriety and mercy hooks', () => {
-    const n = oddsFor({ level: 0, target: 'blade', heat: 0.7, timing: 'auto', mods: { ...NO_MODS, notoriety: 2 } });
-    expect(n.dat).toBeCloseTo(43); expect(n.hong).toBeCloseTo(27);
-    const m = oddsFor({ level: 5, target: 'blade', heat: 0.7, timing: 'auto', mods: { ...NO_MODS, mercy: 10 } });
-    expect(m.hong).toBeCloseTo(26); expect(m.giu).toBeCloseTo(30);
-  });
-  it('every combination sums to 100 and never goes negative', () => {
-    for (let lv = 0; lv <= 19; lv += 3) for (const heat of [0, 0.3, 0.7, 1]) for (const timing of ['perfect', 'miss', 'auto'] as const) {
-      const o = oddsFor({ level: lv, target: 'blade', heat, timing, mods: { ...NO_MODS, notoriety: 3, mercy: 40 } });
-      expect(sum(o)).toBeCloseTo(100);
-      for (const v of [o.tuyet, o.dat, o.giu, o.hong]) expect(v).toBeGreaterThanOrEqual(-1e-9);
+  it('after a Trúng the zone is gapMin–gapMax ahead of the marker (at least half + clear) and never under it', () => {
+    for (let seed = 1; seed < 400; seed++) for (const half of [0.05, 0.11, 0.25]) {
+      const m = hash01(seed, 7), c = zoneAfter(m, half, seed, seed % 13), gap = (c - m + 1) % 1;
+      expect(gap).toBeGreaterThanOrEqual(F.ring.gapMin - 1e-9); expect(gap).toBeLessThanOrEqual(Math.max(F.ring.gapMax, half + F.ring.clear) + 1e-9);
+      expect(ringDist(m, c)).toBeGreaterThan(half);
     }
   });
 });
 
-describe('distributions', () => {
-  const cases: [string, number, number, 'perfect' | 'miss' | 'auto'][] = [
-    ['lvl0 forging heat', 0, 0.7, 'auto'], ['lvl7 cold miss', 7, 0.1, 'miss'], ['lvl12 perfect', 12, 0.7, 'perfect'], ['lvl17 burning', 17, 0.97, 'auto'],
-  ];
-  for (const [name, lv, heat, timing] of cases) {
-    it(`10k rolls within ±2% of the odds: ${name}`, () => {
-      const o = oddsFor({ level: lv, target: 'blade', heat, timing }), r = rng(lv * 7 + 3);
-      const n = 10000, got: Record<Outcome, number> = { tuyet: 0, dat: 0, giu: 0, hong: 0 };
-      for (let i = 0; i < n; i++) got[rollOutcome(o, r())]++;
-      for (const k of ['tuyet', 'dat', 'giu', 'hong'] as const) expect(Math.abs((got[k] / n) * 100 - o[k])).toBeLessThan(2);
-    });
-  }
-  it('rollOutcome boundaries', () => {
-    const o = { tuyet: 15, dat: 60, giu: 15, hong: 10 };
-    expect([0, 0.149, 0.15, 0.749, 0.75, 0.899, 0.9, 0.999].map((r) => rollOutcome(o, r))).toEqual(['tuyet', 'tuyet', 'dat', 'dat', 'giu', 'giu', 'hong', 'hong']);
+describe('strike outcomes', () => {
+  it('Trượt is always Vỡ −2 (clamped at 0): the blade is never destroyed', () => {
+    const s = session(() => 0.0, 5);
+    const r = s.strike(T_MISS); expect(r.timing).toBe('miss'); expect(r.outcome).toBe('vo'); expect(r.delta).toBe(-2); expect(s.blade.level).toBe(3);
+    s.strike(T_MISS + 3); expect(s.blade.level).toBe(1);
+    s.strike(T_MISS + 6); expect(s.blade.level).toBe(0); expect(s.blade.family).toBe('kiem');
+    expect(s.strike(T_MISS + 9).delta).toBe(0); expect(s.blade.level).toBe(0);
+  });
+  it('Trúng is Lên +1 with chance p(L), otherwise Giữ', () => {
+    const lo = session(() => 0.0, 4), hi = session(() => 0.99, 4);
+    expect(lo.strike(hit(lo, T_HIT)).outcome).toBe('len'); expect(lo.blade.level).toBe(5);
+    const g = hi.strike(hit(hi, T_HIT)); expect(g.outcome).toBe('giu'); expect(g.delta).toBe(0); expect(hi.blade.level).toBe(4);
+  });
+  it('the best level is remembered; the form never goes backwards', () => {
+    const s = session(() => 0.0, 6); s.blades[0].best = 6; s.strike(T_MISS); s.strike(T_MISS + 3);
+    expect(s.blade.level).toBe(2); expect(s.blade.best).toBe(6); expect(s.form.minLevel).toBeLessThanOrEqual(6);
+  });
+  it('strikes cost heat (0.12) except in Nhập thần; a pending family pick blocks them', () => {
+    const s = session(); s.strike(T_MISS); expect(s.heat).toBeCloseTo(0.58, 6);
+    s.pendingPick = 0; expect(s.canStrike).toBe(false);
+  });
+  it('the zone jumps only after a Trúng, a miss leaves it', () => {
+    const s = session(rng(3), 4);
+    s.strike(T_MISS); expect(s.zoneC).toBe(0.5);
+    s.zoneC = phaseAt(s.ring, T_HIT + 3); const c2 = s.zoneC; s.strike(T_HIT + 3); expect(s.zoneC).not.toBe(c2);
+    expect(s.zoneK).toBe(1);
+  });
+  it('max level 45 for blades and 10 for armor refuse a Lên', () => {
+    const s = session(() => 0.0, 45); expect(s.strike(hit(s, T_HIT)).refused).toBe(true); expect(s.blade.level).toBe(45);
+    const a = session(() => 0.0); a.target = 'armor'; a.armor = 10; expect(a.strike(hit(a, T_HIT)).refused).toBe(true); expect(a.armor).toBe(10);
+  });
+  it('family cap (training) refuses a Lên over the unlocked level', () => {
+    const s = session(() => 0.0, 6); s.caps = { kiem: 6, bua: 3, thuong: 3 } as never;
+    expect(s.strike(hit(s, T_HIT)).refused).toBe(true);
+  });
+  it('a blank reaching +3 asks for a family and evolves', () => {
+    const s = new ForgeSession(() => 0.0, 5); s.heat = 0.7; s.zoneC = 0.5; s.blades[0] = { family: null, level: 2, best: 2 };
+    const r = s.strike(hit(s, T_HIT)); expect(r.pick).toBe(true); expect(s.pendingPick).toBe(0);
+    expect(s.pickFamily('bua')?.family).toBe('bua'); expect(s.pendingPick).toBeNull();
   });
 });
 
-/** A session whose rolls are scripted: zone is the first value, then one roll per strike. */
-function session(...rolls: number[]) {
-  const s = new ForgeSession(seq(0.5, ...rolls));
-  s.heat = 0.7; s.ring = 0.5; // marker on the zone
-  return s;
-}
-describe('ForgeSession', () => {
-  it('Tuyệt +2, Đạt +1, Giữ 0, Hỏng −1; remembers the highest level', () => {
-    const s = session(0.0, 0.0, 0.0, 0.0, 0.0);
-    s.blade.level = 5; s.blade.best = 5; s.blade.family = 'kiem';
-    expect(s.strike('auto').delta).toBe(2); expect(s.blade.level).toBe(7);
-    s.cooldown = 0; s.blade.level = 7;
-    const hong = new ForgeSession(seq(0.5, 0.999)); hong.heat = 0.7; hong.blade.level = 8; hong.blade.best = 8;
-    expect(hong.strike('auto').outcome).toBe('hong'); expect(hong.blade.level).toBe(7); expect(hong.blade.best).toBe(8);
+describe('cards (mods)', () => {
+  it('guardVo turns one Vỡ into Giữ; plus2Once makes one Lên +2; sureAfterVo guarantees a Lên after a Vỡ', () => {
+    const s = session(() => 0.99, 5); s.mods = { ...NO_MODS, guardVo: 1 };
+    expect(s.strike(T_MISS).outcome).toBe('giu'); expect(s.strike(T_MISS + 3).outcome).toBe('vo');
+    const p = session(() => 0.0, 5); p.mods = { ...NO_MODS, plus2Once: 1 };
+    expect(p.strike(hit(p, T_HIT)).delta).toBe(2); expect(p.strike(hit(p, T_HIT + 3)).delta).toBe(1);
+    const q = session(() => 0.99, 5); q.mods = { ...NO_MODS, sureAfterVo: true };
+    q.strike(T_MISS); expect(q.strike(hit(q, T_HIT + 3)).outcome).toBe('len');
   });
-  it('Hỏng at level 0 breaks the blade; armor never breaks; frenzy turns Hỏng into Giữ', () => {
-    const s = new ForgeSession(seq(0.5, 0.999)); s.heat = 0.7;
-    s.blades[0] = { family: 'bua', level: 0, best: 9 };
-    const r = s.strike('auto');
-    expect(r.broke).toBe(true); expect(s.blade).toEqual({ family: null, level: 0, best: 0 });
-    const a = new ForgeSession(seq(0.5, 0.999)); a.heat = 0.7; a.target = 'armor';
-    expect(a.strike('auto').broke).toBe(false); expect(a.armor).toBe(0);
-    const f = new ForgeSession(seq(0.5, 0.999)); f.heat = 0.7; f.frenzyT = 3;
-    expect(f.strike('auto').outcome).toBe('giu');
+  it('notoriety lowers p(L); zoneMul widens the zone; costMul, heatMul and decayMul scale heat', () => {
+    const s = session(() => 0.74, 0); s.mods = { ...NO_MODS, notoriety: 2 };
+    expect(s.strike(hit(s, T_HIT)).outcome).toBe('giu'); // p = 0.75 − 0.08
+    const z = session(); const w = z.zoneHalf; z.mods = { ...NO_MODS, zoneMul: 1.4 }; expect(z.zoneHalf).toBeCloseTo(w * 1.4);
+    const c = session(); c.mods = { ...NO_MODS, costMul: 0.5 }; c.strike(T_MISS); expect(c.heat).toBeCloseTo(0.64, 6);
+    const h = session(); h.heat = 0; h.mods = { ...NO_MODS, heatMul: 2 }; h.tick(1, true); expect(h.heat).toBeCloseTo(1);
   });
-  it('+3 opens the family pick, blocks strikes until chosen, then the form changes', () => {
-    const s = session(0.0);
-    s.blade.level = 2; s.blade.best = 2;
-    const r = s.strike('auto');
-    expect(r.pick).toBe(true); expect(s.pendingPick).toBe(0); expect(s.canStrike).toBe(false);
-    expect(s.form.id).toBe('phoi');
-    expect(s.pickFamily('bua')?.id).toBe('bua_ren'); expect(s.pendingPick).toBeNull();
-    expect(s.lastFamily).toBe('bua');
+});
+
+describe('Nhập thần', () => {
+  const meterFull = (s: ForgeSession) => { s.frenzyMeter = F.frenzy.full - 1; s.frenzyMeter = F.frenzy.full; };
+  it('meter +1 per Lên, full at 10; the eye starts 4 s on the fast lap with no jump of the marker', () => {
+    const s = session(() => 0.0, 2); for (let i = 0; i < 9; i++) s.strike(hit(s, T_HIT + i * 1.5));
+    expect(s.frenzyMeter).toBe(9); expect(s.activateFrenzy()).toBe(false);
+    s.strike(hit(s, T_HIT + 20 * 1.5)); expect(s.frenzyMeter).toBe(10);
+    const t = 50, before = phaseAt(s.ring, t); s.setTime(t);
+    expect(s.activateFrenzy(t)).toBe(true); expect(s.frenzyMeter).toBe(0);
+    expect(phaseAt(s.ring, t)).toBeCloseTo(before, 6);
+    expect(phaseAt(s.ring, t + 0.9)).toBeCloseTo(before, 6); // one lap per 0.9 s now
+    expect(s.frenzyT).toBeCloseTo(4); expect(s.immune).toBe(true);
   });
-  it('form swaps on milestones and never goes back', () => {
-    const s = session(0.0, 0.0);
-    s.blades[0] = { family: 'kiem', level: 5, best: 5 };
-    const r = s.strike('auto');
-    expect(r.evolved?.id).toBe('kiem_thep'); expect(s.level).toBe(7);
-    s.blade.level = 4; // fell back, form stays
-    expect(s.form.id).toBe('kiem_thep');
+  it('the zone is half the ring, then shrinks to 0.12 at 4 s; the lap returns to normal at the end', () => {
+    const s = session(); meterFull(s); s.setTime(10); s.activateFrenzy(10);
+    expect(s.zoneHalfAt(10) * 2).toBeCloseTo(0.5); expect(s.zoneHalfAt(12.4) * 2).toBeCloseTo(0.5);
+    expect(s.zoneHalfAt(13.2) * 2).toBeCloseTo(0.31, 2); expect(s.zoneHalfAt(13.99) * 2).toBeLessThan(0.13);
+    const m = phaseAt(s.ring, 14); s.setTime(14.01);
+    expect(s.frenzy).toBe(false); expect(s.ring.lap).toBe(F.ring.lapS); expect(phaseAt(s.ring, 14)).toBeCloseTo(m, 6);
   });
-  it('training cap refuses gains with no level change', () => {
-    const s = session(0.0); s.caps = { kiem: 6, bua: 3, thuong: 3 };
-    s.blades[0] = { family: 'kiem', level: 6, best: 6 };
-    const r = s.strike('auto');
-    expect(r.refused).toBe(true); expect(s.blade.level).toBe(6);
+  it('Trúng → Lên with p − 0.10; Trượt → Vỡ 30% else Giữ; no heat cost, heat frozen', () => {
+    const s = session(() => 0.70, 0); meterFull(s); s.setTime(10); s.activateFrenzy(10);
+    const h = s.heat; s.tick(1, true); expect(s.heat).toBe(h);
+    s.zoneC = phaseAt(s.ring, 10.1); // marker is in the zone
+    const r = s.strike(10.1); expect(r.frenzy).toBe(true); expect(r.timing).toBe('hit');
+    expect(r.outcome).toBe('giu'); // 0.70 ≥ 0.75 − 0.10 → no Lên (it would be Lên outside Nhập thần)
+    expect(s.heat).toBe(h);
+    s.zoneC = (phaseAt(s.ring, 10.5) + 0.5) % 1;
+    const lo = new ForgeSession(() => 0.2, 1); lo.zoneC = 0.9; lo.setTime(0); lo.frenzyMeter = 10; lo.activateFrenzy(0); lo.zoneC = 0.9;
+    expect(lo.strike(0.2).outcome).toBe('vo');
+    const hi = new ForgeSession(() => 0.5, 1); hi.frenzyMeter = 10; hi.activateFrenzy(0); hi.zoneC = 0.9; expect(hi.strike(0.2).outcome).toBe('giu');
   });
-  it('max level 20 for blades and 10 for armor', () => {
-    const s = session(0.0, 0.0, 0.0, 0.0); s.blades[0] = { family: 'kiem', level: 20, best: 20 };
-    expect(s.strike('auto').refused).toBe(true);
-    s.cooldown = 0; s.target = 'armor'; s.armor = 10;
-    expect(s.strike('auto').refused).toBe(true); expect(s.armor).toBe(10);
+  it('leaving the stance ends it early and restores the lap', () => {
+    const s = session(); meterFull(s); s.activateFrenzy(5); s.endFrenzy(6);
+    expect(s.frenzy).toBe(false); expect(s.ring.lap).toBe(F.ring.lapS);
   });
-  it('frenzy meter: +1 Đạt, +2 Tuyệt, full at 12, activation gives 3.5 s of 2× auto-strikes', () => {
-    const s = new ForgeSession(rng(5)); s.heat = 0.7; s.blades[0] = { family: 'kiem', level: 3, best: 3 };
-    s.frenzyMeter = 11;
-    expect(s.activateFrenzy()).toBe(false);
-    s.frenzyMeter = 12; expect(s.activateFrenzy()).toBe(true);
-    expect(s.frenzyMeter).toBe(0);
-    let n = 0;
-    for (let t = 0; t < 4.5; t += 1 / 60) { s.heat = 0.7; n += s.tick(1 / 60, false).length; }
-    expect(n).toBeGreaterThanOrEqual(13); expect(n).toBeLessThanOrEqual(15);
-    expect(s.frenzy).toBe(false);
+});
+
+describe('client and server agree (±tol)', () => {
+  it('a Trúng the client shows is a Trúng on the server; the server forgives up to strikeTolS', () => {
+    const tol = BALANCE.net.auth.strikeTolS;
+    const server = session(rng(5), 6), client = session(rng(5), 6);
+    for (let i = 0; i < 300; i++) {
+      const at = 1 + i * 0.37 + (i % 7) * 0.011;
+      const c = client.predict(at);
+      const sv = server.verdict(at, tol);
+      if (c === 'hit') expect(sv).toBe('hit');
+      server.strike(at, tol);
+      // the client re-syncs when the verdicts differ (its zone was not advanced); then both are on the same zone again
+      applyForgeSync(client, forgeSync(server), { heat: true, ring: true });
+      expect(client.zoneC).toBe(server.zoneC);
+    }
   });
-  it('heat: +0.55/s held, −0.05/s decay, −0.12 per strike, cadence 0.5 s', () => {
+  it('predict() moves the zone exactly where the server will, from the same timestamp', () => {
+    const a = session(rng(2), 6), b = session(rng(2), 6);
+    a.predict(T_HIT); b.strike(T_HIT, 0);
+    expect(a.zoneC).toBeCloseTo(b.zoneC, 10); expect(a.zoneK).toBe(b.zoneK);
+  });
+  it('sync carries the ring, zone, seed and Nhập thần window', () => {
+    const a = session(); a.frenzyMeter = 10; a.activateFrenzy(3); a.strike(3.1);
+    const b = new ForgeSession(rng(1), 5); applyForgeSync(b, forgeSync(a), { heat: true, ring: true });
+    expect(b.ring).toEqual(a.ring); expect([b.zoneC, b.zoneK, b.seed, b.frenzyStart, b.frenzyEnd]).toEqual([a.zoneC, a.zoneK, a.seed, a.frenzyStart, a.frenzyEnd]);
+  });
+});
+
+describe('heat, swap, modules', () => {
+  it('heat: +0.55/s held, −0.05/s decay', () => {
     const s = new ForgeSession(rng(1));
     for (let i = 0; i < 60; i++) s.tick(1 / 60, true);
     expect(s.heat).toBeCloseTo(0.55, 2);
     for (let i = 0; i < 60; i++) s.tick(1 / 60, false);
     expect(s.heat).toBeCloseTo(0.5, 2);
-    s.strike('miss'); expect(s.heat).toBeCloseTo(0.38, 2); expect(s.canStrike).toBe(false);
-    for (let i = 0; i < 31; i++) s.tick(1 / 60, false);
-    expect(s.canStrike).toBe(true);
-    s.onHitOut(); expect(s.heat).toBeLessThan(0.2);
+    s.onHitOut(); expect(s.heat).toBeLessThan(0.35);
   });
   it('Đổi: refused with an empty other slot, takes 0.3 s, a picked blank fills the empty slot', () => {
     const s = session(); s.carried = 1;
@@ -153,19 +193,13 @@ describe('ForgeSession', () => {
     expect(s.swapSlot()).toBe(false); expect(s.slot).toBe(0);
     s.carried = 2; expect(s.filled(1)).toBe(true);
     expect(s.swapSlot()).toBe(true); expect(s.slot).toBe(1);
-    expect(s.swapSlot()).toBe(false); // switch still running
-    expect(s.swapSlot(true)).toBe(true); // the server trusts the client's clock
-    s.tick(BALANCE.forge.swapS - 0.05, false); expect(s.swapT).toBeGreaterThan(0);
+    expect(s.swapSlot()).toBe(false);
+    expect(s.swapSlot(true)).toBe(true);
+    s.tick(F.swapS - 0.05, false); expect(s.swapT).toBeGreaterThan(0);
     s.tick(0.06, false); expect(s.swapT).toBe(0);
   });
-  it('ring timing: perfect only inside the 18% zone', () => {
-    const s = session(); s.zoneC = 0.5;
-    s.ring = 0.5 + 0.089; expect(s.timingNow()).toBe('perfect');
-    s.ring = 0.5 + 0.092; expect(s.timingNow()).toBe('miss');
-    s.zoneC = 0.02; s.ring = 0.97; expect(s.timingNow()).toBe('perfect'); // wraps
-  });
   it('two blade slots swap; module slots open at armor +3 and +7', () => {
-    const s = session(); s.blade.level = 4; s.swapSlot(); expect(s.blade.level).toBe(0); s.tick(BALANCE.forge.swapS + 0.01, false); s.swapSlot(); expect(s.blade.level).toBe(4);
+    const s = session(); s.blade.level = 4; s.swapSlot(); expect(s.blade.level).toBe(0); s.tick(F.swapS + 0.01, false); s.swapSlot(); expect(s.blade.level).toBe(4);
     expect([0, 2, 3, 6, 7, 10].map(moduleSlots)).toEqual([0, 0, 1, 1, 2, 2]);
     expect(s.equip('khien_tay')).toBe(false); s.armor = 3; expect(s.equip('khien_tay')).toBe(true); expect(s.equip('no_vai')).toBe(false);
   });

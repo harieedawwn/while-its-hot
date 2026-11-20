@@ -76,6 +76,9 @@ export class Pipeline {
   /** Fire-ring tint 0..1 (LOOK §7: inside the wall the world tints toward the heat ramp). */
   setHeatTint(k: number): void { this.post.uniforms.uHeatTint.value = Math.max(0, Math.min(1, k)); }
 
+  /** Nhập thần: warm stepped edge vignette 0..1 (0 = off, costs nothing). */
+  setWarm(k: number): void { this.post.uniforms.uWarm.value = Math.max(0, Math.min(1, k)); }
+
   /** Transition / death grade (LOOK §9): desaturate (optionally keeping heat colors), stepped edge darkening, fade. */
   setGrade(g: { desat?: number; keepHot?: boolean; edge?: number; steps?: number; fade?: number; fadeColor?: string }): void {
     const u = this.post.uniforms;

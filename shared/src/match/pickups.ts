@@ -48,6 +48,6 @@ export class Pickups {
     this.list.splice(i, 1);
     const s = p.forge;
     s.blades[1 - s.slot] = newBlade(); s.carried = 2;
-    out.push({ to: 'all', m: { t: 'pickup', add: [], del: [id], by: p.id } }, { to: p.id, m: { t: 'fsync', s: forgeSync(s) } });
+    out.push({ to: 'all', m: { t: 'pickup', add: [], del: [id], by: p.id } }, { to: p.id, m: { t: 'fsync', s: forgeSync(s, p.forgeOps) } });
   }
 }

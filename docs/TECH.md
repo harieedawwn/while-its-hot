@@ -63,9 +63,11 @@ friend group (no anti-cheat needed) and it makes melee feel instant.
   successful if its server time is within the parry window around the hit time, widened by the target's
   RTT/2 (max +80 ms). Server applies damage and broadcasts. The attacker plays hit feedback immediately
   (predicted) and gets a correction only if rejected (rare; then just no damage number).
-- **Forge:** the client plays the strike animation immediately; the server rolls the outcome with its own RNG
-  (`shared/forge.ts`, seeded per room) and returns the result in ~RTT; the client delays the result reveal
-  (spark burst + sound) until the result arrives, hidden inside the hammer's downswing (~0.15 s). Training
+- **Forge:** a strike is stamped with the pointer-down time on the match clock and the ring marker is a pure function
+  of that clock. The client predicts the Trúng/Trượt verdict and plays the hammer + word at once; the server re-checks
+  the phase at the stamp (`strikeTolS`), rolls Lên/Giữ with its own RNG (`shared/forge/session.ts`) and returns the
+  result in ~RTT (spark burst + sound on arrival). The client keeps its predicted ring/zone until the server's `ops`
+  count catches up. Training
   mode uses the same `shared/forge.ts` locally.
 - **Rooms:** `POST /room` creates a 4-letter code (letters without I/O), `GET /room/:code/ws` upgrades.
   Max 6 players. Host = first joiner; if the host leaves, the next player becomes host. Reconnect within

@@ -12,7 +12,8 @@ import type { Vec3 } from './spatial';
 const R = FEEL.audio.react, MIX = FEEL.audio.mix;
 const SWING: Record<Family, string> = { kiem: 'swing_sword', bua: 'swing_hammer', thuong: 'swing_polearm' };
 const FOOT: Record<string, string> = { stone: 'footstep_stone', metal: 'footstep_metal', grate: 'footstep_metal', wood: 'footstep_wood', gravel: 'footstep_slag' };
-const STRIKE = { tuyet: 'strike_tuyet', dat: 'strike_dat', giu: 'strike_giu', hong: 'strike_hong' } as const;
+/** Lên is the old Đạt clang (the heavier Tuyệt one in Nhập thần), Vỡ the old Hỏng thud. */
+const STRIKE = { len: 'strike_dat', giu: 'strike_giu', vo: 'strike_hong' } as const;
 const at = (e: { x: number; y: number; z: number }): Vec3 => ({ x: e.x, y: e.y, z: e.z });
 
 export interface AudioBinding {
@@ -81,8 +82,7 @@ export function bindAudio(a: AudioEngine, localId = 0): AudioBinding {
     bus.on('forge:strike', (e) => {
       const pos = at(e), mine = !e.owner || own(e.owner);
       if (e.refused) a.play('strike_refused', { pos });
-      else if (e.broke) { a.play('gay', { pos }); if (mine) { a.duck(); buzz('medium'); } }
-      else { a.play(STRIKE[e.outcome], { pos, db: e.auto ? -3 : 0 }); if (mine) buzz('light'); }
+      else { a.play(e.frenzy && e.outcome === 'len' ? 'strike_tuyet' : STRIKE[e.outcome], { pos }); if (mine) buzz(e.frenzy ? 'medium' : 'light'); }
     }),
     // UI: dry tactile clicks; the menu's select is a real hammer on the anvil; transitions (AUDIO §3)
     bus.on('ui:sound', (e) => a.play(`ui_${e.id}`)),

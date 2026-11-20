@@ -21,9 +21,6 @@ export type HitEffect =
   | { type: 'shockwave'; r: number; push: number }
   | { type: 'pull'; m: number }
   | { type: 'aoe'; dmg: number; r: number };
-/** Forge outcome weights in points (GDD §6 table). */
-export interface ForgeOdds { tuyet: number; dat: number; giu: number; hong: number; }
-
 export interface PassiveHooks {
   /** Damage, arc, lunge, stagger and block interaction of one attack (light/heavy/slide). */
   modifyAttack?(a: AttackShape, c: AttackCtx): void;
@@ -34,7 +31,6 @@ export interface PassiveHooks {
   onParry?(out: HitEffect[]): void;
   /** Effects when a slam lands (centered on the player). */
   onSlamLand?(out: HitEffect[]): void;
-  modifyForgeOdds?(o: ForgeOdds, level: number): void;
 }
 
 const heavy = (c: AttackCtx) => c.kind === 'heavy';
@@ -88,9 +84,4 @@ export function slamEffects(ids: readonly PassiveId[]): HitEffect[] {
   const out: HitEffect[] = [];
   for (const id of ids) hooks(id).onSlamLand?.(out);
   return out;
-}
-export function forgeOdds(ids: readonly PassiveId[], base: ForgeOdds, level: number): ForgeOdds {
-  const o = { ...base };
-  for (const id of ids) hooks(id).modifyForgeOdds?.(o, level);
-  return o;
 }

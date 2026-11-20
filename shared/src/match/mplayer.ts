@@ -40,7 +40,9 @@ export interface MPlayer {
   /** Draft state of this round. */
   offer: string[] | null; rerolls: number; offerNo: number;
   /** Match ms until which gang_da i-frames last; consecutive Hỏng for mối hàn. */
-  ifUntil: number; hongRun: number;
+  ifUntil: number;
+  /** Strike/frenzy ops handled (echoed in every ForgeSync). */
+  forgeOps: number;
   /** Folded relic effects (recomputed when the relic list changes). */
   fx: RelicFx;
 }
@@ -57,7 +59,7 @@ export function newPlayer(id: number, p: Vec3, yaw: number, rand: RandFn): MPlay
     forge, stance: false, heating: false, swings: [], parryAt: -1e9,
     burnT: 0, burnDps: 0, burnBy: 0, anvil: null, dealt: 0, kills: 0,
     pts: 0, deaths: 0, wins: 0, rKills: 0, rDealt: 0, lives: BALANCE.match.lives,
-    relics: [], stacks: 0, best: [0, 0, 0], offer: null, rerolls: 0, offerNo: 0, ifUntil: 0, hongRun: 0, fx: NO_RELIC,
+    relics: [], stacks: 0, best: [0, 0, 0], offer: null, rerolls: 0, offerNo: 0, ifUntil: 0, forgeOps: 0, fx: NO_RELIC,
   };
 }
 

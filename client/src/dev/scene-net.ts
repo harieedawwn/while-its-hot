@@ -119,7 +119,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height, a
     died: () => forge?.leave(),
     spawned: (p, yaw) => { flow.pinTo(flow.cage ? p : null); player.s.pos.set(p[0], p[1], p[2]); player.s.vel.set(0, 0, 0); player.yaw = yaw; player.pitch = 0; },
   });
-  forge = new ForgeController({ player, lf, anvil, stage, session, hud: fhud, touch: input.touch ?? undefined, loadModel: load, link: net.forge });
+  forge = new ForgeController({ player, lf, anvil, stage, session, hud: fhud, touch: input.touch ?? undefined, loadModel: load, link: net.forge, clock: net.forgeClock, look: (k) => pipeline.setWarm(k) });
   net.forge.controller = forge;
   const fxl = new FxLayer({ scene, rig, pipeline, world: arena.world, combat: world, stage, seed: params.seed });
   fxl.trail(() => lf.vm.weapon, () => lf.c.fighter.attacking, (m) => lf.vm.attach(m));

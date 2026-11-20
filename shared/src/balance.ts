@@ -33,7 +33,7 @@ export const BALANCE = {
    */
   weapons: {
     levelDmg: 0.06,
-    maxLevel: 20,
+    maxLevel: 45,
     /** Level at which the blank becomes a family form (the 3-way pick). */
     familyPick: 3,
     family: {
@@ -64,21 +64,21 @@ export const BALANCE = {
    * ForgeMods (shared/src/forge/odds.ts).
    */
   forge: {
-    rows: [
-      { upTo: 4, tuyet: 12, dat: 55, giu: 18, hong: 15 },
-      { upTo: 9, tuyet: 6, dat: 38, giu: 20, hong: 36 },
-      { upTo: 14, tuyet: 4, dat: 25, giu: 22, hong: 49 },
-      { upTo: 99, tuyet: 2, dat: 16, giu: 22, hong: 60 },
-    ],
-    armor: { maxLevel: 10, rowMul: 2 },
-    /** Heat bands (upper edges) and the points each moves from success to Hỏng. */
-    heat: { cold: 0.25, dull: 0.5, burning: 0.9, coldShift: 20, dullShift: 8, burnShift: 10,
-      holdPerS: 0.55, decayPerS: 0.05, strikeCost: 0.12, hitCost: 0.2 },
-    /** Ring: sweet zone = zoneFrac of the circle, one lap per ringS. Perfect moves perfectShift points Hỏng → Đạt:Tuyệt 2:1; a miss moves missShift to Hỏng. */
-    strike: { cadenceS: 0.5, ringS: 1.1, zoneFrac: 0.18, perfectShift: 15, perfectDatShare: 2 / 3, missShift: 15 },
-    /** Tiếng tăm: points per stack moved from Đạt to Hỏng. */
-    notorietyShift: 6,
-    frenzy: { perDat: 1, perTuyet: 2, full: 12, durS: 3.5, cadenceMul: 0.5 },
+    /** Trúng → Lên with p(L): linear from p0 at +0 to pEnd at +(maxLevel−1). Trượt → Vỡ (−voLoss), always. ROUND3 §1. */
+    p: { p0: 0.75, pEnd: 0.38, voLoss: 2 },
+    /** Sweet zone (fraction of the ring) at +0 → at +(maxLevel−1), times the heat multiplier for the band. */
+    zone: { z0: 0.22, zEnd: 0.10, dullMul: 0.8, offMul: 0.6, maxFrac: 0.8 },
+    armor: { maxLevel: 10, levelMul: 4.4 },
+    /** Heat bands (upper edges); heat 0..1: hold Nung +holdPerS, decay, each strike costs strikeCost. */
+    heat: { cold: 0.25, dull: 0.5, burning: 0.9, holdPerS: 0.55, decayPerS: 0.05, strikeCost: 0.12, hitCost: 0.2 },
+    /** Ring: one lap per lapS; after a Trúng the zone center jumps gapMin..gapMax ahead of the marker (at least half the zone + clear). */
+    ring: { lapS: 1.5, gapMin: 0.30, gapMax: 0.65, clear: 0.04, minGapS: 0.05 },
+    /** Tiếng tăm: p(L) lowered by this per stack. */
+    notorietyP: 0.04,
+    /** Nhập thần: meter +fill per Lên, full at `full`; lasts durS: lap lapS, zone zoneFull of the ring until shrinkAtS, then linear to zoneEnd at durS.
+     *  Trúng → Lên with p(L) − pMinus; Trượt → Vỡ with voChance else Giữ. Heat frozen, no heat cost.
+     *  clear = how far ahead of the marker the zone's near edge is after a Trúng (the zone is half the ring: without it a tap rhythm chains hits). */
+    frenzy: { fill: 1, full: 10, durS: 4, lapS: 0.9, zoneFull: 0.5, shrinkAtS: 2.4, zoneEnd: 0.12, pMinus: 0.1, voChance: 0.3, gapMin: 0.15, gapMax: 0.45, clear: 0.2 },
     /** Anvil (Đe): place / pick-up time, cooldown after picking up, how far in front it is placed, interaction reach. */
     anvil: { placeS: 0.6, pickupS: 0.6, cooldownS: 5, placeDist: 1.15, useRadius: 2.2, radius: 0.42, height: 0.86 },
     /** Đổi: time to switch the held blade; no attack during it. */
@@ -165,7 +165,7 @@ export const BALANCE = {
      * hit must land inside its active frames ± early/lateMs; claims older than maxAgeMs are stale; an attack may not
      * start sooner than rateMul × the previous swing's length; the parry window widens by min(parryMaxMs, rtt/2).
      */
-    auth: { reachTol: 2, earlyMs: 60, lateMs: 160, maxAgeMs: 1000, rateMul: 0.6, parryMaxMs: 80, anvilTol: 1.5, pickupTol: 1, strikeTolS: 0.15 },
+    auth: { reachTol: 2, earlyMs: 60, lateMs: 160, maxAgeMs: 1000, rateMul: 0.6, parryMaxMs: 80, anvilTol: 1.5, pickupTol: 1, strikeTolS: 0.08 },
   },
   /** Match rules that phase 17 enforces on the server (GDD §3). Rounds/lives/scoring arrive in phase 18. */
   match: {

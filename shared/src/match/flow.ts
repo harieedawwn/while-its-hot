@@ -2,6 +2,7 @@ import { BALANCE } from '../balance';
 import { FAMILIES } from '../data/weapons';
 import { MODULE_IDS, type ModuleId } from '../data/modules';
 import { foldRelics, isRelic } from '../data/relics';
+import { NO_MODS } from '../forge/odds';
 import { ForgeSession, type RandFn } from '../forge/session';
 import { forgeSync } from '../forge/sync';
 import type { MatchRules } from '../net/protocol';
@@ -57,10 +58,10 @@ export class RoundFlow {
       p.forge = new ForgeSession(this.rand); p.forge.carried = 1;
       p.fx = foldRelics(p.relics);
       this.arm(p);
-      Object.assign(p, { hp: BALANCE.combat.hp, alive: true, lives: this.rules.lives, rKills: 0, rDealt: 0, parryAt: -1e9, burnT: 0, swings: [], hongRun: 0, ifUntil: 0 });
+      Object.assign(p, { hp: BALANCE.combat.hp, alive: true, lives: this.rules.lives, rKills: 0, rDealt: 0, parryAt: -1e9, burnT: 0, swings: [], ifUntil: 0 });
       Object.assign(p.st, { x: c.pos[0], y: c.pos[1], z: c.pos[2], vx: 0, vy: 0, vz: 0, yaw: c.yaw });
       out.push({ to: 'all', m: { t: 'spawn', id: p.id, p: c.pos, yaw: c.yaw, hp: p.hp } });
-      out.push({ to: p.id, m: { t: 'fsync', s: forgeSync(p.forge) } });
+      out.push({ to: p.id, m: { t: 'fsync', s: forgeSync(p.forge, p.forgeOps) } });
       const last = this.n > 1 && standing[0] === p;
       p.offer = makeOffers(p.relics, last, p.offerNo, this.rand);
       p.offerNo++;
@@ -72,8 +73,8 @@ export class RoundFlow {
   /** Relic effects at the start of a round: mods, charges, starting armor, owned modules. */
   private arm(p: MPlayer): void {
     const f = p.forge, x = p.fx;
-    f.mods = { ...f.mods, cadenceMul: x.cadenceMul, heatDecayMul: x.heatDecayMul, heatGainMul: x.heatGainMul, zoneMul: x.zoneMul, notoriety: p.stacks, mercy: 0 };
-    f.noBreak = x.noBreak; f.tuyet = x.tuyet; f.armor = Math.min(BALANCE.forge.armor.maxLevel, x.armorStart);
+    f.mods = { ...NO_MODS, costMul: x.costMul, decayMul: x.decayMul, heatMul: x.heatMul, zoneMul: x.zoneMul, frenzyFillMul: x.frenzyFillMul, frenzyPlusS: x.frenzyPlusS,
+      guardVo: x.guardVo, plus2Once: x.plus2Once, sureAfterVo: x.sureAfterVo, notoriety: p.stacks }; f.armor = Math.min(BALANCE.forge.armor.maxLevel, x.armorStart);
     f.modules = p.relics.filter((r): r is ModuleId => (MODULE_IDS as readonly string[]).includes(r));
   }
 
@@ -90,7 +91,7 @@ export class RoundFlow {
     p.offer = null;
     if (!p.relics.includes(id) && (isRelic(id) || (MODULE_IDS as readonly string[]).includes(id))) p.relics.push(id);
     p.fx = foldRelics(p.relics); this.arm(p);
-    out.push({ to: p.id, m: { t: 'own', relics: p.relics.slice() } }, { to: p.id, m: { t: 'fsync', s: forgeSync(p.forge) } });
+    out.push({ to: p.id, m: { t: 'own', relics: p.relics.slice() } }, { to: p.id, m: { t: 'fsync', s: forgeSync(p.forge, p.forgeOps) } });
   }
 
   /** A kill: points (+ bounty), a life, kill levels. */
@@ -98,7 +99,7 @@ export class RoundFlow {
     t.deaths++; t.lives = Math.max(0, t.lives - 1);
     if (a && a !== t) {
       a.pts += killPoints(t.stacks); a.rKills++;
-      if (a.fx.killLevels > 0 && a.alive) { const b = a.forge.blade; b.level = Math.min(BALANCE.weapons.maxLevel, b.level + a.fx.killLevels); b.best = Math.max(b.best, b.level); out.push({ to: a.id, m: { t: 'fsync', s: forgeSync(a.forge) } }); }
+      if (a.fx.killLevels > 0 && a.alive) { const b = a.forge.blade; b.level = Math.min(BALANCE.weapons.maxLevel, b.level + a.fx.killLevels); b.best = Math.max(b.best, b.level); out.push({ to: a.id, m: { t: 'fsync', s: forgeSync(a.forge, a.forgeOps) } }); }
     }
     out.push({ to: 'all', m: { t: 'score', rows: this.rows() } });
   }
@@ -125,7 +126,7 @@ export class RoundFlow {
     const s = this.fightS(now), r = ringRadius(s, this.rules.ring), c = FOUNDRY.ringCenters[this.ring % FOUNDRY.ringCenters.length];
     for (const p of this.players.values()) {
       const outside = r > 0 && Math.hypot(p.st.x - c[0], p.st.z - c[1]) > r;
-      p.forge.mods.heatDecayMul = p.fx.heatDecayMul * (outside ? M.ring.heatMul : 1);
+      p.forge.mods.decayMul = p.fx.decayMul * (outside ? M.ring.heatMul : 1);
       if (outside && p.alive && now >= this.truceEnd) this.harm(p, burnDps(s) * dt, 0, out);
     }
   }

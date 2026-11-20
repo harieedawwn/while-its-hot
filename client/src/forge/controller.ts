@@ -1,5 +1,5 @@
 import type * as THREE from 'three';
-import { BALANCE, type Family, type ForgeOp, NO_FIGHT, type ForgeSession, type StrikeResult, type Timing } from '@wih/shared';
+import { BALANCE, type Family, type ForgeOp, NO_FIGHT, type ForgeSession, type StrikeResult } from '@wih/shared';
 import type { LocalFighter } from '../combat/local-fighter';
 import { bus } from '../core/events';
 import { FEEL } from '../core/feel';
@@ -13,7 +13,7 @@ import type { Anvil } from './anvil';
 import { StanceCamera } from './stance-cam';
 import type { ForgeStage } from './stage';
 
-const F = BALANCE.forge, S = FEEL.forge;
+const F = BALANCE.forge, S = FEEL.forge, FR = S.frenzy;
 
 export interface ForgeDeps {
   player: Player; lf: LocalFighter; anvil: Anvil; stage: ForgeStage; session: ForgeSession; hud: ForgeHud;
@@ -24,8 +24,15 @@ export interface ForgeDeps {
   onArmor?(level: number): void;
   /** Online: the server rolls strikes (results come back through `reveal`) and hears every predicted op. */
   link?: ForgeLink;
+  /** The shared clock the ring runs on (default: this device's wall clock). */
+  clock?: ForgeClock;
+  /** Nhập thần warm edge vignette 0..1 (the scene's pipeline.setWarm). */
+  look?(warm: number): void;
 }
-export interface ForgeLink { op(o: Exclude<ForgeOp, { k: 'strike' }>): void; strike(timing: Timing): void }
+/** Seconds on the clock the ring runs on; `at` converts a performance.now() stamp (a pointer-down) to it. */
+export interface ForgeClock { now(): number; at(perfMs: number): number }
+export const WALL_CLOCK: ForgeClock = { now: () => performance.now() / 1000, at: (ms) => ms / 1000 };
+export interface ForgeLink { op(o: ForgeOp): void; strike(at: number): void }
 
 /**
  * The local smith's forging loop (GDD §6, §7): place/lift the anvil, enter and leave the stance, heat (hold
@@ -40,6 +47,7 @@ export class ForgeController {
   private shown = '';
   private token = 0;
   private heating = false;
+  private frenzyOn = false;
   private ctx = { forge: false, anvil: false };
   private off: () => void;
 
@@ -83,7 +91,7 @@ export class ForgeController {
     if (!this.inStance) return;
     this.inStance = false; this.d.session.endFrenzy(); this.d.hud.closePick(); this.pickT = 0;
     this.d.link?.op({ k: 'stance', on: false }); this.d.stage.lower();
-    this.setHeating(false); this.d.lf.c.invuln = false;
+    this.setHeating(false); this.d.lf.c.invuln = false; this.d.look?.(0);
     bus.emit('forge:stance', { on: false, owner: this.d.lf.c.id });
   }
 
@@ -94,21 +102,24 @@ export class ForgeController {
     bus.emit('forge:heating', { on });
   }
 
+  private get clock(): ForgeClock { return this.d.clock ?? WALL_CLOCK; }
+
   /** One sim tick. Replaces `lf.tick` + `player.tick` in the scene. */
   tick(dt: number, a: Actions): void {
     const { session, anvil, lf, player } = this.d;
+    session.setTime(this.clock.now());
     anvil.tick(dt);
     const near = anvil.inReach(player.s.pos);
     if ((!near && this.inStance) || !lf.c.alive || !lf.canAct) this.leave();
 
-    const forgePress = a.take('forge'), anvilPress = a.take('anvil'), swapPress = a.take('swap');
+    const presses = a.takeStamps('forge'), anvilPress = a.take('anvil'), swapPress = a.take('swap');
     if (anvilPress && !this.inStance) {
       if (anvil.rule.canPlace) { if (lf.canAct) anvil.place(player.s.pos, player.yaw); }
       else if (anvil.rule.canLift && anvil.dist(player.s.pos) <= F.anvil.useRadius * 1.5) anvil.lift();
     }
-    if (this.inStance) this.stanceTick(dt, a, forgePress, swapPress);
+    if (this.inStance) this.stanceTick(dt, a, presses, swapPress);
     else {
-      if (forgePress) this.enter();
+      if (presses.length) this.enter();
       if (swapPress && !lf.c.fighter.attacking && session.swapSlot()) { this.d.link?.op({ k: 'swap' }); void this.syncWeapon(true); }
       session.tick(dt, false);
     }
@@ -121,42 +132,61 @@ export class ForgeController {
 
     lf.c.invuln = this.inStance && session.immune;
     if (this.pickT > 0) { this.pickT -= dt; if (this.pickT <= 0) this.pick(session.lastFamily); }
+    this.trackFrenzy();
     this.setContexts(near);
   }
 
-  private stanceTick(dt: number, a: Actions, forgePress: boolean, swapPress: boolean): void {
+  /** Strikes fire on pointer-down: every press since the last tick is struck now, in order, stamped with when the finger came down. */
+  private stanceTick(dt: number, a: Actions, presses: number[], swapPress: boolean): void {
     const { session, hud } = this.d;
     if (Math.hypot(a.move.x, a.move.y) > S.exitStick || a.take('jump') || a.take('slide')) { this.leave(); return; }
     a.take('attack');
     this.setHeating(a.isHeld('attack') && !hud.picking);
-    const link = this.d.link;
+    const link = this.d.link, clock = this.clock;
     if (swapPress && !hud.picking) { session.toggleTarget(); link?.op({ k: 'target' }); this.d.stage.setTarget(session.target); }
-    if (a.take('parry') && session.activateFrenzy()) { link?.op({ k: 'frenzy' }); bus.emit('forge:frenzy', { on: true }); }
-    if (forgePress && session.canStrike) {
-      if (!link) this.report(session.strike(), false);
-      else { this.d.stage.raise(); link.strike(session.timingNow()); session.cooldown = F.strike.cadenceS * session.mods.cadenceMul; }
+    if (a.take('parry') && session.activateFrenzy(clock.now())) link?.op({ k: 'frenzy', at: clock.now() });
+    for (const ms of presses) {
+      if (!session.canStrike || hud.picking) break;
+      this.strikeAt(clock.at(ms));
     }
-    const wasFrenzy = session.frenzy;
-    for (const r of session.tick(dt, this.heating)) this.report(r, true);
-    if (wasFrenzy && !session.frenzy) bus.emit('forge:frenzy', { on: false });
+    session.tick(dt, this.heating);
   }
 
-  /** Online: the server's roll for one of our strikes (or a frenzy auto-strike) arrived; the hammer falls now. */
-  reveal(r: StrikeResult, auto: boolean): void { if (this.inStance || auto) this.report(r, auto); }
-
-  private report(r: StrikeResult, auto: boolean): void {
-    const { session, stage, hud, anvil, lf } = this.d;
+  /** One strike stamped `at`. Offline it is rolled right here; online the verdict is shown now and the server's roll follows. */
+  private strikeAt(at: number): void {
+    const { session, link, hud, stage } = this.d;
+    if (!link) { this.report(session.strike(at), false); return; }
+    const timing = session.predict(at);
     stage.strike();
+    hud.flash(timing === 'hit' ? 'hit' : 'miss');
+    bus.emit('cam:trauma', { amount: S.strike.trauma.giu });
+    link.strike(at);
+  }
+
+  /** Nhập thần on/off (ours or the server's): the bus gets it once, the blade goes white-hot for the duration. */
+  private trackFrenzy(): void {
+    const on = this.d.session.frenzy;
+    if (on === this.frenzyOn) return;
+    this.frenzyOn = on;
+    if (on) this.d.stage.boost(1, this.d.session.frenzyT);
+    bus.emit('forge:frenzy', { on });
+  }
+
+  /** Online: the server's roll for one of our strikes arrived (the hammer already fell at the press). */
+  reveal(r: StrikeResult): void { if (this.inStance) this.report(r, true); }
+
+  private report(r: StrikeResult, fell: boolean): void {
+    const { session, stage, hud, anvil, lf } = this.d;
+    if (!fell) stage.strike();
     const p = stage.hitPoint(anvil.pos.clone());
-    bus.emit('forge:strike', { outcome: r.outcome, perfect: r.timing === 'perfect', auto, target: r.target, level: r.level, refused: r.refused, broke: r.broke, heat: session.heat, x: p.x, y: p.y, z: p.z });
-    bus.emit('cam:trauma', { amount: S.strike.trauma[r.outcome] });
-    const up = (r.outcome === 'tuyet' || r.outcome === 'dat') && !r.refused;
-    bus.emit('cam:hitstop', { ms: up ? S.strike.levelStopMs : S.strike.hitStopMs });
-    hud.flash(r.broke ? 'broke' : r.refused ? 'refused' : (r.outcome as FlashKind));
+    bus.emit('forge:strike', { outcome: r.outcome, hit: r.timing === 'hit', frenzy: r.frenzy, target: r.target, level: r.level, refused: r.refused, heat: session.heat, x: p.x, y: p.y, z: p.z, ...(fell ? { fallS: 0 } : {}) });
+    bus.emit('cam:trauma', { amount: S.strike.trauma[r.outcome] * (r.frenzy ? S.strike.frenzyTrauma : 1) });
+    if (!r.frenzy) bus.emit('cam:hitstop', { ms: r.outcome === 'len' && !r.refused ? S.strike.levelStopMs : S.strike.hitStopMs });
+    hud.flash(r.refused ? 'refused' : r.outcome, r.delta > 1 ? ` +${r.delta}` : '');
     if (r.target === 'armor') { lf.c.armor = session.armor; this.d.onArmor?.(session.armor); }
     if (r.pick) { hud.openPick(session.lastFamily, F.stance.pickS, (f) => this.pick(f)); this.pickT = F.stance.pickS; }
     if (r.evolved) bus.emit('forge:evolve', { form: r.evolved.id, family: r.evolved.family as Family });
-    if (r.target === 'blade' && (r.evolved || r.broke)) void this.syncWeapon(true);
+    if (r.target === 'blade' && r.evolved) void this.syncWeapon(true);
     else lf.c.level = session.blade.level;
   }
 
@@ -191,19 +221,22 @@ export class ForgeController {
     touch.setDim('swap', !st && !s.filled(1 - s.slot));
   }
 
-  /** Per render frame, after `cam.update`. */
+  /** Per render frame, after `cam.update`. The ring is drawn from the shared clock, not from the sim ticks. */
   frame(dt: number, time: number, cam: FirstPersonCamera): void {
     const { anvil, stage, session, hud } = this.d;
+    session.setTime(this.clock.now());
     anvil.animate();
     this.faces();
-    this.stanceCam.apply(dt, this.inStance, anvil, cam.camera);
+    this.stanceCam.apply(dt, this.inStance, anvil, cam.camera, session.frenzy && this.inStance);
     stage.root.visible = this.working;
     stage.setHeat(session.heat);
     stage.update(dt, time);
     hud.show(this.inStance && this.stanceCam.k > 0.5);
+    const fk = this.stanceCam.frenzyK * this.stanceCam.k;
+    this.d.look?.(fk > 0 ? fk * FR.vignette * (1 - FR.vignettePulse * (0.5 + 0.5 * Math.cos(session.marker * Math.PI * 2))) : 0);
     hud.update({
-      ring: session.ring, zoneC: session.zoneC, zoneHalf: session.zoneHalf, cooling: !session.canStrike,
-      heat: session.heat, level: session.level, target: session.target, frenzyMeter: session.frenzyMeter, frenzyOn: session.frenzy,
+      ring: session.marker, zoneC: session.zoneC, zoneHalf: session.zoneHalf, heat: session.heat, level: session.level,
+      target: session.target, frenzyMeter: session.frenzyMeter, frenzyOn: session.frenzy, frenzyLeft: session.frenzyT / (F.frenzy.durS + session.mods.frenzyPlusS),
     });
   }
 

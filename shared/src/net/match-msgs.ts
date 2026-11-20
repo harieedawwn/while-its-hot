@@ -12,8 +12,9 @@ import type { AttackKind } from '../passives';
 export type Vec3 = [number, number, number];
 export type ForgeOp =
   | { k: 'stance'; on: boolean } | { k: 'heat'; on: boolean }
-  | { k: 'strike'; timing: Timing; n: number }
-  | { k: 'frenzy' } | { k: 'pick'; f: Family } | { k: 'swap' } | { k: 'target' };
+  /** at = the pointer-down time in match seconds (the ring is a function of it); n = the owner's request number. */
+  | { k: 'strike'; at: number; n: number }
+  | { k: 'frenzy'; at: number } | { k: 'pick'; f: Family } | { k: 'swap' } | { k: 'target' };
 
 export type MatchClientMsg =
   /** A swing began (windup or heavy release). s = the attacker's swing counter. */
@@ -38,10 +39,14 @@ export interface BladeNet { family: Family | null; level: number; best: number }
 /** The owner's forging state after the server applied an op (the client overwrites its prediction). */
 export interface ForgeSync {
   blades: [BladeNet, BladeNet]; carried: number; slot: number; armor: number; target: ForgeTarget;
-  heat: number; meter: number; frenzyT: number; pending: number | null; zoneC: number; lastFamily: Family;
+  heat: number; meter: number; pending: number | null; lastFamily: Family;
+  /** The ring: base [p0, t0, lap], zone center, zones drawn so far, sequence seed, Nhập thần [start, end] (0 = off). */
+  ring: [number, number, number]; zoneC: number; zoneK: number; seed: number; fr: [number, number];
+  /** How many strike/frenzy ops of this player the server has handled: a client keeps its predicted ring until this catches up with what it sent. */
+  ops: number;
 }
 export interface StrikeNet {
-  outcome: Outcome; timing: Timing; target: ForgeTarget; level: number; refused: boolean; broke: boolean;
+  outcome: Outcome; timing: Timing; target: ForgeTarget; level: number; delta: number; refused: boolean; frenzy: boolean;
   pick: boolean; evolved: string | null; heat: number;
 }
 export type HitKindNet = Exclude<HitResult['r'], 'immune' | 'parried'>;

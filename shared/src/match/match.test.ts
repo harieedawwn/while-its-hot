@@ -78,17 +78,17 @@ describe('match authority: hits', () => {
 describe('match authority: forge, pickups, snapshot', () => {
   it('strikes only in stance at the own anvil; the server rolls', () => {
     const m = setup(), me = m.players.get(1)!;
-    expect(kinds(m.msg(1, { t: 'forge', op: { k: 'strike', timing: 'perfect', n: 1 } }, 100))).toEqual(['fsync']);
+    expect(kinds(m.msg(1, { t: 'forge', op: { k: 'strike', at: 0.1, n: 1 } }, 100))).toEqual(['fsync']);
     m.msg(1, { t: 'forge', op: { k: 'stance', on: true } }, 100);
     expect(me.stance).toBe(false); // no anvil yet
     m.msg(1, { t: 'anvil', act: 'place', p: [0, 0, -1.1], yaw: 0 }, 100);
     m.msg(1, { t: 'forge', op: { k: 'stance', on: true } }, 200);
     expect(me.stance).toBe(true);
-    const o = m.msg(1, { t: 'forge', op: { k: 'strike', timing: 'perfect', n: 2 } }, 300);
+    const o = m.msg(1, { t: 'forge', op: { k: 'strike', at: 0.3, n: 2 } }, 300);
     expect(kinds(o)).toEqual(['forged', 'fsync']);
     expect(o[0].to).toBe('all');
-    // the cooldown refuses an immediate second strike
-    expect(kinds(m.msg(1, { t: 'forge', op: { k: 'strike', timing: 'miss', n: 3 } }, 310))).toEqual(['fsync']);
+    // strikes closer than minGapS are refused
+    expect(kinds(m.msg(1, { t: 'forge', op: { k: 'strike', at: 0.31, n: 3 } }, 310))).toEqual(['fsync']);
   });
   it('a blank in reach gives the second blade', () => {
     const m = setup(), me = m.players.get(1)!, k = m.pickups.list[0];

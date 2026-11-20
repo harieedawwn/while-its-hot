@@ -15,6 +15,7 @@ import type { RoomClient } from './client';
 import { NetAnvils } from './net-anvils';
 import type { NetFlow } from './net-flow';
 import { NetCombat } from './net-combat';
+import type { ForgeClock } from '../forge/controller';
 import { NetForge } from './net-forge';
 import { emptyState, packLocal } from './pack';
 import { NetPickups } from './pickups';
@@ -64,7 +65,7 @@ export class NetMatch {
       lf: d.lf, world: d.combat, remotes: this.remotes, hud: d.hud, me: () => this.me, send: (m) => this.send(m),
       now: () => this.simMs, renderT: () => this.renderT(), name: (id) => this.name(id), died: d.died, spawned: d.spawned,
     });
-    this.forge = new NetForge((m) => this.send(m), d.session, d.stage, this.anvils, () => this.me);
+    this.forge = new NetForge((m) => this.send(m), d.session, this.anvils, () => this.me);
     d.combat.resolver = this.combat;
     d.lf.c.netOwned = true;
     const h = d.room.h;
@@ -90,6 +91,8 @@ export class NetMatch {
   get me(): number { return this.d.room.id; }
   /** Match ms on the server clock. */
   now(): number { return this.d.room.clock.serverNow(Date.now()) - this.t0; }
+  /** The clock the forge ring runs on: match seconds; `at` turns a pointer-down's performance.now() stamp into it. */
+  readonly forgeClock: ForgeClock = { now: () => this.now() / 1000, at: (ms) => (this.now() - (performance.now() - ms)) / 1000 };
   /** The time remote players are drawn at (sim side: the tick's own time). */
   renderT(): number { return this.simMs - this.remotes.jitter.delay; }
   name(id: number): string { return this.d.room.view?.players.find((p) => p.id === id)?.name ?? STR.profile.defaultName; }
@@ -119,7 +122,7 @@ export class NetMatch {
         for (const a of m.anvils) if (a.id !== this.me) this.anvils.place(a.id, a.p, a.yaw, true);
         this.pickups.set(m.pickups);
         this.d.flow.onMsg({ t: 'phase', f: m.f, rows: m.rows });
-        applyForgeSync(this.d.session, m.you, true);
+        applyForgeSync(this.d.session, m.you, { heat: true, ring: true });
         void this.forge.controller?.syncWeapon(true);
         break;
       }
@@ -139,7 +142,6 @@ export class NetMatch {
     if (Math.abs(this.simMs - now) > 200) this.simMs = now;
     this.remotes.apply(this.renderT());
     this.anvils.tick(dt);
-    this.forge.tick();
     if (++this.ticks % SEND_EVERY === 0) this.d.room.sendBinary(encodeState(packLocal(this.d.lf.c, this.d.forging(), this.st)));
   }
 

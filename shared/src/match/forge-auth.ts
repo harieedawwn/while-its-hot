@@ -8,7 +8,7 @@ import type { MPlayer, Out } from './mplayer';
 /**
  * Server-authoritative forging (TECH §4): the room's RNG rolls every strike with shared/forge/session.ts.
  * The client predicts ring/heat/cooldown and sends ops; the server answers with `forged` (broadcast) and
- * `fsync` (owner). A strike's timing (perfect/miss) is the client's word: it is a skill input, not a roll.
+ * `fsync` (owner). A strike carries its pointer-down time; the server re-checks the ring phase at that time (within strikeTolS) and rolls Lên/Giữ.
  */
 const F = BALANCE.forge, A = BALANCE.net.auth;
 
@@ -17,41 +17,43 @@ export function nearOwnAnvil(p: MPlayer): boolean {
   return Math.hypot(p.st.x - p.anvil.p[0], p.st.z - p.anvil.p[2]) <= F.anvil.useRadius + A.anvilTol;
 }
 
-export function leaveStance(p: MPlayer): void { p.stance = false; p.heating = false; p.forge.endFrenzy(); }
+export function leaveStance(p: MPlayer, now = p.forge.time): void { p.stance = false; p.heating = false; p.forge.endFrenzy(now); }
 
-export function forgeOp(p: MPlayer, op: ForgeOp, out: Out[], all: readonly MPlayer[] = []): void {
+/** `now` = match seconds. A strike's `at` is the client's pointer-down time on the same clock: it must not be from the future
+ *  or older than a second, strikes come in order and no faster than `minGapS`; the zone is judged with `strikeTolS` of slack. */
+export function forgeOp(p: MPlayer, op: ForgeOp, out: Out[], all: readonly MPlayer[] = [], now = p.forge.time): void {
   const s = p.forge;
+  s.setTime(now);
+  if (op.k === 'strike' || op.k === 'frenzy') p.forgeOps++;
   switch (op.k) {
     case 'stance':
-      if (op.on && p.alive && nearOwnAnvil(p)) p.stance = true; else leaveStance(p);
+      if (op.on && p.alive && nearOwnAnvil(p)) p.stance = true; else leaveStance(p, now);
       break;
     case 'heat': p.heating = op.on && p.stance; break;
     case 'strike': {
       if (!p.stance || s.pendingPick !== null) break;
-      if (s.cooldown > A.strikeTolS) break;
-      s.cooldown = 0;
-      s.mods.mercy = Math.min(p.fx.mercyMax, p.hongRun * p.fx.mercyStep);
-      const r = s.strike(op.timing === 'perfect' ? 'perfect' : 'miss');
-      if (r.outcome === 'hong') p.hongRun++; else if (r.outcome !== 'giu') p.hongRun = 0;
-      if (r.outcome === 'hong' && p.fx.wave > 0 && p.anvil) wave(p, all, out);
+      const at = Math.max(now - 1, Math.min(now + A.strikeTolS, op.at));
+      if (at < s.lastStrikeAt + F.ring.minGapS) break;
+      const r = s.strike(at, A.strikeTolS);
+      if (r.outcome === 'vo' && p.fx.wave > 0 && p.anvil) wave(p, all, out);
       out.push({ to: 'all', m: { t: 'forged', id: p.id, r: strikeNet(r, s.heat), n: op.n } });
       break;
     }
-    case 'frenzy': if (p.stance) s.activateFrenzy(); break;
+    case 'frenzy': if (p.stance) s.activateFrenzy(Math.max(now - 1, Math.min(now, op.at))); break;
     case 'pick': if ((FAMILIES as readonly string[]).includes(op.f)) s.pickFamily(op.f); break;
     case 'swap': if (!p.stance) s.swapSlot(true); break;
     case 'target': s.toggleTarget(); break;
   }
-  out.push({ to: p.id, m: { t: 'fsync', s: forgeSync(s) } });
+  out.push({ to: p.id, m: { t: 'fsync', s: forgeSync(s, p.forgeOps) } });
 }
 
-/** Per server tick: heat, cooldown and frenzy auto-strikes (only at the anvil). */
-export function forgeTick(p: MPlayer, dt: number, out: Out[]): void {
+/** Per server tick: clock, heat, the end of Nhập thần (only at the anvil). */
+export function forgeTick(p: MPlayer, dt: number, out: Out[], now = p.forge.time): void {
   const s = p.forge, was = s.frenzy;
-  if (p.stance && !nearOwnAnvil(p)) leaveStance(p);
-  const auto = s.tick(dt, p.heating && p.stance);
-  for (const r of auto) out.push({ to: 'all', m: { t: 'forged', id: p.id, r: strikeNet(r, s.heat), n: -1 } });
-  if (auto.length || was !== s.frenzy) out.push({ to: p.id, m: { t: 'fsync', s: forgeSync(s) } });
+  s.setTime(now);
+  if (p.stance && !nearOwnAnvil(p)) leaveStance(p, now);
+  s.tick(dt, p.heating && p.stance);
+  if (was !== s.frenzy) out.push({ to: p.id, m: { t: 'fsync', s: forgeSync(s, p.forgeOps) } });
 }
 
 /** Death: the held blade loses levels (never breaks; the form stays at its best). */

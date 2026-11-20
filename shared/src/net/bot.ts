@@ -80,7 +80,7 @@ export class NetBot {
     if (was < on && this.forgeT >= on) { this.io.send({ t: 'forge', op: { k: 'stance', on: true } }); this.io.send({ t: 'forge', op: { k: 'heat', on: true } }); }
     if (this.forgeT > on + 1.2 && now - this.lastStrike > 650) {
       this.lastStrike = now;
-      this.io.send({ t: 'forge', op: { k: 'strike', timing: this.rand() < 0.45 ? 'perfect' : 'miss', n: ++this.strikeN } });
+      this.io.send({ t: 'forge', op: { k: 'strike', at: now / 1000, n: ++this.strikeN } });
       this.io.send({ t: 'forge', op: { k: 'pick', f: (['kiem', 'bua', 'thuong'] as const)[this.k % 3] } });
     }
     if (this.forgeT > this.forgeFor) {

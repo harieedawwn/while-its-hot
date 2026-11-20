@@ -73,7 +73,7 @@ export class MatchAuthority {
       t: 'match', t0: 0, now: this.now, truce: this.flow.truceEnd, rules: this.flow.rules, f: this.flow.net(), rows: this.flow.rows(),
       players: [...this.players.values()].map((p) => ({ id: p.id, hp: p.hp, alive: p.alive, p: [p.st.x, p.st.y, p.st.z] as Vec3, yaw: p.st.yaw })),
       anvils: [...this.players.values()].filter((p) => p.anvil).map((p) => ({ id: p.id, p: p.anvil!.p, yaw: p.anvil!.yaw })),
-      pickups: this.pickups.list.slice(), you: forgeSync(me.forge),
+      pickups: this.pickups.list.slice(), you: forgeSync(me.forge, me.forgeOps),
     };
   }
 
@@ -106,7 +106,7 @@ export class MatchAuthority {
   private forge(p: MPlayer, op: ForgeOp, out: Out[]): void {
     if (!this.flow.fighting) return;
     const was = p.stance;
-    forgeOp(p, op, out, this.ctx.list);
+    forgeOp(p, op, out, this.ctx.list, this.now / 1000);
     if (was && !p.stance && p.fx.stanceIframeS > 0) p.ifUntil = this.now + p.fx.stanceIframeS * 1000;
   }
 
@@ -138,7 +138,7 @@ export class MatchAuthority {
     if (a && a !== t) a.kills++;
     deathLoss(t);
     this.flow.onKill(t, a, out);
-    out.push({ to: 'all', m: { t: 'kill', tg: t.id, by } }, { to: t.id, m: { t: 'fsync', s: forgeSync(t.forge) } });
+    out.push({ to: 'all', m: { t: 'kill', tg: t.id, by } }, { to: t.id, m: { t: 'fsync', s: forgeSync(t.forge, t.forgeOps) } });
   }
 
   /** A safe edge point away from everyone alive (best of a few random picks). */
@@ -162,7 +162,7 @@ export class MatchAuthority {
     this.flow.tick(now, out);
     for (const p of this.players.values()) {
       if (p.alive && p.burnT > 0) { p.burnT -= dt; this.harm(p, p.burnDps * dt, p.burnBy, out); }
-      if (p.alive) forgeTick(p, dt, out);
+      if (p.alive) forgeTick(p, dt, out, now / 1000);
       else if (now >= p.spawnAt && this.flow.canRespawn(p)) {
         const s = this.spawnPoint(), yaw = Math.atan2(s[0], s[2]);
         p.alive = true; p.hp = C.hp; p.parryAt = -1e9;

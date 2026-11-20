@@ -25,20 +25,20 @@ export interface FxDemoDeps {
 
 /** Fire one effect now. */
 export function fireFx(id: FxId, d: FxDemoDeps): void {
-  const strike = (outcome: 'tuyet' | 'dat' | 'giu' | 'hong', broke = false) => {
+  const strike = (outcome: 'len' | 'giu' | 'vo', frenzy = false) => {
     d.stage.strike();
     const p = d.stage.hitPoint(new THREE.Vector3());
-    bus.emit('forge:strike', { outcome, perfect: outcome === 'tuyet', auto: false, target: 'blade', level: 5, refused: false, broke, heat: d.heat, x: p.x, y: p.y, z: p.z });
+    bus.emit('forge:strike', { outcome, hit: outcome !== 'vo', frenzy, target: 'blade', level: 5, refused: false, heat: d.heat, x: p.x, y: p.y, z: p.z });
   };
   const hit = (result: 'hit' | 'blocked', kind: 'light' | 'heavy') => {
     const p = d.chest;
     bus.emit('combat:hit', { attacker: 0, target: 1, dmg: kind === 'heavy' ? 26 : 9, zone: 'torso', kind, result, x: p.x, y: p.y, z: p.z });
   };
   switch (id) {
-    case 'strike': strike('tuyet'); break;
-    case 'levelup': strike('dat'); break;
-    case 'evolve': d.swapBlade('start'); strike('tuyet'); bus.emit('forge:evolve', { form: 'next', family: 'kiem' }); d.swapBlade('next'); break;
-    case 'break': d.swapBlade('start'); strike('hong', true); d.swapBlade('phoi'); break;
+    case 'strike': strike('len', true); break;
+    case 'levelup': strike('len'); break;
+    case 'evolve': d.swapBlade('start'); strike('len'); bus.emit('forge:evolve', { form: 'next', family: 'kiem' }); d.swapBlade('next'); break;
+    case 'break': d.swapBlade('start'); strike('vo'); d.swapBlade('phoi'); break;
     case 'hit': hit('hit', 'light'); break;
     case 'heavy': hit('hit', 'heavy'); break;
     case 'clash': hit('blocked', 'light'); break;

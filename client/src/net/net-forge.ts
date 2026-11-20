@@ -1,43 +1,32 @@
-import { applyForgeSync, type ClientMsg, type ForgeSession, type ForgeSync, type MatchServerMsg, OUTCOME_DELTA, type StrikeNet, type StrikeResult, type Timing, weaponById } from '@wih/shared';
+import { applyForgeSync, type ClientMsg, type ForgeSession, type ForgeSync, type MatchServerMsg, type StrikeNet, type StrikeResult, weaponById } from '@wih/shared';
 import { bus } from '../core/events';
 import type { ForgeController, ForgeLink } from '../forge/controller';
-import type { ForgeStage } from '../forge/stage';
 import type { NetAnvils } from './net-anvils';
 
-/** A strike the server has not answered after this long was refused (cooldown, left the stance): lower the hammer. */
-const PENDING_MS = 900;
-
 /**
- * Forging online (TECH §4). The controller predicts the ring, heat, cooldown and every op and tells the
- * room; a strike only raises the hammer until the room's roll comes back, then it falls (the latency
- * hides in the bigger swing). `forged` for us is held until the `fsync` right behind it, so the session
- * shows the server's level when the sparks fly. Other players' strikes throw sparks at their anvil.
+ * Forging online (TECH §4, ROUND3 §1). The controller predicts the ring, heat and every op, and tells the room;
+ * a strike goes out stamped with the pointer-down time on the shared clock, so the room judges the same ring
+ * phase. The hammer and the local Trúng/Trượt word are already shown; the room's Lên/Giữ roll follows. `forged`
+ * for us is held until the `fsync` right behind it, so the session shows the server's level when the sparks fly.
+ * The predicted ring stays until the room has handled every strike/frenzy we sent (`ForgeSync.ops`).
  */
 export class NetForge implements ForgeLink {
   controller: ForgeController | null = null;
   strikes = 0;
   private n = 0;
-  private pending: { n: number; at: number }[] = [];
-  private held: { r: StrikeNet; auto: boolean } | null = null;
+  private sent = 0;
+  private held: StrikeNet | null = null;
 
-  constructor(private send: (m: ClientMsg) => void, private session: ForgeSession, private stage: ForgeStage,
-    private anvils: NetAnvils, private me: () => number) {
-    session.autoStrike = false;
-  }
+  constructor(private send: (m: ClientMsg) => void, private session: ForgeSession, private anvils: NetAnvils, private me: () => number) {}
 
-  op(o: Parameters<ForgeLink['op']>[0]): void { this.send({ t: 'forge', op: o }); }
-  strike(timing: Timing): void {
-    const n = ++this.n;
-    this.pending.push({ n, at: performance.now() });
-    this.send({ t: 'forge', op: { k: 'strike', timing, n } });
-  }
+  op(o: Parameters<ForgeLink['op']>[0]): void { if (o.k === 'frenzy') this.sent++; this.send({ t: 'forge', op: o }); }
+  strike(at: number): void { this.sent++; this.send({ t: 'forge', op: { k: 'strike', at, n: ++this.n } }); }
 
   onMsg(m: MatchServerMsg): void {
     if (m.t === 'forged') {
       if (m.id !== this.me()) { this.remote(m.id, m.r); return; }
       this.strikes++;
-      this.pending = this.pending.filter((p) => p.n !== m.n);
-      this.held = { r: m.r, auto: m.n < 0 };
+      this.held = m.r;
     } else if (m.t === 'fsync') this.sync(m.s);
   }
 
@@ -45,23 +34,18 @@ export class NetForge implements ForgeLink {
   sync(s: ForgeSync): void {
     const h = this.held;
     this.held = null;
-    applyForgeSync(this.session, s, !!h);
-    if (h && this.controller) this.controller.reveal(toResult(h.r), h.auto);
+    applyForgeSync(this.session, s, { heat: !!h, ring: s.ops >= this.sent });
+    if (h && this.controller) this.controller.reveal(toResult(h));
     void this.controller?.syncWeapon();
-  }
-
-  tick(): void {
-    const now = performance.now();
-    if (this.pending.length && now - this.pending[0].at > PENDING_MS) { this.pending.shift(); if (!this.pending.length) this.stage.lower(); }
   }
 
   private remote(id: number, r: StrikeNet): void {
     const p = this.anvils.face(id);
     if (!p) return;
-    bus.emit('forge:strike', { outcome: r.outcome, perfect: r.timing === 'perfect', auto: r.timing === 'auto', target: r.target, level: r.level, refused: r.refused, broke: r.broke, heat: r.heat, x: p.x, y: p.y, z: p.z, owner: id, fallS: 0 });
+    bus.emit('forge:strike', { outcome: r.outcome, hit: r.timing === 'hit', frenzy: r.frenzy, target: r.target, level: r.level, refused: r.refused, heat: r.heat, x: p.x, y: p.y, z: p.z, owner: id, fallS: 0 });
   }
 }
 
 function toResult(r: StrikeNet): StrikeResult {
-  return { outcome: r.outcome, timing: r.timing, target: r.target, delta: OUTCOME_DELTA[r.outcome], level: r.level, refused: r.refused, broke: r.broke, pick: r.pick, evolved: r.evolved ? weaponById(r.evolved) : null };
+  return { outcome: r.outcome, timing: r.timing, target: r.target, delta: r.delta, level: r.level, refused: r.refused, frenzy: r.frenzy, pick: r.pick, evolved: r.evolved ? weaponById(r.evolved) : null };
 }

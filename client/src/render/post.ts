@@ -21,6 +21,8 @@ uniform float uEdgeSteps;
 uniform vec3 uFadeColor; // sRGB
 uniform float uFade;     // 0..1
 uniform float uHeatTint; // 0..1: inside the fire ring the world leans toward the heat ramp
+uniform float uWarm;     // 0..1 Nhập thần: stepped, dithered warm edge vignette
+uniform vec3 uWarmColor; // sRGB
 uniform vec3 uHeatRamp[9];
 varying vec2 vUv;
 
@@ -53,6 +55,11 @@ void main() {
     float k = floor(r * uEdge * uEdgeSteps + bayer4(gl_FragCoord.xy * 0.5)) / uEdgeSteps;
     c *= 1.0 - clamp(k, 0.0, 0.92);
   }
+  if (uWarm > 0.0) {
+    vec2 q = (vUv - 0.5) * 2.0;
+    float r = clamp((length(q * vec2(1.0, 0.8)) - 0.3) / 0.9, 0.0, 1.0);
+    c = mix(c, uWarmColor, clamp(floor(r * uWarm * 5.0 + bayer4(gl_FragCoord.xy * 0.5)) / 5.0, 0.0, 0.7));
+  }
   c = mix(c, uFadeColor, uFade);
   gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
 }
@@ -70,6 +77,8 @@ export class PostPass {
     uFadeColor: { value: new THREE.Color(0, 0, 0) },
     uFade: { value: 0 },
     uHeatTint: { value: 0 },
+    uWarm: { value: 0 },
+    uWarmColor: { value: new THREE.Color(0.54, 0.165, 0.047) },
     uHeatRamp: { value: HEAT_LINEAR },
   };
   private scene = new THREE.Scene();

@@ -71,33 +71,43 @@ Anvils are solid, visible to all, show the owner's color band. Only the owner ca
 Moving the stick or pressing Nhảy or Trượt exits instantly (0.2 s blend). Getting hit kicks you out and costs 0.2 heat.
 
 **Heat (nhiệt) 0–1.** Hold Nung (the same button while in stance) to push the blade into the anvil's brazier:
-+0.55/s. Heat decays 0.05/s, each strike costs 0.12. The blade glows with real blackbody steps (LOOK §5).
-| Heat | Band | Effect on odds |
++0.55/s. Heat decays 0.05/s, each strike costs 0.12. The blade glows with real blackbody steps (LOOK §5). Heat does not
+change the odds, it changes the size of the sweet zone:
+| Heat | Band | Zone size |
 |---|---|---|
-| < 0.25 | cold | 20 points move from success to Hỏng |
-| 0.25–0.5 | dull red | 8 points move to Hỏng |
-| 0.5–0.9 | forging heat | none (the target band — "strike while it's hot") |
-| > 0.9 | burning | 10 points move to Hỏng |
+| < 0.25 | cold | ×0.6 |
+| 0.25–0.5 | dull red | ×0.8 |
+| 0.5–0.9 | forging heat | ×1 (the target band: "strike while it's hot") |
+| > 0.9 | burning | ×0.6 |
 
-**Strike:** tap Rèn to strike (cadence ≥ 0.5 s). A marker sweeps a ring; the sweet zone is 18% of the ring.
-Perfect timing moves 15 points from Hỏng to Đạt/Tuyệt (2:1); a miss moves 15 points to Hỏng.
+**Strike (ROUND3 §1, phase 25):** one lap of the ring takes 1.5 s. A strike fires on pointer-DOWN (keydown), no
+cadence, no cooldown; presses queue and are never lost. The marker is a pure function of the shared clock, so the
+client draws it every frame and the server re-checks the phase at the press's timestamp (`strikeTolS` 0.08 s).
+- **Trúng** (marker inside the sweet zone) → **Lên +1** with chance `p(L)`, otherwise **Giữ**.
+  `p(L)` falls linearly from 0.75 at +0 to 0.38 at +44. Zone `zone(L)` 0.22 of the ring at +0 → 0.10 at +44.
+- **Trượt** (outside) → **Vỡ −2**, always (level clamps at 0: **a blade is never destroyed**, no Gãy).
+- After every Trúng the zone jumps 0.30–0.65 of the ring ahead of the marker (never under it, at least half a zone
+  + 0.04 clear); a Trượt does not move it. Zone positions come from a seeded sequence the client and server share.
+- The local Trúng/Trượt verdict shows at once (hammer, word); online the server's Lên/Giữ roll follows.
+- Max level **+45** (`BALANCE.weapons.maxLevel`). Armor stays 0–10 and runs the same curves stretched over 0..44.
+  A blade remembers its highest level (its form never goes backwards, like ForgeTax).
+- Heat cost per strike 0.12 (not in Nhập thần). Cards/relics change the numbers through `ForgeMods` only
+  (zoneMul, heatMul, decayMul, costMul, frenzyFillMul, frenzyPlusS, guardVo, plus2Once, sureAfterVo, notoriety).
 
-**Outcomes** (base %, by current level, after the heat and timing shifts; the server rolls them):
-| Level | Tuyệt (+2) | Đạt (+1) | Giữ (0) | Hỏng (−1) |
-|---|---|---|---|---|
-| 0–4 | 12 | 55 | 18 | 15 |
-| 5–9 | 6 | 38 | 20 | 36 |
-| 10–14 | 4 | 25 | 22 | 49 |
-| 15–19 | 2 | 16 | 22 | 60 |
+**Nhập thần (Frenzy):** meter +1 per Lên, full at 10. The eye button in stance starts 4 s: lap 0.9 s, the zone is half
+the ring until 2.4 s then shrinks linearly to 0.12 at 4 s; after a Trúng it jumps 0.15–0.45 ahead (near edge ≥ 0.20
+clear). Trúng → Lên with `p(L) − 0.10`; Trượt → **30% Vỡ, 70% Giữ**. No heat cost, heat frozen, and you
+cannot be damaged while at the anvil (everyone can see the effect). FOV punch-in, heavier shake, sparks ×3, blade
+white-hot, warm dithered edge vignette pulsing with the marker; it ends with a 0.4 s ease back, everything restored.
+Leaving the stance ends it early.
 
-(Retuned in phase 20 with `tools/forge-sim.mjs`: without frenzy a 35% / 60% / 85% sweet-zone smith settles around +10 / +13 / +16; +18 takes a perfect run.)
-Max level +20. **Gãy** (break): a Hỏng at level 0 destroys the blade. That is the only way to lose a blade.
-A blade remembers its highest level (its form never goes backwards, like ForgeTax).
+**Numbers (`tools/forge-sim.mjs`, phase 25).** Nhập thần from +10: blind spam (7 taps/s) −1.2 · careless +2.7 ·
+semi-careful +4.3 · solid +4.9 · expert (reacts in ~70 ms) +5.3, and ≥ +7 in ~22% of expert runs. Normal forging from
++0, level after 15 / 30 / 45 / 90 s at the anvil: semi 11 / 17 / 21 / 26 · solid 14 / 23 / 28 / 36 · expert 15 / 28 /
+37 / 45. With ~15–20 s at the anvil per round a solid smith ends round 1 near +12–15 and an expert needs ~4–5 rounds
+for +45; a smith with 100 ms of timing noise plateaus in the mid +20s (the −2 on a Trượt outweighs a falling p).
 
-**Nhập thần (Frenzy):** meter +1 per Đạt, +2 per Tuyệt, full at 12. Activate in stance: 3.5 s of auto-strikes at
-2× cadence, Hỏng becomes Giữ, and you cannot be damaged while at the anvil (everyone can see the effect).
-
-**Evolution:** reaching +3 opens a quick 3-way pick (Kiếm / Búa / Thương, 3 s, defaults to last used).
+**Evolution:** reaching +3 opens a quick 3-way pick (Kiếm / Búa / Thương, 3 s, defaults to last used; ROUND3 §4 changes the families in phase 27).
 Forms change at the milestones below. Each form adds its passive (passives stack within a family).
 
 ### Weapon roster (16; insert new forms anywhere by `minLevel`, ids never change)
@@ -143,21 +153,21 @@ Modules render as attachments on armor sockets (back, shoulders, forearm, heels)
 - **Di vật draft** during the cage: pick 1 of 3. The last-place player picks first and from the rare pool.
   Players who scored below the round winner get one extra reroll.
 - **Tiếng tăm** (notoriety): the round winner starts the next round with 1 stack (2 if they won by 3+ kills).
-  Each stack moves 6 points from Đạt to Hỏng on their forge rolls, and killing them gives +1 point per stack.
+  Each stack lowers p(L) by 0.04 on their forge rolls, and killing them gives +1 point per stack.
   Stacks are recalculated every round (never accumulate forever).
 - The first and second relic offered to last place can be armor modules (catch-up builds).
 
 Starting relic pool (`shared/src/data/relics.ts`):
 | id | Name | Effect |
 |---|---|---|
-| da_niem | Đá niêm | prevent the first Gãy each round |
-| hon_than_do | Hòn than đỏ | 1 guaranteed Tuyệt per round |
-| vong_da | Vòng da | strike cadence −20% |
-| moi_han | Mối hàn | each Hỏng lowers the next Hỏng chance by 10 points (max 40, resets on Đạt) |
+| da_niem | Đá niêm | the first Vỡ each round becomes Giữ |
+| hon_than_do | Hòn than đỏ | 1 Lên +2 per round |
+| vong_da | Vòng da | each strike costs 25% less heat |
+| moi_han | Mối hàn | after a Vỡ the next Trúng is a sure Lên |
 | an_sat | Ấn sắt | +10% weapon damage |
 | kim_giu_nhiet | Kìm giữ nhiệt | heat decay −50% |
 | ong_be | Ống bễ | heating 2× faster |
-| bua_nen | Búa nện | every Hỏng releases a shockwave around your anvil (knockback 4 m) |
+| bua_nen | Búa nện | every Vỡ releases a shockwave around your anvil (knockback 4 m) |
 | de_nhe | Đe nhẹ | place and pick up the anvil instantly |
 | dau_toi | Dầu tôi | parries restore 1 stamina and 5 HP |
 | gang_da | Găng da | leaving forge stance grants 0.3 s i-frames |

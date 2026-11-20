@@ -109,14 +109,14 @@ export const STR = {
   },
   /** Relics (GDD §8): name + the one line that says what it does. */
   relic: {
-    da_niem: { name: 'Đá niêm', line: 'Chặn lần Gãy đầu tiên mỗi vòng' },
-    hon_than_do: { name: 'Hòn than đỏ', line: 'Một nhát Tuyệt chắc chắn mỗi vòng' },
-    vong_da: { name: 'Vòng da', line: 'Nhịp búa nhanh hơn 20%' },
-    moi_han: { name: 'Mối hàn', line: 'Mỗi lần Hỏng giảm 10 điểm Hỏng kế tiếp' },
+    da_niem: { name: 'Đá niêm', line: 'Lần Vỡ đầu tiên mỗi vòng thành Giữ' },
+    hon_than_do: { name: 'Hòn than đỏ', line: 'Một lần Lên +2 mỗi vòng' },
+    vong_da: { name: 'Vòng da', line: 'Mỗi nhát búa tốn ít nhiệt hơn 25%' },
+    moi_han: { name: 'Mối hàn', line: 'Sau khi Vỡ, nhát Trúng kế tiếp chắc chắn Lên' },
     an_sat: { name: 'Ấn sắt', line: 'Vũ khí mạnh hơn 10%' },
     kim_giu_nhiet: { name: 'Kìm giữ nhiệt', line: 'Nhiệt nguội chậm một nửa' },
     ong_be: { name: 'Ống bễ', line: 'Nung nóng nhanh gấp đôi' },
-    bua_nen: { name: 'Búa nện', line: 'Mỗi lần Hỏng hất văng người quanh đe' },
+    bua_nen: { name: 'Búa nện', line: 'Mỗi lần Vỡ hất văng người quanh đe' },
     de_nhe: { name: 'Đe nhẹ', line: 'Đặt và nhấc đe tức thì' },
     dau_toi: { name: 'Dầu tôi', line: 'Đỡ đòn hồi 1 thể lực và 5 máu' },
     gang_da: { name: 'Găng da', line: 'Rời bàn rèn được miễn đòn 0,3 giây' },
@@ -126,8 +126,8 @@ export const STR = {
   },
   /** Forge stance HUD (GDD §6). Only result words and what a player truly needs to read. */
   forge: {
-    outcome: { tuyet: 'Tuyệt', dat: 'Đạt', giu: 'Giữ', hong: 'Hỏng' },
-    broke: 'Gãy', refused: 'Chạm trần',
+    outcome: { len: 'Lên', giu: 'Giữ', vo: 'Vỡ' },
+    hit: 'Trúng', miss: 'Trượt', refused: 'Chạm trần',
     target: { blade: 'Vũ khí', armor: 'Giáp' },
     frenzy: 'Nhập thần',
   },

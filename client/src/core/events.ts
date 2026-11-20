@@ -31,7 +31,7 @@ export interface GameEvents {
    * owner = combatant id (absent = the local smith); fallS = seconds until the hammer lands (absent = a full fall;
    * online the result arrives part-way through the swing).
    */
-  'forge:strike': { outcome: 'tuyet' | 'dat' | 'giu' | 'hong'; perfect: boolean; auto: boolean; target: 'blade' | 'armor'; level: number; refused: boolean; broke: boolean; heat: number; x: number; y: number; z: number; owner?: number; fallS?: number };
+  'forge:strike': { outcome: 'len' | 'giu' | 'vo'; hit: boolean; frenzy: boolean; target: 'blade' | 'armor'; level: number; refused: boolean; heat: number; x: number; y: number; z: number; owner?: number; fallS?: number };
   'forge:evolve': { form: string; family: Family };
   'forge:frenzy': { on: boolean };
   'forge:heating': { on: boolean };

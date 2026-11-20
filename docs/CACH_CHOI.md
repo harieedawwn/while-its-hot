@@ -24,22 +24,20 @@ Mỗi vòng, ai cũng bắt đầu tay trắng. Bạn chạy ra lấy một than
 | Đỏ cam tươi | **Vừa đẹp. Đập lúc này** |
 | Vàng trắng | Quá nóng. Đập lúc này cũng dễ hỏng |
 
-Mỗi nhát đập làm thép nguội đi một chút. Thép cũng tự nguội dần theo thời gian. Vì vậy cứ nung vài nhát, đập vài nhát, rồi lại nung.
+Mỗi nhát đập làm thép nguội đi một chút. Thép cũng tự nguội dần theo thời gian. Vì vậy cứ nung vài nhát, đập vài nhát, rồi lại nung. Thép càng đúng độ nóng thì vùng sáng trên vòng càng rộng.
 
-**Đập:** **chạm nút Rèn** để đập một nhát. Lúc đập có một vòng tròn với một vạch chạy quanh. Bấm đúng lúc vạch nằm trong vùng sáng thì tỉ lệ thành công tăng lên. Bấm trật thì tỉ lệ hỏng tăng lên.
+**Đập:** **chạm nút Rèn** để đập một nhát, chạm bao nhiêu lần cũng được, không phải chờ. Có một vòng tròn với một vạch chạy quanh (một vòng mất 1,5 giây). Búa rơi đúng lúc ngón tay chạm xuống: vạch nằm trong vùng sáng là **Trúng**, nằm ngoài là **Trượt**. Sau mỗi nhát Trúng, vùng sáng nhảy sang chỗ khác phía trước vạch.
 
 **Kết quả mỗi nhát:**
 | Kết quả | Ý nghĩa |
 |---|---|
-| Tuyệt | +2 cấp |
-| Đạt | +1 cấp |
-| Giữ | không đổi |
-| Hỏng | −1 cấp |
-| Gãy | mất luôn thanh thép. Chỉ xảy ra khi thép đang ở +0 mà đập ra Hỏng |
+| Lên | Trúng và gặp may: +1 cấp |
+| Giữ | Trúng nhưng không may: không đổi |
+| Vỡ | Trượt: −2 cấp (không bao giờ tụt dưới +0, thép không bao giờ mất) |
 
-Cấp càng cao thì càng khó lên tiếp. Đây là trò may rủi có tính toán: cố đập thêm thì có thể mạnh hơn hẳn, nhưng cũng có thể tụt cấp.
+Cấp càng cao thì tỉ lệ Lên càng thấp và vùng sáng càng hẹp. Đập bừa liên tục chỉ làm tụt cấp: phải nhìn vạch rồi mới đập. Tối đa +45.
 
-**Nhập thần:** mỗi nhát Đạt hoặc Tuyệt làm đầy thêm thanh Nhập thần. Đầy thì kích hoạt được. Trong vài giây đó búa tự đập rất nhanh, nhát hỏng biến thành Giữ (không bị tụt cấp), và không ai đánh bạn được khi bạn đang đứng ở đe. Đây là lúc dồn cấp an toàn.
+**Nhập thần:** mỗi nhát Lên làm đầy thêm thanh Nhập thần (10 nhát). Đầy thì bấm nút mắt. Trong 4 giây đó vòng quay nhanh, vùng sáng rộng một nửa vòng nhưng thu nhỏ dần, nhát Trượt hiếm khi làm tụt cấp, và không ai đánh bạn được khi bạn đang đứng ở đe. Đập đúng nhịp thì lên được vài cấp liền; đập bừa thì vẫn tụt.
 
 **Lên hình dạng mới:** khi thép lên **+3**, bạn chọn 1 trong 3 nhánh vũ khí: **Kiếm**, **Búa** hoặc **Thương**. Đến các mốc +6, +10, +14, +18, vũ khí đổi sang hình dạng mới và có thêm kỹ năng nội tại. Thép không bao giờ tụt về hình dạng cũ, kể cả khi bị trừ cấp.
 

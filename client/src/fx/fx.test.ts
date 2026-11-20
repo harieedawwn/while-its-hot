@@ -45,7 +45,7 @@ describe('fx pools', () => {
     const p = new THREE.Vector3(0, 1, 0), a = new THREE.Vector3(-0.5, 1, 0), b = new THREE.Vector3(0.5, 1, 0);
     const live = () => fx.sparks.live + fx.puffs.live;
     const runs: (() => void)[] = [
-      () => fx.forgeStrike(p, 'tuyet', 0), () => fx.bladeBurst(a, b, FEEL.fx.levelUp.sparks, 0), () => fx.quench(a, b, 0),
+      () => fx.forgeStrike(p, 'len', 0), () => fx.bladeBurst(a, b, FEEL.fx.levelUp.sparks, 0), () => fx.quench(a, b, 0),
       () => fx.shatter(a, b, 0.05, 0), () => fx.hit(p, null, 0, true, true), () => fx.hit(p, null, 0, false, false),
       () => fx.clash(p, 0), () => fx.parryStar(p), () => fx.slam(p),
     ];

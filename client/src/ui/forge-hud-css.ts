@@ -16,7 +16,8 @@ export const FORGE_CSS = `
 .fh-ring .tr{fill:none;stroke:var(--ash);stroke-width:7}
 .fh-ring .zn{fill:none;stroke:var(--bone);stroke-width:7}
 .fh-ring .mk{stroke:var(--hot);stroke-width:4}
-.fh-ring.cd .mk{stroke:var(--steel)}
+.fh-ring.fr .mk{stroke:var(--bone)}
+.fh-ring.fr .zn{stroke:var(--hot)}
 .fh-ring .dot{fill:var(--soot);stroke:var(--ash);stroke-width:2}
 .fh-lvl{min-width:78px;text-align:right;line-height:1.05}
 .fh-lvl b{display:block;font-size:44px;font-weight:900;line-height:1}

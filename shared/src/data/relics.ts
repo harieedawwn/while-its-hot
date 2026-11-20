@@ -6,14 +6,14 @@ import type { ModuleId } from './modules';
  * `rare` relics fill the pool offered to last place.
  */
 export interface RelicFx {
-  /** Multipliers on forge ForgeMods. */
-  cadenceMul: number; heatDecayMul: number; heatGainMul: number; zoneMul: number;
+  /** Forge mods (ForgeMods): multipliers, plus Nhập thần fill rate and extra seconds. */
+  costMul: number; decayMul: number; heatMul: number; zoneMul: number; frenzyFillMul: number; frenzyPlusS: number;
   /** Weapon damage multiplier. */
   dmgMul: number;
-  /** Prevent this many Gãy each round / guarantee this many Tuyệt each round. */
-  noBreak: number; tuyet: number;
-  /** Mối hàn: each Hỏng lowers the next Hỏng chance by `mercyStep` points (max `mercyMax`), reset on Đạt. */
-  mercyStep: number; mercyMax: number;
+  /** Turn this many Vỡ into Giữ each round / make this many Lên a +2 each round. */
+  guardVo: number; plus2Once: number;
+  /** Mối hàn: after a Vỡ the next Trúng is a sure Lên. */
+  sureAfterVo: boolean;
   /** Start each round with this much armor; kills give this many weapon levels. */
   armorStart: number; killLevels: number;
   /** A parry restores this much stamina / HP. */
@@ -26,19 +26,19 @@ export interface RelicFx {
   stanceIframeS: number;
 }
 export const NO_RELIC: RelicFx = {
-  cadenceMul: 1, heatDecayMul: 1, heatGainMul: 1, zoneMul: 1, dmgMul: 1, noBreak: 0, tuyet: 0, mercyStep: 0, mercyMax: 0,
+  costMul: 1, decayMul: 1, heatMul: 1, zoneMul: 1, frenzyFillMul: 1, frenzyPlusS: 0, dmgMul: 1, guardVo: 0, plus2Once: 0, sureAfterVo: false,
   armorStart: 0, killLevels: 0, parryStamina: 0, parryHp: 0, wave: 0, instantAnvil: false, stanceIframeS: 0,
 };
 
 export interface RelicDef { id: string; rare: boolean; fx: Partial<RelicFx> }
 export const RELICS = [
-  { id: 'da_niem', rare: true, fx: { noBreak: 1 } },
-  { id: 'hon_than_do', rare: true, fx: { tuyet: 1 } },
-  { id: 'vong_da', rare: false, fx: { cadenceMul: 0.8 } },
-  { id: 'moi_han', rare: false, fx: { mercyStep: 10, mercyMax: 40 } },
+  { id: 'da_niem', rare: true, fx: { guardVo: 1 } },
+  { id: 'hon_than_do', rare: true, fx: { plus2Once: 1 } },
+  { id: 'vong_da', rare: false, fx: { costMul: 0.75 } },
+  { id: 'moi_han', rare: false, fx: { sureAfterVo: true } },
   { id: 'an_sat', rare: true, fx: { dmgMul: 1.1 } },
-  { id: 'kim_giu_nhiet', rare: false, fx: { heatDecayMul: 0.5 } },
-  { id: 'ong_be', rare: false, fx: { heatGainMul: 2 } },
+  { id: 'kim_giu_nhiet', rare: false, fx: { decayMul: 0.5 } },
+  { id: 'ong_be', rare: false, fx: { heatMul: 2 } },
   { id: 'bua_nen', rare: true, fx: { wave: 4 } },
   { id: 'de_nhe', rare: false, fx: { instantAnvil: true } },
   { id: 'dau_toi', rare: false, fx: { parryStamina: 1, parryHp: 5 } },
@@ -58,10 +58,10 @@ export function foldRelics(ids: readonly string[]): RelicFx {
   const o: RelicFx = { ...NO_RELIC };
   for (const id of ids) {
     const f = BY_ID.get(id)?.fx; if (!f) continue;
-    o.cadenceMul *= f.cadenceMul ?? 1; o.heatDecayMul *= f.heatDecayMul ?? 1; o.heatGainMul *= f.heatGainMul ?? 1;
-    o.zoneMul *= f.zoneMul ?? 1; o.dmgMul *= f.dmgMul ?? 1;
-    o.noBreak += f.noBreak ?? 0; o.tuyet += f.tuyet ?? 0; o.armorStart += f.armorStart ?? 0; o.killLevels += f.killLevels ?? 0;
-    o.mercyStep += f.mercyStep ?? 0; o.mercyMax = Math.max(o.mercyMax, f.mercyMax ?? 0);
+    o.costMul *= f.costMul ?? 1; o.decayMul *= f.decayMul ?? 1; o.heatMul *= f.heatMul ?? 1;
+    o.zoneMul *= f.zoneMul ?? 1; o.dmgMul *= f.dmgMul ?? 1; o.frenzyFillMul *= f.frenzyFillMul ?? 1; o.frenzyPlusS += f.frenzyPlusS ?? 0;
+    o.guardVo += f.guardVo ?? 0; o.plus2Once += f.plus2Once ?? 0; o.armorStart += f.armorStart ?? 0; o.killLevels += f.killLevels ?? 0;
+    o.sureAfterVo ||= f.sureAfterVo ?? false;
     o.parryStamina += f.parryStamina ?? 0; o.parryHp += f.parryHp ?? 0; o.wave = Math.max(o.wave, f.wave ?? 0);
     o.instantAnvil ||= f.instantAnvil ?? false; o.stanceIframeS += f.stanceIframeS ?? 0;
   }

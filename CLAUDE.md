@@ -72,8 +72,8 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/combat/{local-fighter,aim-assist,combat-feel,fighter-anim,dummy}.ts` local player melee kit, touch aim assist, hit-stop/trauma, fighter → TP clips, training dummy AI
 - `client/src/combat/vm/{vm-pose,vm-clips,vm-driver,vm-arms}.ts` FP pose keys, per-family FP attack sets from the sweep arcs, fighter → viewmodel, FP forearms
 - `client/src/player/character/clips/attacks.ts` TP attack clips · `dev/{scene-combat,combat-demo}.ts` combat scene + scripted demos
-- `shared/src/forge/{odds,session,anvil-rule}.ts` forge odds + shifts, ForgeSession (blades/armor/heat/ring/frenzy/pick), anvil timers · `forge/forge.test.ts` · `BALANCE.forge`
-- `client/src/forge/{anvil,stage,stance-cam,controller}.ts` placed anvil+brazier (solid, lit), blade/hammer on the anvil, stance camera blend, local forge loop (replaces lf.tick+player.tick) · `physics/blockers.ts` dynamic cylinders in CollisionWorld
+- `shared/src/forge/{odds,ring,session,anvil-rule,sync}.ts` p(L)/zone(L)/heat zone/ForgeMods, clock-driven ring + seeded zones, ForgeSession (blades/armor/heat/frenzy/pick, `strike(at,tol)`/`predict(at)`), anvil timers, ForgeSync · `forge/forge.test.ts` · `BALANCE.forge`
+- `client/src/forge/{anvil,stage,stance-cam,controller}.ts` placed anvil+brazier (solid, lit), blade/hammer on the anvil, stance camera blend + frenzy FOV punch, local forge loop on pointer-down stamps + `ForgeClock` (replaces lf.tick+player.tick) · `physics/blockers.ts` dynamic cylinders in CollisionWorld
 - `client/src/ui/{forge-hud,forge-hud-css}.ts` strike ring, heat meter, frenzy pips, result word, +3 family pick · `dev/scene-forge.ts` forge scene (presets in its header)
 - `client/src/fx/{sparks,puffs,decals,shards,trail}.ts` spark pool (embers/star), dithered puffs, ground decals/rings, Gãy shards, weapon ribbon · `fx/glsl.ts` Bayer clip + heat ramp + fog
 - `client/src/fx/{fx-world,fx-bind,fx-layer,fx-settings}.ts` pools + recipes, bus → effects + ring embers/tint, per-scene FX bundle with trails, Máu setting · `dev/{scene-fx,fx-demo}.ts` fx bench

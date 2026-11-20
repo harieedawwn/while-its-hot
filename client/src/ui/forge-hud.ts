@@ -6,14 +6,16 @@ import { STR } from './strings.vi';
 import { FEEL } from '../core/feel';
 
 const F = BALANCE.forge;
-export type FlashKind = 'tuyet' | 'dat' | 'giu' | 'hong' | 'broke' | 'refused';
+/** hit / miss = the local verdict shown at once online; len / giu / vo = the rolled result. */
+export type FlashKind = 'hit' | 'miss' | 'len' | 'giu' | 'vo' | 'refused';
 export interface ForgeHudView {
-  ring: number; zoneC: number; zoneHalf: number; cooling: boolean; heat: number; level: number;
-  target: 'blade' | 'armor'; frenzyMeter: number; frenzyOn: boolean;
+  /** Marker phase 0..1 (drawn from the shared clock every frame), zone center and half-size as fractions of the ring. */
+  ring: number; zoneC: number; zoneHalf: number; heat: number; level: number;
+  target: 'blade' | 'armor'; frenzyMeter: number; frenzyOn: boolean; frenzyLeft: number;
 }
 /** Result words use the heat ramp (LOOK §8); a miss reads cold or dark. */
 const WORD_COLOR: Record<FlashKind, string> = {
-  tuyet: HEAT_HEX[7], dat: HEAT_HEX[5], giu: '#7f93a1', hong: HEAT_HEX[3], broke: '#b3261e', refused: '#7f93a1',
+  hit: '#e9e1d3', miss: '#7f93a1', len: HEAT_HEX[6], giu: '#7f93a1', vo: HEAT_HEX[3], refused: '#7f93a1',
 };
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', parent?: HTMLElement): HTMLElementTagNameMap[K] => {
   const e = document.createElement(tag); if (cls) e.className = cls; parent?.appendChild(e); return e;
@@ -41,7 +43,7 @@ export class ForgeHud {
   private fr: HTMLElement;
   private word: HTMLElement;
   private pick: HTMLElement | null = null;
-  private cache = { zone: '', heat: -1, pips: -1, level: NaN, target: '', cool: false, on: false };
+  private cache = { zone: '', heat: -1, pips: -1, level: NaN, target: '', on: false, fr: false };
   private onKey: ((e: KeyboardEvent) => void) | null = null;
 
   constructor(host: HTMLElement) {
@@ -81,13 +83,13 @@ export class ForgeHud {
       this.cache.zone = zk;
       this.zone.setAttribute('d', arc(v.zoneC - v.zoneHalf, v.zoneC + v.zoneHalf));
     }
-    if (v.cooling !== this.cache.cool) { this.cache.cool = v.cooling; this.ringSvg.classList.toggle('cd', v.cooling); }
+    if (v.frenzyOn !== this.cache.fr) { this.cache.fr = v.frenzyOn; this.ringSvg.classList.toggle('fr', v.frenzyOn); this.cache.pips = -1; }
     const step = v.heat <= 0 ? -1 : heatStep(v.heat);
     if (step !== this.cache.heat) {
       this.cache.heat = step;
       this.heatSegs.forEach((s, i) => { s.style.background = i <= step ? HEAT_HEX[i] : ''; });
     }
-    const fm = Math.floor(v.frenzyMeter);
+    const fm = v.frenzyOn ? Math.ceil(Math.max(0, v.frenzyLeft) * F.frenzy.full) : Math.floor(v.frenzyMeter);
     if (fm !== this.cache.pips) { this.cache.pips = fm; this.pips.forEach((p, i) => p.classList.toggle('on', i < fm)); }
     if (v.level !== this.cache.level) { this.cache.level = v.level; this.lvl.textContent = `+${v.level}`; }
     if (v.target !== this.cache.target) { this.cache.target = v.target; this.tgt.textContent = STR.forge.target[v.target]; }
@@ -95,8 +97,8 @@ export class ForgeHud {
     if (ready !== this.cache.on) { this.cache.on = ready; this.fr.classList.toggle('on', ready); }
   }
 
-  flash(kind: FlashKind): void {
-    this.word.textContent = kind === 'broke' ? STR.forge.broke : kind === 'refused' ? STR.forge.refused : STR.forge.outcome[kind];
+  flash(kind: FlashKind, suffix = ''): void {
+    this.word.textContent = (kind === 'refused' ? STR.forge.refused : kind === 'hit' ? STR.forge.hit : kind === 'miss' ? STR.forge.miss : STR.forge.outcome[kind]) + suffix;
     this.word.style.color = WORD_COLOR[kind];
     this.word.classList.remove('pop'); void this.word.offsetWidth; this.word.classList.add('pop');
   }

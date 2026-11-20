@@ -40,17 +40,12 @@ export function bindFx(d: FxDeps): () => void {
   const offs = [
     bus.on('forge:strike', (e) => {
       const p = new THREE.Vector3(e.x, e.y, e.z), floor = floorAt(p) + 0.005;
-      if (e.owner) { fx.later(e.fallS ?? FEEL.forge.hammer.fallS, () => fx.forgeStrike(p, e.outcome, floor)); return; } // someone else's anvil
+      if (e.owner) { fx.later(e.fallS ?? FEEL.forge.hammer.fallS, () => fx.forgeStrike(p, e.outcome, floor, e.frenzy)); return; } // someone else's anvil
       const onBlade = e.target === 'blade' && !!stage?.bladeSegment(a, b);
-      if (e.broke && onBlade) {
-        stage!.hideBlade(X.shatter.hideS);
-        fx.shatter(a.clone(), b.clone(), 0.05, floor);
-        return;
-      }
-      const up = (e.outcome === 'tuyet' || e.outcome === 'dat') && !e.refused;
+      const up = e.outcome === 'len' && !e.refused;
       const sa = a.clone(), sb = b.clone();
       fx.later(e.fallS ?? FEEL.forge.hammer.fallS, () => {
-        fx.forgeStrike(p, e.outcome, floor);
+        fx.forgeStrike(p, e.outcome, floor, e.frenzy);
         if (up && onBlade) {
           stage!.boost(Math.min(1, e.heat + 1 / 9), X.levelUp.pulseS);
           fx.bladeBurst(sa, sb, X.levelUp.sparks, floor);
@@ -72,7 +67,7 @@ export function bindFx(d: FxDeps): () => void {
     bus.on('combat:parry', (e) => fx.parryStar(new THREE.Vector3(e.x, e.y, e.z))),
     bus.on('move:slam', (e) => fx.slam(new THREE.Vector3(e.x, e.y, e.z))),
     // menu: the helve hammer lands on the bar
-    bus.on('ui:strike', (e) => fx.forgeStrike(new THREE.Vector3(e.x, e.y, e.z), 'tuyet', e.floor)),
+    bus.on('ui:strike', (e) => fx.forgeStrike(new THREE.Vector3(e.x, e.y, e.z), 'len', e.floor)),
   ];
   return () => offs.forEach((o) => o());
 }

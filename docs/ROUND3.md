@@ -10,14 +10,14 @@ Numbers are starting values; they go to `balance.ts` / `feel.ts`, never inline.
 - `p(L)` starts 0.75 at +0 and falls linearly to 0.38 at +44. Zone size `zone(L)` 0.22 of the ring at +0 →
   0.10 at +44. Heat: forging band = full zone; dull ×0.8; cold or burning ×0.6. Heat cost per strike 0.12 stays.
 - **Ring:** one lap = 1.5 s (was 1.1, slower but still needs timing). After every Trúng the zone jumps ahead
-  of the marker by a random gap of 0.15–0.45 of the ring (never under the marker). Misses do not move it.
+  of the marker by a random gap (never under the marker; tuned in phase 25 to 0.30–0.65 of the ring normally, 0.15–0.45 in Nhập thần with a 0.20 clear). Misses do not move it.
   Zone positions come from a seeded sequence the client and server share.
 - **No cadence / no cooldown.** A strike fires on pointer-DOWN (and keydown), stamped with the event time.
   The client decides Trúng/Trượt from the ring phase at that timestamp and shows it at once (marker flash,
   hammer anim); the server re-checks the phase within `strikeTolS` and rolls Lên/Giữ. Strikes queue, input
   never waits for the server, the ring is drawn from the same clock every frame (no drift, no hitch).
 - **Nhập thần:** meter +1 per Lên, full at 10. Activated with the eye button in stance. Lasts 4 s:
-  lap 0.9 s, zone = half the ring until 2.6 s, then shrinks linearly to 0.12 at 4 s. Trúng → Lên with
+  lap 0.9 s, zone = half the ring until 2.4 s, then shrinks linearly to 0.12 at 4 s. Trúng → Lên with
   `p(L) − 0.10` (a bit more Giữ). Trượt → Vỡ 30%, Giữ 70%. No heat cost, heat frozen, you cannot be damaged
   at the anvil (as before). Ends cleanly: every camera/audio/post change is restored.
 - **Frenzy feel ("dữ dội"):** FOV punch-in 8°, heavier strike shake, sparks ×3, blade at white-hot step,

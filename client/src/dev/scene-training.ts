@@ -100,7 +100,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   yard.setMode(mode, false);
 
   const forge = new ForgeController({
-    player, lf, anvil, stage, session, hud: fhud, touch: input.touch ?? undefined, loadModel: load,
+    player, lf, anvil, stage, session, hud: fhud, touch: input.touch ?? undefined, loadModel: load, look: (k) => pipeline.setWarm(k),
     onArmor: (l) => { yard.setArmor(l); },
   });
 

@@ -156,7 +156,9 @@ export const FEEL = {
     /** Blade on the anvil: longest length shown (m), and how fast it slides into the brazier (1/s). */
     blade: { showLen: 1.15, maxScale: 1.4, slideRate: 7, brazierX: -0.88 },
     /** Camera trauma and hit-stop on a strike, by outcome. */
-    strike: { trauma: { tuyet: 0.5, dat: 0.32, giu: 0.2, hong: 0.4 } as Record<string, number>, hitStopMs: 55, levelStopMs: 60, kickBack: 0.05 },
+    strike: { trauma: { len: 0.32, giu: 0.2, vo: 0.4 } as Record<string, number>, frenzyTrauma: 1.7, hitStopMs: 55, levelStopMs: 60, kickBack: 0.05 },
+    /** Nhập thần: FOV punch-in (deg, eased in/out), warm edge vignette strength (0..1) pulsing with the marker, music/ambience duck, blade at the white-hot step, restore time (s). */
+    frenzy: { fovPunch: 8, fovInS: 0.12, outS: 0.4, vignette: 0.55, vignettePulse: 0.35, whiteStep: 7 },
     /** Anvil appearing/leaving: drop height of the placing animation (m). */
     drop: 0.55,
     /** HUD: seconds a result word stays. */
@@ -168,7 +170,7 @@ export const FEEL = {
     /** Spark pool: gravity (m/s²), floor bounce keep (vertical, horizontal), width (m, never under 1 px), length per m/s, max length. */
     spark: { pool: 400, gravity: 11, bounceY: 0.32, bounceXZ: 0.55, width: 0.012, lenPerSpeed: 0.022, maxLen: 0.24 },
     /** Forge strike: sparks by outcome, speed range (m/s), life range (s). Spawned when the hammer lands. */
-    strike: { count: { tuyet: 40, dat: 28, giu: 16, hong: 12 } as Record<string, number>, speed: [2.2, 5.5] as const, life: [0.3, 0.8] as const },
+    strike: { count: { len: 30, giu: 16, vo: 12 } as Record<string, number>, frenzyMul: 3, speed: [2.2, 5.5] as const, life: [0.3, 0.8] as const },
     /** Level up: sparks along the blade, blade pulse up one heat step for pulseS. */
     levelUp: { sparks: 14, pulseS: 0.16 },
     /** Form evolution (quench): white flash, steam column, ground ring, camera punch. */
