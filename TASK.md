@@ -139,7 +139,16 @@ Run this phase again every time the user drops new files into `weapon-lab/weapon
   stay as ROSTER says (ignore `meta.effects`). A file with a new id: add a row only if it fits a free level
   slot, else report it. Files of the old `thuong` family (e.g. `the_dao_pha_thu.js`) are skipped.
   Keep the lab file unchanged; put any fix in an override next to it.
-- Unit test: every lab file builds, tris ≤ 1500, markers present, ids unique.
+- User batch (24 free-chat files, +3..+27). Map onto ROSTER slots and rename the row id + name in
+  `weapons.ts`/ROSTER (old profile ids map to the new ones; effects stay the row's, plus the small twist):
+  `kiem_tram_nguyet` → kiem +21 (was kiem_song_nhan; its flying slash fits), `thien_nghich_mau` → kiem +9
+  (replaces kiem_ban_rong's model), `bua_cu_chuy` → bua +21 (was bua_nam_cham; pull fits),
+  `phi_dao_loi_than` → dao +15 (was dao_nem; twist: heavy again within 2 s while the knife is out =
+  blink to it, reuse the blink atom), `dao_bong_toi` → dao +21 (was dao_bong). `gang_piston` (+12) has no
+  file yet: keeps the borrowed model.
+- Tris: many free files are 1700–4100. lab-kit gets a `detail` factor (fewer radial/loft segments) so every
+  file lands ≤ 2000 tris without changing its silhouette; check with `tools/lab-sheet.mjs` before/after.
+- Unit test: every lab file builds, tris ≤ 2000 after detail, markers present, ids unique.
 Shots: `weapons` (rack). Done when the new models appear in the rack, armory and training.
 
 ---
