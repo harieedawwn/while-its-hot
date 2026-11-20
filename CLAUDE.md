@@ -102,6 +102,8 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/ui/modal.ts` setModal (hides touch layer while a choice is open) · `ui/menu/lobby-settings.ts` host/read-only match settings grid · `core/slice.ts` yieldTask/settleFrames for sliced scene loads
 - `client/src/dev/scene-icon.ts` app icon scene (`icon`) · `tools/icon-gen.mjs` + `tools/icon-src.png` → Android icon mipmaps + splash
 
+- `client/src/input/controls-settings.ts` `sharedControls()` the one live Controls · `layout-store.ts` `reload()` · `pictograms.ts` flame/eye/slot variants, `TouchControls.setIcon/setDim` · `ForgeSession.swapSlot/filled/swapT`
+
 ## Conventions
 - TypeScript strict, ES modules, npm workspaces: `client/`, `server/`, `shared/`.
 - Units: meters, seconds, radians. +Y up. Player eye height 1.62 m.

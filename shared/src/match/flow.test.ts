@@ -12,6 +12,10 @@ describe('round rules', () => {
     expect(ringRadius(M.ring.startS - 1)).toBe(0);
     expect(ringRadius(M.ring.startS)).toBe(M.ring.maxR);
     expect(ringRadius(M.ring.closedS)).toBe(M.ring.minR);
+    // continuous: no step bigger than the shrink rate allows over one 60 fps frame, so the mesh can follow it per frame
+    let prev = ringRadius(M.ring.startS), worst = 0;
+    for (let t = M.ring.startS; t <= M.ring.closedS + 1; t += 1 / 60) { const r = ringRadius(t); worst = Math.max(worst, Math.abs(r - prev)); prev = r; }
+    expect(worst).toBeLessThan(0.05);
     expect(ringRadius(M.ring.closedS + 50)).toBe(M.ring.minR);
     expect(burnDps(M.ring.startS)).toBe(6);
     expect(burnDps(M.ring.startS + 25)).toBe(10);

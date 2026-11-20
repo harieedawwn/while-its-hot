@@ -36,10 +36,10 @@ Scoring: kill = 1 point; killing the player with Tiếng tăm (§8) = +1 bonus p
 ## 4. Movement (fast, skill-based; feel constants in `client/src/core/feel.ts`)
 | Move | Value |
 |---|---|
-| Run speed | 9 m/s, ground accel 80 m/s², air accel 30 m/s² (strong air control) |
+| Run speed | 6.75 m/s (round 3: −25%), ground accel 80 m/s², air accel 30 m/s² (strong air control) |
 | Gravity / jump | 30 m/s² / jump velocity 10 m/s; coyote time 0.1 s; jump buffer 0.12 s |
 | Stamina | 3 pips (guard only: block / parry), regen 1 pip / 1.4 s, no regen while sliding |
-| Slide (Trượt) | on ground while moving: 14 m/s easing down to run speed over 0.8 s max, then you stand up even if held (release before the next one); 0.35 s cooldown; lower hitbox; slide-jump keeps speed. There is no dash. |
+| Slide (Trượt) | on ground while moving: 10.5 m/s easing down to run speed over 0.8 s max, then you stand up even if held (release before the next one); 0.35 s cooldown; lower hitbox; slide-jump keeps speed. There is no dash. |
 | Slam | slide/crouch in air: 40 m/s down; landing knocks nearby players up (r 3 m, no damage); jump within 0.15 s of landing = slam bounce (jump ×1.5) |
 | Wall jump | up to 3 before landing; wall cling slows falling to 3 m/s while pushing into a wall |
 

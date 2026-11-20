@@ -26,7 +26,7 @@ export const STR = {
   settings: {
     tabs: { gfx: 'Hình ảnh', audio: 'Âm thanh', controls: 'Điều khiển', view: 'Góc nhìn', profile: 'Hồ sơ' },
     reduceMotion: 'Giảm chuyển động', on: 'Bật', off: 'Tắt',
-    fixed: 'Cố định', floating: 'Nổi', thirdPerson: 'Góc thứ ba', firstPerson: 'Góc thứ nhất',
+    fixed: 'Cố định', floating: 'Nổi',
     tapParry: 'Chạm để đỡ', holdParry: 'Giữ để đỡ',
   },
   /** Controls tab rows (TECH §5). */
@@ -36,7 +36,7 @@ export const STR = {
     gyroSens: 'Độ nhạy quay', aimAssist: 'Hỗ trợ ngắm', parry: 'Đỡ đòn',
   },
   /** View tab rows. */
-  view: { fov: 'Góc nhìn ngang', mode: 'Chế độ nhìn', bob: 'Lắc đầu khi chạy', shake: 'Rung màn hình' },
+  view: { fov: 'Góc nhìn ngang', bob: 'Lắc đầu khi chạy', shake: 'Rung màn hình' },
   /** Profile tab rows. */
   profile: {
     name: 'Tên', color: 'Màu', clear: 'Xóa dữ liệu', clearDo: 'Xóa', clearSure: 'Chạm lần nữa để xóa',
@@ -78,7 +78,7 @@ export const STR = {
     lastHit: 'Đòn cuối', dps: 'DPS', armor: 'Giáp', rack: 'Vũ khí', dummies: 'Người gỗ',
   },
   hud: { fps: 'FPS', lives: 'Mạng', ring: 'Vòng lửa', kills: 'Hạ', deaths: 'Gục', level: 'Cấp', you: 'Bạn' },
-  pause: { title: 'Tạm dừng', resume: 'Tiếp tục', settings: 'Cài đặt', leave: 'Về menu' },
+  pause: { title: 'Tạm dừng', resume: 'Tiếp tục', settings: 'Cài đặt', leave: 'Thoát' },
   score: { title: 'Bảng điểm', player: 'Người chơi', weapon: 'Vũ khí' },
   /** Touch layout editor (Điều khiển → Chỉnh bố cục). Game buttons carry pictograms only, never text. */
   layout: {

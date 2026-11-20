@@ -8,6 +8,7 @@ import { Viewmodel } from '../player/viewmodel';
 import type { MaterialLib } from '../render/materials/library';
 import { marker } from '../weapons/weapon';
 import { AimAssist } from './aim-assist';
+import { sharedControls } from '../input/controls-settings';
 import { bindCombatFeel } from './combat-feel';
 import type { CombatWorld } from './combat-world';
 import { Combatant } from './combatant';
@@ -23,6 +24,8 @@ export class LocalFighter {
   readonly c: Combatant;
   readonly vm: Viewmodel;
   readonly aim = new AimAssist();
+  private guardLatch = false;
+  private aimWanted: boolean;
   private driver: VmDriver;
   private arms: VmArms;
   private gripL: THREE.Object3D | undefined;
@@ -37,7 +40,7 @@ export class LocalFighter {
     this.driver = new VmDriver(this.vm, def);
     this.arms = new VmArms(lib);
     this.vm.attach(this.arms.root);
-    this.aim.enabled = o.aim ?? false;
+    this.aimWanted = o.aim ?? false; this.aim.enabled = this.aimWanted;
     this.offs = [
       bindCombatFeel(() => this.c.id, cam, this.vm),
       bus.on('combat:swing', (e) => { if (e.id === this.c.id) this.aim.snap(this.c); }),
@@ -56,6 +59,11 @@ export class LocalFighter {
     const f = this.fin;
     f.attackPressed = a.take('attack'); f.attackHeld = a.isHeld('attack');
     f.parryPressed = a.take('parry'); f.parryHeld = a.isHeld('parry');
+    if (!sharedControls().v.holdParry) { // tap mode: a tap raises the guard, the next tap (or a swing, a stagger) lowers it
+      if (f.parryPressed) this.guardLatch = !this.guardLatch;
+      if (f.attackPressed || this.c.fighter.phase === 'stagger' || this.c.fighter.phase === 'dead') this.guardLatch = false;
+      f.parryHeld = this.guardLatch;
+    }
     f.sinceSlide = this.c.sinceSlide;
     this.c.tick(dt, f);
   }
@@ -71,6 +79,7 @@ export class LocalFighter {
 
   /** Look input in radians after aim-assist slowdown; pulls toward the target when the player acts. */
   look(dx: number, dy: number, dt: number, moving: boolean): { dx: number; dy: number } {
+    this.aim.enabled = this.aimWanted && sharedControls().v.aimAssist;
     const k = this.aim.update(this.c, this.world.list);
     if (moving || dx !== 0 || dy !== 0 || this.c.fighter.attacking) this.aim.pull(this.c, dt);
     return { dx: dx * k, dy: dy * k };

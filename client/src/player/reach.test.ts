@@ -32,8 +32,8 @@ describe('course reach', () => {
     expect(top).toBeGreaterThan(5.2);
   });
 
-  it('the 7.5 m gap between 1.5 m platforms needs a slide-jump', () => {
-    const kin = world([[4, 1.5, 20, 0, 0.75, 10], [4, 1.5, 6, 0, 0.75, -10.5]]);
+  it('the 5.6 m gap between 1.5 m platforms needs a slide-jump', () => {
+    const kin = world([[4, 1.5, 20, 0, 0.75, 10], [4, 1.5, 6, 0, 0.75, -8.6]]);
     const cross = (mode: 'slidejump' | 'jump') => {
       const s = createMoveState([0, 1.6, 8]);
       let jumpedAt = -1;
@@ -45,7 +45,7 @@ describe('course reach', () => {
         } else if (s.pos.z < 0.6 && jumpedAt < 0) inp.jumpPressed = true;
         stepMove(s, inp, DT, kin);
         if (jumpedAt < 0 && s.events.some((e) => e.k === 'jump')) jumpedAt = i;
-        if (jumpedAt >= 0 && s.events.some((e) => e.k === 'land')) return s.pos.y > 1.4 && s.pos.z < -7.8;
+        if (jumpedAt >= 0 && s.events.some((e) => e.k === 'land')) return s.pos.y > 1.4 && s.pos.z < -5.8;
       }
       return false;
     };

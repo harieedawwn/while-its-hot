@@ -46,7 +46,6 @@ export class NetFlow {
   private endScr: EndScreen;
   private pin: Vec3 | null = null;
   private lastPh = '';
-  private ringKey = -1;
   /** Unlock list of this match (after `end`). */
   unlocked: string[] = [];
 
@@ -89,7 +88,7 @@ export class NetFlow {
     const d = this.d;
     this.board.hide(); this.endScr.hide();
     if (f.ph === 'cage') {
-      d.arena.setDoors(0); d.arena.setRing(0, 0); this.ringKey = -1; d.newRound();
+      d.arena.setDoors(0); d.arena.setRing(0, 0); d.newRound();
       this.draft.setHead(f.n); this.banner.flash(STR.match.round(f.n), 1600);
     } else if (f.ph === 'fight') {
       this.draft.hide(); this.pin = null;
@@ -140,8 +139,7 @@ export class NetFlow {
       const tl = this.truceLeft(now);
       roundS = tl > 0 ? tl : Math.max(0, (f.end - now) / 1000);
       ringS = s < M.ring.startS ? M.ring.startS - s : Math.max(0, M.ring.startS + ringSpan(this.rules.ring) - s);
-      const r = ringRadius(s, this.rules.ring), key = Math.round(r * 4);
-      if (key !== this.ringKey) { this.ringKey = key; this.d.arena.setRing(f.ring, r); }
+      this.d.arena.setRing(f.ring, ringRadius(s, this.rules.ring));
     }
     return { ...base, roundS, ringS, lives: me ? { left: me.lives, max: this.rules.lives } : null };
   }

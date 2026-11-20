@@ -147,6 +147,17 @@ describe('ForgeSession', () => {
     expect(s.canStrike).toBe(true);
     s.onHitOut(); expect(s.heat).toBeLessThan(0.2);
   });
+  it('Đổi: refused with an empty other slot, takes 0.3 s, a picked blank fills the empty slot', () => {
+    const s = session(); s.carried = 1;
+    expect(s.filled(s.slot)).toBe(true); expect(s.filled(1 - s.slot)).toBe(false);
+    expect(s.swapSlot()).toBe(false); expect(s.slot).toBe(0);
+    s.carried = 2; expect(s.filled(1)).toBe(true);
+    expect(s.swapSlot()).toBe(true); expect(s.slot).toBe(1);
+    expect(s.swapSlot()).toBe(false); // switch still running
+    expect(s.swapSlot(true)).toBe(true); // the server trusts the client's clock
+    s.tick(BALANCE.forge.swapS - 0.05, false); expect(s.swapT).toBeGreaterThan(0);
+    s.tick(0.06, false); expect(s.swapT).toBe(0);
+  });
   it('ring timing: perfect only inside the 18% zone', () => {
     const s = session(); s.zoneC = 0.5;
     s.ring = 0.5 + 0.089; expect(s.timingNow()).toBe('perfect');
@@ -154,7 +165,7 @@ describe('ForgeSession', () => {
     s.zoneC = 0.02; s.ring = 0.97; expect(s.timingNow()).toBe('perfect'); // wraps
   });
   it('two blade slots swap; module slots open at armor +3 and +7', () => {
-    const s = session(); s.blade.level = 4; s.swapSlot(); expect(s.blade.level).toBe(0); s.swapSlot(); expect(s.blade.level).toBe(4);
+    const s = session(); s.blade.level = 4; s.swapSlot(); expect(s.blade.level).toBe(0); s.tick(BALANCE.forge.swapS + 0.01, false); s.swapSlot(); expect(s.blade.level).toBe(4);
     expect([0, 2, 3, 6, 7, 10].map(moduleSlots)).toEqual([0, 0, 1, 1, 2, 2]);
     expect(s.equip('khien_tay')).toBe(false); s.armor = 3; expect(s.equip('khien_tay')).toBe(true); expect(s.equip('no_vai')).toBe(false);
   });

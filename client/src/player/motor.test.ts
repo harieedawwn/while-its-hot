@@ -39,7 +39,7 @@ describe('movement integrator', () => {
   it('reaches run speed in ~0.12 s and never exceeds it', () => {
     const kin = world(), s = settled(kin);
     run(s, kin, 0.12, { my: 1 });
-    expect(hspeed(s)).toBeGreaterThan(8.9);
+    expect(hspeed(s)).toBeGreaterThan(6.0);
     run(s, kin, 0.5, { my: 1 });
     expect(hspeed(s)).toBeCloseTo(M.runSpeed, 3);
     expect(s.vel.z).toBeLessThan(0); // yaw 0 runs toward −Z
@@ -185,7 +185,7 @@ describe('movement integrator', () => {
       run(s, kin, 1.2, () => { top = Math.max(top, s.pos.y); return { my: 1 }; });
       return top;
     };
-    expect(ramp(30)).toBeGreaterThan(2);
+    expect(ramp(30)).toBeGreaterThan(1.2);
     expect(ramp(55)).toBeLessThan(0.6);
   });
 

@@ -8,6 +8,7 @@ import { clampKnob, type Disc } from './touch-math';
 import { TouchRims } from './touch-rims';
 import { PointerRouter } from './touch-router';
 import { createView, type View } from './touch-view';
+import type { PictoVariant } from './pictograms';
 
 const T = FEEL.input.touch;
 /** Hit priority when two discs overlap: the big attack button wins. */
@@ -56,6 +57,9 @@ export class TouchControls {
   }
 
   /** Contextual buttons (forge, anvil) fade in place only while the game says they apply. */
+  /** Pictogram override / grayed state for a control (forge stance, held slot). */
+  setIcon(id: ControlId, v: PictoVariant | null): void { this.view.icon(id, v); }
+  setDim(id: ControlId, on: boolean): void { this.view.dim(id, on); }
   setContext(id: 'forge' | 'anvil', on: boolean): void { if (on) this.ctxShown.add(id); else this.ctxShown.delete(id); this.refresh(); }
 
   /** Re-read the layout store (after the editor or a preset change). */

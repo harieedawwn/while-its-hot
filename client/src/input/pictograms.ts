@@ -24,6 +24,19 @@ const P: Partial<Record<ControlId, string>> = {
   scoreboard: '<path d="M4 5h16v14H4zM4 9.5h16M4 14h16M10 9.5V19"/>',
 };
 
+/** Variants swapped in over a control's default pictogram (forge stance, held slot digit). */
+export type PictoVariant = 'flame' | 'eye' | 'slot1' | 'slot2';
+const V: Record<PictoVariant, string> = {
+  // a flame: outer tongue and a notch for the inner one
+  flame: '<path d="M12 3c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-4 3-6 1 2 1 3 2 3 1-2 1-5 1-9z"/>',
+  // an open eye: lid arcs and a square pupil
+  eye: '<path d="M2 12c3-5 6-7 10-7s7 2 10 7c-3 5-6 7-10 7s-7-2-10-7z"/><path d="M10 10h4v4h-4z"/>',
+  // the held slot digit beside the swap arrows
+  slot1: '<path d="M5 6h10M12 3l3 3-3 3M19 18H9M12 15l-3 3 3 3M18 3v8"/>',
+  slot2: '<path d="M5 6h8M10 3l3 3-3 3M19 18H9M12 15l-3 3 3 3M16 3h4v4h-4v4h4"/>',
+};
+export function pictogramVariant(v: PictoVariant): string { return svg(V[v], 'pg'); }
+
 const svg = (inner: string, cls = '') =>
   `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">${inner}</svg>`;
 

@@ -5,7 +5,7 @@
 .h-root[hidden] { display: none; }
 
 /* HP: segmented bar, bottom-left above the stick zone; stamina chevrons beside it */
-.h-vit { position: absolute; left: 12px; bottom: min(192px, 52vh); display: flex; align-items: flex-end; gap: 10px; }
+.h-vit { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(var(--sb, 0px) + 8px); display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .h-hp { display: flex; gap: 3px; padding: 3px; background: var(--soot); box-shadow: 0 0 0 2px var(--ash); }
 .h-seg { width: clamp(9px, 2.4vmin, 14px); height: clamp(14px, 3.8vmin, 20px); background: var(--ash); }
 .h-seg.is-on { background: var(--bone); }
@@ -13,7 +13,7 @@
 .h-sta { display: flex; gap: 3px; }
 .h-chev { width: clamp(14px, 3.6vmin, 20px); height: clamp(14px, 3.6vmin, 20px); background: var(--ash); clip-path: polygon(0 0, 55% 0, 100% 50%, 55% 100%, 0 100%, 45% 50%); }
 .h-chev.is-on { background: var(--steel); }
-.h-pips { position: absolute; left: 12px; bottom: calc(min(192px, 52vh) + 36px); display: flex; gap: 5px; }
+.h-pips { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(var(--sb, 0px) + 72px); display: flex; gap: 5px; }
 .h-pip { width: 12px; height: 12px; background: var(--iron-hot); transform: rotate(45deg); }
 .h-pip.is-off { background: var(--ash); }
 

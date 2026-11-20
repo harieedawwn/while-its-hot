@@ -1,4 +1,4 @@
-import { pictogram, rimRing, stickBase } from './pictograms';
+import { pictogram, pictogramVariant, rimRing, stickBase, type PictoVariant } from './pictograms';
 import { TOUCH_CSS } from './touch-css';
 import { CONTROL_IDS, resolveCtl, type Circle, type ControlId, type Layout } from './touch-layout';
 import type { RimTone } from './touch-rims';
@@ -17,6 +17,10 @@ export interface View {
   apply(layout: Layout): Record<ControlId, Circle>;
   /** Cooldown / charge arc on a button rim, v in [0,1] (0 hides it). */
   rim(id: ControlId, v: number, tone: RimTone): void;
+  /** Swap a control's pictogram for a variant (null = its default). */
+  icon(id: ControlId, v: PictoVariant | null): void;
+  /** Grayed out (still tappable; the game decides what a tap does). */
+  dim(id: ControlId, on: boolean): void;
   dispose(): void;
 }
 
@@ -71,6 +75,14 @@ export function createView(host: HTMLElement): View {
       el.classList.toggle('rim-charge', tone === 'charge');
       el.classList.toggle('rim-full', tone === 'full');
     },
+    icon(id, v) {
+      const face = els[id].querySelector('.face'), key = v ?? '';
+      if (!face || els[id].dataset.icon === key) return;
+      els[id].dataset.icon = key;
+      face.querySelector('.pg')?.remove();
+      face.insertAdjacentHTML('beforeend', v ? pictogramVariant(v) : pictogram(id));
+    },
+    dim(id, on) { els[id].classList.toggle('dim', on); },
     dispose() { capture.remove(); },
   };
 }

@@ -70,7 +70,15 @@ export class ForgeSession {
   get form(): WeaponDef { return bladeForm(this.blade); }
   get passives() { return passivesOf(this.form); }
 
-  swapSlot(): void { if (this.carried > 1) this.slot = 1 - this.slot; }
+  /** Seconds left of the blade switch (no attack while > 0). */
+  swapT = 0;
+  /** Slot `i` holds a blade: the held one always does, the other only after a blank was picked up (carried 2). */
+  filled(i: number): boolean { return i === this.slot || this.carried > 1; }
+  /** Switch the held blade. Refused with an empty other slot or while a switch is running (`force` = server, which trusts the client's timing). */
+  swapSlot(force = false): boolean {
+    if (this.carried < 2 || (!force && this.swapT > 0)) return false;
+    this.slot = 1 - this.slot; this.swapT = F.swapS; return true;
+  }
   toggleTarget(): void { this.target = this.target === 'blade' ? 'armor' : 'blade'; }
 
   /** Equip a module into a free slot (relic draft, phase 18). */
@@ -91,6 +99,7 @@ export class ForgeSession {
     const H = F.heat;
     this.ring = (this.ring + dt / F.strike.ringS) % 1;
     this.cooldown = Math.max(0, this.cooldown - dt);
+    this.swapT = Math.max(0, this.swapT - dt);
     this.heat = heating ? Math.min(1, this.heat + H.holdPerS * this.mods.heatGainMul * dt)
       : Math.max(0, this.heat - H.decayPerS * this.mods.heatDecayMul * dt);
     const out: StrikeResult[] = [];

@@ -38,3 +38,7 @@ export class Controls {
   constructor(v?: Partial<ControlSettings>) { this.v = sanitizeControls({ ...sanitizeControls(loadJson(KEY, {})), ...v }); }
   set(p: Partial<ControlSettings>): void { this.v = sanitizeControls({ ...this.v, ...p }); saveJson(KEY, this.v); }
 }
+
+/** The one live instance: the game's input rig, the settings screens and the pause menu all share it. */
+let shared: Controls | null = null;
+export function sharedControls(): Controls { return (shared ??= new Controls()); }

@@ -1,6 +1,6 @@
 import { LayoutStore } from '../../input/layout-store';
 import { Actions } from '../../input/actions';
-import { Controls } from '../../input/controls-settings';
+import { sharedControls } from '../../input/controls-settings';
 import { openLayoutEditor } from '../../input/layout-editor';
 import { TouchControls } from '../../input/touch';
 import { FEEL } from '../../core/feel';
@@ -25,7 +25,7 @@ const onOff = [{ id: 'on', label: STR.settings.on }, { id: 'off', label: STR.set
 const bool = (v: boolean) => (v ? 'on' : 'off');
 const toggle = (label: string, v: boolean, fn: (v: boolean) => void) => segmented(label, onOff, bool(v), (x) => fn(x === 'on')).root;
 const pct = (v: number) => `${Math.round(v * 100)}`;
-const controls = new Controls();
+const controls = sharedControls();
 
 function gfx(L: Ledger): void {
   const res = FEEL.render.resolutions;
@@ -55,8 +55,12 @@ function audio(L: Ledger): void {
 async function editLayout(c: RowsCtx): Promise<void> {
   c.hide(true);
   const store = new LayoutStore();
-  const t = new TouchControls(c.host, new Actions(), new Controls(), store);
-  try { await openLayoutEditor(t); } finally { t.dispose(); c.hide(false); }
+  // solid black under the editor so the live game controls and HUD never show through the ones being edited
+  const back = document.createElement('div');
+  back.style.cssText = 'position:absolute;inset:0;background:#000;z-index:5';
+  c.host.append(back);
+  const t = new TouchControls(c.host, new Actions(), controls, store);
+  try { await openLayoutEditor(t); } finally { t.dispose(); back.remove(); c.hide(false); }
 }
 
 function ctl(L: Ledger, c: RowsCtx): void {
@@ -82,8 +86,6 @@ function ctl(L: Ledger, c: RowsCtx): void {
 
 function view(L: Ledger): void {
   L.row(STR.view.fov, rangeSlider(STR.view.fov, FEEL.camera.hfovMin, FEEL.camera.hfovMax, 5, game.hfov, (x) => setGame({ hfov: x })).root);
-  L.row(STR.view.mode, segmented(STR.view.mode, [{ id: 'fp', label: STR.settings.firstPerson }, { id: 'tp', label: STR.settings.thirdPerson }] as const,
-    game.thirdPerson ? 'tp' : 'fp', (x) => setGame({ thirdPerson: x === 'tp' })).root);
   L.row(STR.view.bob, toggle(STR.view.bob, game.bob, (x) => setGame({ bob: x })));
   L.row(STR.view.shake, rangeSlider(STR.view.shake, 0, 1, 0.25, game.shake, (x) => setGame({ shake: x }), pct).root);
 }

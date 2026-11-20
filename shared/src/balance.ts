@@ -8,7 +8,7 @@ export const BALANCE = {
    * sanity-check speeds and i-frames are a combat rule. Camera reactions to them live in FEEL.camera.
    */
   move: {
-    runSpeed: 9,
+    runSpeed: 6.75,
     groundAccel: 80,
     airAccel: 30,
     gravity: 30,
@@ -18,11 +18,11 @@ export const BALANCE = {
     stamina: { pips: 3, regenS: 1.4 },
     /** Slide (Trượt): speed eases from speed down to endSpeed (= run speed) over maxS, then the player stands
      *  up even if the button is still held; cooldownS before the next one. steer = rad/s toward stick. */
-    slide: { speed: 14, endSpeed: 9, maxS: 0.8, cooldownS: 0.35, steer: 2.2 },
+    slide: { speed: 10.5, endSpeed: 6.75, maxS: 0.8, cooldownS: 0.35, steer: 2.2 },
     /** Slam: straight down; jump within bounceS of landing jumps ×bounceMul. knockR used by phase 08/17. */
     slam: { speed: 40, bounceS: 0.15, bounceMul: 1.5, knockR: 3 },
     /** Wall jump/cling. probe = extra radius that counts as touching a wall; graceS keeps contact that long. */
-    wall: { jumps: 3, clingFall: 3, jumpUp: 10, jumpOut: 7.5, probe: 0.12, graceS: 0.1, minPush: 0.3 },
+    wall: { jumps: 3, clingFall: 3, jumpUp: 10, jumpOut: 6, probe: 0.12, graceS: 0.1, minPush: 0.3 },
     /** Capsule body. height is the full standing capsule; low = sliding hitbox. */
     body: { radius: 0.35, height: 1.8, lowHeight: 1.0, stepUp: 0.35, maxSlopeDeg: 45, skin: 0.002 },
   },
@@ -81,6 +81,8 @@ export const BALANCE = {
     frenzy: { perDat: 1, perTuyet: 2, full: 12, durS: 3.5, cadenceMul: 0.5 },
     /** Anvil (Đe): place / pick-up time, cooldown after picking up, how far in front it is placed, interaction reach. */
     anvil: { placeS: 0.6, pickupS: 0.6, cooldownS: 5, placeDist: 1.15, useRadius: 2.2, radius: 0.42, height: 0.86 },
+    /** Đổi: time to switch the held blade; no attack during it. */
+    swapS: 0.3,
     stance: { blendInS: 0.35, blendOutS: 0.2, pickS: 3 },
     /** Armor level at which each module slot opens (GDD §7). */
     moduleSlotAt: [3, 7],

@@ -74,7 +74,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   const unbindFeel = bindFeel(cam, lf.vm);
 
   // third person: the player's own body
-  const tp = params.get('tp') ? params.get('tp') === '1' : game.thirdPerson;
+  const tp = params.get('tp') ? params.get('tp') === '1' : false;
   const tpCam = new ThirdPersonCamera();
   let body: Character | null = null, bodyAnim: FighterAnim | null = null, bodyWeapon: THREE.Object3D | null = null;
   const animIn = { ...IDLE_INPUT };

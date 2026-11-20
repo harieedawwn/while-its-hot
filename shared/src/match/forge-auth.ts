@@ -39,7 +39,7 @@ export function forgeOp(p: MPlayer, op: ForgeOp, out: Out[], all: readonly MPlay
     }
     case 'frenzy': if (p.stance) s.activateFrenzy(); break;
     case 'pick': if ((FAMILIES as readonly string[]).includes(op.f)) s.pickFamily(op.f); break;
-    case 'swap': if (!p.stance) s.swapSlot(); break;
+    case 'swap': if (!p.stance) s.swapSlot(true); break;
     case 'target': s.toggleTarget(); break;
   }
   out.push({ to: p.id, m: { t: 'fsync', s: forgeSync(s) } });

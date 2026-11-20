@@ -14,11 +14,19 @@ export const SLOT_COUNT = 3;
  * `preview` (dev scenes, `?preset=`) shows a factory preset without touching what is saved.
  */
 export class LayoutStore {
-  active: number;
-  private slots: Slot[];
+  active = 0;
+  private slots: Slot[] = [];
   private readonly preview: boolean;
 
   constructor(preview?: string | null) {
+    this.preview = isPresetId(preview);
+    this.load(preview);
+  }
+
+  /** Re-read what is saved (the settings screen edits it through its own store while the game is paused). */
+  reload(): void { if (!this.preview) this.load(null); }
+
+  private load(preview?: string | null): void {
     const s = loadJson<Partial<Saved>>(KEY, {});
     const old = s.slots ? null : loadJson<{ slots?: unknown[] }>(OLD_KEY, {}).slots ?? null;
     this.slots = Array.from({ length: SLOT_COUNT }, (_, i) => {
@@ -32,7 +40,6 @@ export class LayoutStore {
       return { base: def, layout: cloneLayout(PRESETS[def]) };
     });
     this.active = typeof s.active === 'number' && s.active >= 0 && s.active < SLOT_COUNT ? s.active : 0;
-    this.preview = isPresetId(preview);
     if (isPresetId(preview)) { this.slots = [{ base: preview, layout: cloneLayout(PRESETS[preview]) }, ...this.slots.slice(1)]; this.active = 0; }
   }
 

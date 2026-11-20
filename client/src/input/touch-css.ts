@@ -16,6 +16,7 @@ export const TOUCH_CSS = `
 .tb.on .face{background:#f26a1b;color:#0d0b0a;border-color:#f26a1b;transform:scale(.94);
   box-shadow:inset 0 0 0 3px #0d0b0a50,inset 0 3px 0 3px #0d0b0a70;transition:none}
 .tb.on .face .pg{transform:translateY(1px)}
+.tb.dim .face{opacity:.4}
 .tb.off{opacity:0 !important}
 .tb.off .face{transform:scale(.8)}
 .tb .rim{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}

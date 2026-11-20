@@ -109,11 +109,15 @@ export class ForgeController {
     if (this.inStance) this.stanceTick(dt, a, forgePress, swapPress);
     else {
       if (forgePress) this.enter();
-      if (swapPress) { session.swapSlot(); this.d.link?.op({ k: 'swap' }); void this.syncWeapon(true); }
+      if (swapPress && !lf.c.fighter.attacking && session.swapSlot()) { this.d.link?.op({ k: 'swap' }); void this.syncWeapon(true); }
       session.tick(dt, false);
     }
     if (this.inStance) { lf.tickWith(dt, NO_FIGHT); player.tickWith(dt, { ...NO_INPUT, yaw: player.yaw }); }
-    else { lf.tick(dt, a); player.tick(dt, a, lf.canAct); }
+    else if (session.swapT > 0) { // Đổi in progress: no attack until the new blade is up
+      a.take('attack');
+      lf.tickWith(dt, { attackPressed: false, attackHeld: false, parryPressed: a.take('parry'), parryHeld: a.isHeld('parry') });
+      player.tick(dt, a, lf.canAct);
+    } else { lf.tick(dt, a); player.tick(dt, a, lf.canAct); }
 
     lf.c.invuln = this.inStance && session.immune;
     if (this.pickT > 0) { this.pickT -= dt; if (this.pickT <= 0) this.pick(session.lastFamily); }
@@ -175,10 +179,23 @@ export class ForgeController {
     if (anv !== this.ctx.anvil) { this.ctx.anvil = anv; touch.setContext('anvil', anv); }
   }
 
+  /** Button faces: flame / eye in the stance, the held slot digit on Đổi otherwise. */
+  private faces(): void {
+    const { touch } = this.d;
+    if (!touch) return;
+    const s = this.d.session, st = this.inStance;
+    touch.setIcon('attack', st ? 'flame' : null);
+    touch.setIcon('parry', st ? 'eye' : null);
+    touch.setDim('parry', st && s.frenzyMeter < F.frenzy.full);
+    touch.setIcon('swap', st ? null : s.slot === 0 ? 'slot1' : 'slot2');
+    touch.setDim('swap', !st && !s.filled(1 - s.slot));
+  }
+
   /** Per render frame, after `cam.update`. */
   frame(dt: number, time: number, cam: FirstPersonCamera): void {
     const { anvil, stage, session, hud } = this.d;
     anvil.animate();
+    this.faces();
     this.stanceCam.apply(dt, this.inStance, anvil, cam.camera);
     stage.root.visible = this.working;
     stage.setHeat(session.heat);

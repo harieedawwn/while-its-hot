@@ -5,12 +5,12 @@ import type { QuantizeMode } from '../render/pipeline';
 /** Hình ảnh + Góc nhìn settings (TECH §5), saved. Applied live by `bindGraphics` (main) and read by the camera. */
 export interface GameSettings {
   resolution: number; quantize: QuantizeMode; snap: boolean; fpsCap: number; showFps: boolean;
-  hfov: number; thirdPerson: boolean; bob: boolean; shake: number;
+  hfov: number; bob: boolean; shake: number;
 }
 const R = FEEL.render;
 export const DEFAULT_GAME: GameSettings = {
   resolution: R.defaultResolution, quantize: R.defaultQuantize, snap: false, fpsCap: 60, showFps: false,
-  hfov: FEEL.camera.hfov, thirdPerson: false, bob: true, shake: 1,
+  hfov: FEEL.camera.hfov, bob: true, shake: 1,
 };
 const KEY = 'wih.game.v1';
 const clamp = (v: unknown, d: number, lo: number, hi: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d);
@@ -23,7 +23,7 @@ export function sanitizeGame(raw: unknown): GameSettings {
   const cap = [30, 60, 90, 120, 0].includes(r.fpsCap as number) ? (r.fpsCap as number) : d.fpsCap;
   return {
     resolution: clamp(r.resolution, d.resolution, 0, 1080), quantize: q, snap: bool(r.snap, d.snap), fpsCap: cap, showFps: bool(r.showFps, d.showFps),
-    hfov: clamp(r.hfov, d.hfov, FEEL.camera.hfovMin, FEEL.camera.hfovMax), thirdPerson: bool(r.thirdPerson, d.thirdPerson),
+    hfov: clamp(r.hfov, d.hfov, FEEL.camera.hfovMin, FEEL.camera.hfovMax),
     bob: bool(r.bob, d.bob), shake: clamp(r.shake, d.shake, 0, 1),
   };
 }

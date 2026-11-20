@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { sanitizeControls } from './controls-settings';
+import { sanitizeControls, sharedControls } from './controls-settings';
+import { sanitizeGame } from '../core/game-settings';
 import { padAxis } from './gamepad';
 import { gyroLook } from './gyro';
 import { CONTROL_IDS, mirrorLayout, overlaps, placeCtl, realSize, resolveCtl, sanitizeLayout, uiScale } from './touch-layout';
@@ -103,5 +104,17 @@ describe('gyro, gamepad, settings', () => {
     const s = sanitizeControls({ sensX: 99, sensY: -3, invertY: 'yes', deadzone: 0.2 });
     expect(s.sensX).toBe(6); expect(s.sensY).toBe(0.3); expect(s.invertY).toBe(false); expect(s.deadzone).toBe(0.2);
     expect(sanitizeControls(null).haptics).toBe(true);
+  });
+  it('settings are one live object: the pause menu and the game read the same instance', () => {
+    const c = sharedControls();
+    expect(sharedControls()).toBe(c);
+    c.set({ holdParry: false, aimAssist: false });
+    expect(sharedControls().v.holdParry).toBe(false); expect(sharedControls().v.aimAssist).toBe(false);
+    c.set({ holdParry: true, aimAssist: true });
+  });
+  it('game settings round-trip through sanitize and have no third-person flag', () => {
+    const g = sanitizeGame({ hfov: 999, bob: false, shake: 0.5, thirdPerson: true });
+    expect(g.bob).toBe(false); expect(g.shake).toBe(0.5); expect('thirdPerson' in g).toBe(false);
+    expect(sanitizeGame(g)).toEqual(g);
   });
 });
