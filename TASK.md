@@ -174,6 +174,21 @@ Read: Phase log lines of phases 19 and 31. Code map lines for render/{pipeline,p
 Done when GPU skinning cuts throttled render-submit time clearly, and the report copies on the phone.
 After this phase the user sends the report text to the planning chat for a targeted fix.
 
+### Phase 34 — Slower climb: wider form gaps at high levels, max +57 · `TODO` · Sonnet 5.5 · medium
+Read: Phase log lines of phases 25 and 27. Code map lines for data/weapons, forge/odds, balance, tools/forge-sim.
+Players reach the top form too fast. Do NOT lower p(L) or raise Giữ (boring). Instead the ladder gets longer:
+- Form levels: every 3 up to +21 (3,6,…,21 = 7 forms), every 4 up to +37 (25,29,33,37), every 5 after
+  (42,47,52,57). Max level **+57** (`BALANCE` + ForgeSession clamp, profile bestLevel clamp, UI digits).
+  Put the list in balance.ts (`weapons.formLevels`), `minLevel` comes from it, ROSTER doc column updated.
+- Power stays the same per FORM: damage/speed scaling (`dmgScale`, bua `speedUp`/timeMul) and effect numbers
+  use the form-equivalent level (form index × 3 + 3), so the top form hits like old +45, not harder.
+- Forge curves: `p(L)` and `zone(L)` keep their current values up to +44 and stay flat (clamped) above.
+- `tools/forge-sim.mjs`: report levels after 15/30/45/90/150 s at the anvil for solid/expert, and rounds to
+  the top form with carry loss (2k per round). Target: solid smith reaches the top form around round 5,
+  expert around round 4; nobody before round 3. If it is still too fast, lengthen the last gaps (6) rather
+  than touching odds. Write the numbers in the Phase log and GDD §6.
+- Tests: form lookup at boundaries, clamp at 57, dmgScale(top form) == old dmgScale(45). Keep it quick.
+
 ---
 
 ## Phase log
