@@ -1,0 +1,27 @@
+import * as THREE from 'three';
+import { FX_COMMON } from '../../fx/glsl';
+
+/**
+ * The Hồn (ghost) body (ROUND3 §2): a pale flat-shaded silhouette drawn through the Bayer screen door at ~40 % (never blended,
+ * no glow). One shared material for every ghost; the character swaps its meshes onto it and back.
+ */
+let shared: THREE.ShaderMaterial | null = null;
+export function ghostMaterial(alpha = 0.4): THREE.ShaderMaterial {
+  return (shared ??= new THREE.ShaderMaterial({
+    uniforms: { uAlpha: { value: alpha }, uHeatRamp: { value: [] }, uFogColor: { value: new THREE.Color() }, uFog: { value: new THREE.Vector2(1, 2) } },
+    vertexShader: /* glsl */ `
+      varying vec3 vP;
+      void main() { vec4 mv = modelViewMatrix * vec4(position, 1.0); vP = mv.xyz; gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: /* glsl */ `${FX_COMMON.replace('uniform vec3 uHeatRamp[9];', '').replace(/vec3 heatRamp[^\n]*\n/, '')}
+      uniform float uAlpha;
+      varying vec3 vP;
+      void main() {
+        ditherClip(uAlpha);
+        vec3 n = normalize(cross(dFdx(vP), dFdy(vP)));
+        float l = 0.22 + 0.78 * clamp(dot(n, normalize(vec3(0.35, 0.75, 0.55))) * 0.5 + 0.5, 0.0, 1.0);
+        l = floor(l * 5.0 + 0.5) / 5.0;
+        gl_FragColor = vec4(vec3(0.52, 0.58, 0.64) * l, 1.0);
+        #include <colorspace_fragment>
+      }`,
+  }));
+}

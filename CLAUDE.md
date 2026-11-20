@@ -103,6 +103,8 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/dev/scene-icon.ts` app icon scene (`icon`) · `tools/icon-gen.mjs` + `tools/icon-src.png` → Android icon mipmaps + splash
 
 - `client/src/input/controls-settings.ts` `sharedControls()` the one live Controls · `layout-store.ts` `reload()` · `pictograms.ts` flame/eye/slot variants, `TouchControls.setIcon/setDim` · `ForgeSession.swapSlot/filled/swapT`
+- `shared/src/match/rules.ts` also `ghostLanding/ringTickDmg/bladeLoss/armorLoss` · `match/ghost.test.ts` · `ForgeSession.newRound/carryLoss` · msgs `ghost/rtick/carry` (`net/match-msgs.ts`), `FLAG.ghost`
+- `client/src/net/net-ghost.ts` local dead/Hồn presentation + ring pain vignette · `render/materials/ghost.ts` Bayer pale ghost body (`Character.setGhost`) · `Pipeline.setVignette` (`uVig`), `FirstPersonCamera.hurt/dead`, `TouchControls.setGhost`
 
 ## Conventions
 - TypeScript strict, ES modules, npm workspaces: `client/`, `server/`, `shared/`.

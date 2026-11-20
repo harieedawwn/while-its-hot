@@ -48,6 +48,10 @@ export const FEEL = {
     /** Trauma shake (Eiserloh): decays per second, shake = trauma², noise frequency in Hz. */
     shake: { decay: 1.6, yaw: 2.5, pitch: 2.5, roll: 3, freq: 16 },
     hitStop: { minMs: 50, maxMs: 90 },
+    /** Fire-ring tick (Minecraft-style hurt cam): roll kick deg (random side) + pitch dip deg, back in ~0.35 s (spring). */
+    hurt: { roll: 6, pitch: 1.5, k: 180, c: 27 },
+    /** Dead (first seconds after dying): eye drops to `eye` m, head tilts `roll` deg; `rate` = approach speed 1/s. */
+    dead: { eye: 0.4, roll: 16, rate: 4 },
     maxPitch: 89,
   },
 
@@ -225,6 +229,9 @@ export const FEEL = {
     roundEnd: { scale: 0.25, ramp: 0.15, hold: 0.6, desat: 0.85 },
     /** Death: desaturate, edge darkening steps, respawn counter s. */
     death: { desat: 0.7, edge: 0.85, steps: 4, ramp: 0.5 },
+    /** Edge vignettes in the post pass (dithered steps): ghost = white + desat; fire-ring pain = red, fade in/out s, strength from dps/dpsFull. */
+    ghost: { vig: 0.55, desat: 0.4, color: '#e8e4da' },
+    pain: { vig: [0.4, 0.8] as readonly [number, number], dpsFull: 24, in: 0.3, out: 0.5, color: '#8a1410' },
     /** Menu helve hammer: raise s, fall s, rest angle (held up by the cam) and raised angle (rad), delay after the blow. */
     hammer: { raise: 0.16, fall: 0.08, rest: 0.12, up: 0.62, after: 0.07 },
   },

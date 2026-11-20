@@ -18,6 +18,22 @@ export function ringRadius(s: number, speed = 1): number {
 /** Damage per second outside the ring at fight-clock `s`. */
 export function burnDps(s: number): number { return R.dps + R.step * Math.max(0, Math.floor((s - R.startS) / R.everyS)); }
 
+/** Damage of one ring tick at fight-clock `s` (every `tickS`). */
+export function ringTickDmg(s: number): number { return burnDps(s) * R.tickS; }
+
+/** Where a ghost turns solid: where it stands if inside the ring, else the nearest point `landIn` m inside it (ring centre c = [x, z]). */
+export function ghostLanding(x: number, z: number, c: readonly [number, number], r: number): [number, number] {
+  if (r <= 0) return [x, z];
+  const dx = x - c[0], dz = z - c[1], d = Math.hypot(dx, dz);
+  if (d <= r) return [x, z];
+  const k = Math.max(0, r - M.ghost.landIn) / d;
+  return [c[0] + dx * k, c[1] + dz * k];
+}
+
+/** Levels a carried blade / armor loses at the end of round `k` (1-based). */
+export const bladeLoss = (k: number): number => M.carry.bladeLoss * k;
+export const armorLoss = (k: number): number => M.carry.armorLoss * k;
+
 export interface RoundRow { id: number; kills: number; lives: number; dealt: number; online: boolean }
 /** Round winner = most kills; tiebreak lives left, then damage dealt. Null when nobody did anything at all. */
 export function roundWinner(rows: readonly RoundRow[]): { win: number | null; lead: number } {

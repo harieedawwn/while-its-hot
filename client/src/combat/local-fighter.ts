@@ -65,6 +65,7 @@ export class LocalFighter {
       f.parryHeld = this.guardLatch;
     }
     f.sinceSlide = this.c.sinceSlide;
+    if (this.c.ghost) Object.assign(f, NO_FIGHT, { sinceSlide: f.sinceSlide }); // a ghost cannot attack or guard
     this.c.tick(dt, f);
   }
 

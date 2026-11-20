@@ -17,6 +17,7 @@ import { simFromParams } from '../net/link-sim';
 import { Loopback } from '../net/loopback';
 import { NetDebug } from '../net/net-debug';
 import { NetFlow } from '../net/net-flow';
+import { NetGhost } from '../net/net-ghost';
 import { NetMatch } from '../net/net-match';
 import { FirstPersonCamera } from '../player/camera';
 import { bindFeel } from '../player/feel-bind';
@@ -98,6 +99,8 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height, a
 
   let forge: ForgeController | null = null;
   let relicInstant = false;
+  let ghost: NetGhost | null = null;
+  let forcePain = 0; // preview=ring: pretend we stand outside the fire ring at this dps
   // eslint-disable-next-line prefer-const
   let net: NetMatch;
   const flow = new NetFlow({
@@ -111,14 +114,17 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height, a
       setTimeout(() => { anvil.rule.instant = relicInstant; }, 150);
     },
     relicFx: (fx) => { relicInstant = fx.instantAnvil; anvil.rule.instant = relicInstant; },
+    onPhase: (ph) => { if (ph !== 'fight') ghost?.solid(); },
     leave: () => { const code = roomC.code; void app.go('ui-menu', 'quench', code && code !== 'LOOP' ? { screen: 'online', code } : { screen: 'menu' }); },
   });
   net = new NetMatch({
     flow, room: roomC, scene, combat: world, collision: arena.world, lib, rig, load, lf, player, session, stage, anvil, hud,
     forging: () => forge?.inStance ?? false,
-    died: () => forge?.leave(),
-    spawned: (p, yaw) => { flow.pinTo(flow.cage ? p : null); player.s.pos.set(p[0], p[1], p[2]); player.s.vel.set(0, 0, 0); player.yaw = yaw; player.pitch = 0; },
+    died: () => { forge?.leave(); ghost?.die(); },
+    ghosted: () => ghost?.rise(),
+    spawned: (p, yaw) => { ghost?.solid(); flow.pinTo(flow.cage ? p : null); player.s.pos.set(p[0], p[1], p[2]); player.s.vel.set(0, 0, 0); player.yaw = yaw; player.pitch = 0; },
   });
+  ghost = new NetGhost({ lf, cam, pipeline, banner: flow.banner, touch: input.touch ?? undefined, painDps: () => forcePain || flow.painDps(player.s.pos.x, player.s.pos.z, net.now()) });
   forge = new ForgeController({ player, lf, anvil, stage, session, hud: fhud, touch: input.touch ?? undefined, loadModel: load, link: net.forge, clock: net.forgeClock, look: (k) => pipeline.setWarm(k) });
   net.forge.controller = forge;
   const fxl = new FxLayer({ scene, rig, pipeline, world: arena.world, combat: world, stage, seed: params.seed });
@@ -129,6 +135,17 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height, a
   const keys = (e: KeyboardEvent) => { if (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3') flow.keyPick(+e.code.slice(5) - 1); };
   addEventListener('keydown', keys);
   let pvDone = false;
+  /** dev: preview=dead | ghost | ring | rghost (a bot is a ghost) shows those beats without waiting for a real death. */
+  const devPreview = (kind: string) => {
+    if (kind === 'dead') { lf.c.fighter.kill(); ghost?.die(); }
+    else if (kind === 'ghost') ghost?.rise();
+    else if (kind === 'ring') forcePain = num(params, 'dps', 18);
+    else if (kind === 'rghost') { // bot 2 is a Hồn (it walks up to us: use settle=9000)
+      const a = loop?.authority?.players.get(2);
+      if (!a) return;
+      a.alive = false; a.ghost = true; a.hp = 0; a.spawnAt = 1e12;
+    }
+  };
   let touchOn = false;
   const simTick = (dt: number) => {
     const f = forge!;
@@ -151,6 +168,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height, a
     const stop = cam.freezeS > 0;
     net.frame(dt, stop);
     forge!.frame(dt, performance.now() / 1000, cam);
+    ghost?.frame(dt);
     hud.set(flow.frame(net.now(), { hp: lf.c.hp, hpMax: BALANCE.combat.hp, stamina: player.s.stamina, staminaMax: BALANCE.move.stamina.pips,
       level: session.blade.level, family: session.blade.family, roundS: null, ringS: null, lives: null }));
     sa?.frame(dt, cam.camera.position, v.yaw, Math.hypot(player.s.vel.x, player.s.vel.z));
@@ -170,14 +188,14 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height, a
       const mv = forge!.inStance ? { dx: 0, dy: 0 } : lf.look(look.dx, look.dy, fdt, Math.hypot(actions.move.x, actions.move.y) > 0.1);
       player.look(mv.dx, mv.dy);
       frame(fdt, alpha);
-      pipeline.render(scene, cam.camera, forge!.showViewmodel ? lf.vm : undefined);
+      pipeline.render(scene, cam.camera, forge!.showViewmodel && lf.c.alive ? lf.vm : undefined);
       // final frame for shots: the match is on and remotes are drawn (or a few seconds passed)
-      if (net.started && !pvDone && params.get('preview') && now - (readyAt ||= now) > 800) { pvDone = true; for (const m of previewMsgs(params.get('preview')!, roomC.id)) flow.onMsg(m); }
+      if (net.started && !pvDone && params.get('preview') && now - (readyAt ||= now) > 800) { pvDone = true; devPreview(params.get('preview')!); for (const m of previewMsgs(params.get('preview')!, roomC.id)) flow.onMsg(m); }
       if (!out.ready && net.started) { readyAt ||= now; if (now - readyAt > num(params, 'settle', 1500)) out.ready = true; }
     },
     resize(w: number, h: number) { cam.resize(w / h); lf.vm.resize(w / h); },
     dispose() {
-      sa?.dispose(); debug?.dispose(); flow.dispose(); removeEventListener('keydown', keys); net.dispose(); loop?.stop();
+      sa?.dispose(); ghost?.dispose(); debug?.dispose(); flow.dispose(); removeEventListener('keydown', keys); net.dispose(); loop?.stop();
       roomC.close(); if (current.current === roomC) current.current = null;
       unbindFeel(); fxl.dispose(); lf.dispose(); forge!.dispose(); fhud.dispose(); hud.dispose(); anvil.dispose();
       arena.dispose(); input.dispose();

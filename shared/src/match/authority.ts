@@ -9,10 +9,11 @@ import { rulesOf, type RoomSettings, type ServerMsg } from '../net/protocol';
 import { slamEffects } from '../passives';
 import { SAFE_RESPAWN } from '../world/arenas/foundry';
 import { knockFrom, serverEffects } from './effects';
-import { deathLoss, forgeOp, forgeTick, leaveStance } from './forge-auth';
+import { forgeOp, forgeTick, leaveStance } from './forge-auth';
 import { claimHit, recordSwing, type HitCtx } from './hits';
 import { flatDist, newPlayer, type MPlayer, type Out } from './mplayer';
 import { Pickups } from './pickups';
+import { ghostLanding } from './rules';
 
 export type { Out } from './mplayer';
 export { parryOk, checkClaim } from './hits';
@@ -52,7 +53,7 @@ export class MatchAuthority {
   /** The fight opens: a fresh pedestal of blanks replaces whatever lay around. */
   private fightStarts(now: number, out: Out[]): void {
     const old = this.pickups.list.map((k) => k.id);
-    this.pickups = new Pickups(this.players.size, now, this.rand);
+    this.pickups = new Pickups([...this.players.values()].filter((p) => p.forge.carried < M.maxCarry).length, now, this.rand);
     out.push({ to: 'all', m: { t: 'pickup', add: this.pickups.list.slice(), del: old, by: 0 } });
   }
 
@@ -83,7 +84,7 @@ export class MatchAuthority {
   /** A State from a client: movement is trusted; dead players stay where they fell. */
   state(id: number, s: NetState): void {
     const p = this.players.get(id);
-    if (p && p.alive && this.flow.fighting) p.st = s;
+    if (p && (p.alive || p.ghost) && this.flow.fighting) p.st = s;
   }
 
   msg(id: number, m: MatchClientMsg, now: number): Out[] {
@@ -134,23 +135,20 @@ export class MatchAuthority {
     const a = this.players.get(by);
     if (a && a !== t) { a.dealt += dmg; a.rDealt += dmg; }
     if (t.hp > 0) return;
-    t.alive = false; t.spawnAt = this.now + M.respawnS * 1000; t.burnT = 0; t.swings.length = 0;
+    t.alive = false; t.ghost = false; t.ghostAt = this.now + M.ghost.deadS * 1000; t.spawnAt = this.now + M.ghost.solidS * 1000; t.burnT = 0; t.swings.length = 0;
     if (a && a !== t) a.kills++;
-    deathLoss(t);
+    leaveStance(t);
     this.flow.onKill(t, a, out);
     out.push({ to: 'all', m: { t: 'kill', tg: t.id, by } }, { to: t.id, m: { t: 'fsync', s: forgeSync(t.forge, t.forgeOps) } });
   }
 
-  /** A safe edge point away from everyone alive (best of a few random picks). */
-  private spawnPoint(): Vec3 {
-    let best: Vec3 = [0, SPAWN_Y, 0], bestD = -1;
-    for (let i = 0; i < 6; i++) {
-      const [x, z] = SAFE_RESPAWN[Math.floor(this.rand() * SAFE_RESPAWN.length)];
-      let d = 1e9;
-      for (const o of this.players.values()) if (o.alive) d = Math.min(d, Math.hypot(o.st.x - x, o.st.z - z));
-      if (d > bestD) { bestD = d; best = [x, SPAWN_Y, z]; }
-    }
-    return best;
+  /** The ghost turns solid where it stands; outside the fire ring it is moved to the nearest point `landIn` m inside. */
+  private solid(p: MPlayer, now: number, out: Out[]): void {
+    const { c, r } = this.flow.ringAt(now), [x, z] = ghostLanding(p.st.x, p.st.z, c, r);
+    const moved = Math.hypot(x - p.st.x, z - p.st.z) > 0.01;
+    p.alive = true; p.ghost = false; p.hp = C.hp; p.parryAt = -1e9; p.spawnUntil = now + M.ghost.spawnProtS * 1000;
+    Object.assign(p.st, { x, y: moved ? SPAWN_Y : p.st.y, z, vx: 0, vy: 0, vz: 0 });
+    out.push({ to: 'all', m: { t: 'spawn', id: p.id, p: [x, p.st.y, z], yaw: p.st.yaw, hp: p.hp } });
   }
 
   /** Server tick (20 Hz): burn, forging, respawns, rack blanks. */
@@ -163,11 +161,9 @@ export class MatchAuthority {
     for (const p of this.players.values()) {
       if (p.alive && p.burnT > 0) { p.burnT -= dt; this.harm(p, p.burnDps * dt, p.burnBy, out); }
       if (p.alive) forgeTick(p, dt, out, now / 1000);
-      else if (now >= p.spawnAt && this.flow.canRespawn(p)) {
-        const s = this.spawnPoint(), yaw = Math.atan2(s[0], s[2]);
-        p.alive = true; p.hp = C.hp; p.parryAt = -1e9;
-        Object.assign(p.st, { x: s[0], y: s[1], z: s[2], vx: 0, vy: 0, vz: 0, yaw });
-        out.push({ to: 'all', m: { t: 'spawn', id: p.id, p: s, yaw, hp: p.hp } });
+      else if (this.flow.canRespawn(p)) {
+        if (!p.ghost && now >= p.ghostAt) { p.ghost = true; out.push({ to: 'all', m: { t: 'ghost', id: p.id } }); }
+        if (now >= p.spawnAt) this.solid(p, now, out);
       }
     }
     if (this.flow.fighting) this.pickups.tick(now, out);
@@ -180,8 +176,8 @@ export class MatchAuthority {
     for (const p of this.players.values()) {
       if (!p.online) continue;
       const f = p.forge;
-      let flags = p.st.flags & ~(FLAG.dead | FLAG.forging);
-      if (!p.alive) flags |= FLAG.dead;
+      let flags = p.st.flags & ~(FLAG.dead | FLAG.forging | FLAG.ghost);
+      if (!p.alive) flags |= p.ghost ? FLAG.ghost : FLAG.dead;
       if (p.stance) flags |= FLAG.forging;
       players.push({ id: p.id, state: { ...p.st, flags, weapon: Math.max(0, WEAPON_IDS.indexOf(f.form.id)), level: f.blade.level, armor: f.armor, hp: p.hp } });
     }

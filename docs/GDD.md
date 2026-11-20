@@ -19,17 +19,26 @@ evolution, and build a fast PvP shooter-style arena around it (ULTRAKILL-like mo
 
 ## 3. Round flow (online)
 1. **Lồng** (cage, 10 s): players stand in spawn cages around the arena edge. Relic draft happens here (§8).
-2. **Mở lồng**: doors slam open. Raw blanks (`phoi`) lie on the central pedestal: one per player + 1.
+2. **Mở lồng**: doors slam open. Raw blanks (`phoi`) lie on the central pedestal: one per player with a free hand, +1.
    Two more blanks appear on side racks every 40 s (max 2 carried per player).
 3. **Hưu chiến** (truce, default 30 s, host can set 0/30/60): no player damage. Grab steel, place anvils.
-4. **Đấu**: free fight. The **vòng lửa** (fire ring) starts closing at 60 s and is fully closed at 170 s.
-   Outside the ring: 6 dmg/s, +2 dmg/s every 10 s, and blades lose heat 3× faster.
-5. Each player has **3 lives** per round. Death: respawn after 4 s at a random safe edge point, your held
-   weapon loses 2 levels (min 0, never breaks from death), your anvil stays where it is.
+4. **Đấu**: free fight. The **vòng lửa** (fire ring) starts closing at 60 s and is fully closed at 170 s; its radius is a pure
+   function of the fight clock (the mesh is updated every frame, never stepped). Outside the ring damage lands in **ticks every
+   0.5 s** (6 dmg/s, +2 dmg/s every 10 s, so 3 → 4 → 5 … per tick), each tick plays `ring_hurt` with a hurt-cam kick and keeps a red
+   dithered edge vignette up while you stand outside; blades also lose heat 3× faster.
+5. Each player has **3 lives** per round (host setting). **Death costs no level.** 0–2.5 s you are dead ("Bạn đã chết", death grade, camera low,
+   `death_crack` loud). 2.5–6.5 s you are a **Hồn** (ghost): you stand where you died, move/jump/slide 15% faster, are invulnerable and
+   ignore the ring, but cannot attack, guard, forge, place/lift the anvil, take blanks or swap (those buttons are hidden); your screen has
+   a white dithered edge vignette and slight desaturation, others see you pale and see-through (Bayer ~40%). At 6.5 s you turn solid where
+   you stand (outside the ring: moved to the nearest point 2 m inside it) with 0.5 s of protection, broken early by attacking. The server
+   keeps this state (`ghost` flag in State/Snapshot); hit claims from or against a ghost are rejected. Your anvil stays where it is.
+   Out of lives you stay down.
 6. Round ends when the timer hits 180 s or only one player has lives left.
    **Round winner = most kills**; tiebreak: lives left, then damage dealt.
-7. 5 s result beat (slow-mo end, scoreboard), back to cages. Weapons and armor reset every round.
-   Relics and armor modules persist for the whole match.
+7. 5 s result beat (slow-mo end, scoreboard), back to cages. **Weapons (both slots, family, level) and armor carry over.** At the end of
+   round k (1-based) every carried blade loses 2k levels and armor loses k (min 0); the result screen shows the loss next to each blade
+   icon and the armor. The form follows the level at the round change (it never drops mid-round). Heat, Nhập thần and the anvil reset.
+   The pedestal gets one blank per player with a free hand, +1. Relics and armor modules persist for the whole match.
 
 Scoring: kill = 1 point; killing the player with Tiếng tăm (§8) = +1 bonus per stack.
 

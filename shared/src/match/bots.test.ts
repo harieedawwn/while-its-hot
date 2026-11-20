@@ -17,6 +17,7 @@ describe('full match with bots', () => {
       b.id = id; b.swingEvery = 0.6; bots.push(b);
     }
     const phases: string[] = [];
+    let carries = 0, ghosts = 0, kills = 0;
     let end: Extract<Out['m'], { t: 'end' }> | null = null;
     for (let i = 0; i < 20 * 60 * 90 && !end; i++) {
       now += 50;
@@ -28,9 +29,14 @@ describe('full match with bots', () => {
         for (const b of bots) if (x.to === 'all' || x.to === b.id) b.onMsg(x.m);
         if (x.m.t === 'phase' && phases[phases.length - 1] !== x.m.f.ph + x.m.f.n) phases.push(x.m.f.ph + x.m.f.n);
         if (x.m.t === 'end') end = x.m;
+        if (x.m.t === 'carry') carries++;
+        if (x.m.t === 'ghost') ghosts++;
+        if (x.m.t === 'kill') kills++;
       }
     }
     expect(end).not.toBeNull();
+    // deaths cost no level and become ghosts; each finished round but the last reports the carried loss
+    expect(kills).toBeGreaterThan(0); expect(ghosts).toBeGreaterThan(0); expect(carries).toBeGreaterThanOrEqual(2);
     expect(phases[0]).toBe('cage1');
     expect(phases).toContain('fight1'); expect(phases).toContain('result1');
     expect(a.flow.ph).toBe('end');

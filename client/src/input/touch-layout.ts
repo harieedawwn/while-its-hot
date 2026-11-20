@@ -5,6 +5,8 @@ export type ControlId = 'stick' | 'attack' | 'jump' | 'slide' | 'parry' | 'forge
 export const CONTROL_IDS: readonly ControlId[] = ['stick', 'attack', 'jump', 'slide', 'parry', 'forge', 'anvil', 'swap', 'pause', 'scoreboard'];
 /** Forge and anvil only show when the game says so (contextual); the editor always shows them. */
 export const CONTEXTUAL: readonly ControlId[] = ['forge', 'anvil'];
+/** Buttons a ghost does not have. */
+export const GHOST_HIDDEN: readonly ControlId[] = ['attack', 'parry', 'forge', 'anvil', 'swap'];
 
 /** Center offset from the anchored safe-rect edges (ax: l|r, ay: t|b), size = diameter. */
 export interface Ctl { ax: 'l' | 'r'; ay: 't' | 'b'; dx: number; dy: number; size: number; opacity: number }

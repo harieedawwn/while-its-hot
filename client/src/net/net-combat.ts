@@ -21,6 +21,8 @@ export interface NetCombatDeps {
   name(id: number): string;
   /** We died / stood up again at p. */
   died(): void; spawned(p: Vec3, yaw: number): void;
+  /** We became a Hồn (ghost). */
+  ghosted(): void;
 }
 
 const C = BALANCE.combat;
@@ -59,6 +61,8 @@ export class NetCombat implements HitResolver {
         if (m.id === this.d.me()) { this.d.lf.c.revive(); this.d.spawned(m.p, m.yaw); }
         else this.d.remotes.teleport(m.id);
         break;
+      case 'ghost': if (m.id === this.d.me()) this.d.ghosted(); break;
+      case 'rtick': this.ringTick(m.id); break;
       case 'heal': this.d.lf.c.hp = m.hp; break;
       case 'knock': pushMove(this.d.lf.c.body.s, m.kn[0], m.kn[2], C.pushS, m.kn[1]); break;
       default: break;
@@ -88,10 +92,17 @@ export class NetCombat implements HitResolver {
     bus.emit('combat:parry', { parrier: this.local(m.tg), attacker: this.local(m.a), x: m.p[0], y: m.p[1], z: m.p[2] });
   }
 
+  /** One fire-ring tick on `id`: sound, hurt cam and vignette pulse listen on the bus. */
+  private ringTick(id: number): void {
+    const p = id === this.d.me() ? this.d.lf.c.body.s.pos : this.d.remotes.get(id)?.c.body.s.pos;
+    if (p) bus.emit('ring:hurt', { id: this.local(id), x: p.x, y: p.y, z: p.z });
+  }
+
   private kill(m: Msg<'kill'>): void {
     const me = this.d.me();
     if (m.tg === me) { this.d.lf.c.hp = 0; this.d.lf.c.fighter.kill(); this.d.died(); }
-    bus.emit('combat:kill', { target: this.local(m.tg), by: this.local(m.by) });
+    const at = m.tg === me ? this.d.lf.c.body.s.pos : this.d.remotes.get(m.tg)?.c.body.s.pos;
+    bus.emit('combat:kill', { target: this.local(m.tg), by: this.local(m.by), x: at?.x, y: at?.y, z: at?.z });
     const killer = m.by === me ? this.d.lf.c : this.d.remotes.get(m.by)?.c;
     this.d.hud.kill(this.d.name(m.by), this.d.name(m.tg), killer?.weapon.family ?? null, m.by === me || m.tg === me);
   }

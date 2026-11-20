@@ -1,4 +1,4 @@
-import { BALANCE, DEFAULT_RULES, type MatchRules, ringSpan, type EndRowNet, foldRelics, type RelicFx, matchUnlocks, type MatchServerMsg, type PhaseNet, ringRadius, type ScoreNet, type Vec3 } from '@wih/shared';
+import { BALANCE, DEFAULT_RULES, type MatchRules, ringSpan, type EndRowNet, foldRelics, type RelicFx, matchUnlocks, type MatchServerMsg, type PhaseNet, burnDps, FOUNDRY, ringRadius, type CarryNet, type ScoreNet, type Vec3 } from '@wih/shared';
 import { clock } from '../core/clock';
 import { profile, setProfile } from '../core/profile';
 import type { Player } from '../player/player';
@@ -27,6 +27,8 @@ export interface FlowDeps {
   relicFx(fx: RelicFx): void;
   /** Leave the match (back to the lobby screen). */
   leave(): void;
+  /** The phase changed (the ghost resets on result/cage). */
+  onPhase?(ph: string): void;
 }
 
 /**
@@ -41,7 +43,9 @@ export class NetFlow {
   rows: ScoreNet[] = [];
   relics: string[] = [];
   private draft: Draft;
-  private banner: Banner;
+  readonly banner: Banner;
+  /** What each player lost at the end of the last round (result screen). */
+  private carry = new Map<number, CarryNet>();
   private board: Scoreboard;
   private endScr: EndScreen;
   private pin: Vec3 | null = null;
@@ -76,6 +80,7 @@ export class NetFlow {
       case 'score': this.rows = m.rows; break;
       case 'offer': this.draft.show(m.ids, m.rerolls); break;
       case 'own': this.relics = m.relics; this.d.relicFx(foldRelics(m.relics)); break;
+      case 'carry': this.carry = new Map(m.rows.map((r) => [r.id, r])); if (this.board.visible) this.board.show(this.scoreRows()); break;
       case 'end': this.end(m); break;
       default: break;
     }
@@ -86,8 +91,9 @@ export class NetFlow {
     this.f = f; this.rows = rows; this.lastPh = f.ph;
     if (!changed && !first) return;
     const d = this.d;
-    this.board.hide(); this.endScr.hide();
+    this.board.hide(); this.endScr.hide(); d.onPhase?.(f.ph);
     if (f.ph === 'cage') {
+      this.carry.clear();
       d.arena.setDoors(0); d.arena.setRing(0, 0); d.newRound();
       this.draft.setHead(f.n); this.banner.flash(STR.match.round(f.n), 1600);
     } else if (f.ph === 'fight') {
@@ -103,7 +109,11 @@ export class NetFlow {
   private scoreRows(): ScoreRow[] {
     return this.rows.map((r) => {
       const w = this.d.weaponOf(r.id);
-      return { name: this.d.name(r.id), color: this.d.color(r.id), family: w.family, level: w.level, kills: r.kills, deaths: r.deaths, me: r.id === this.d.me() };
+      const c = this.f.ph === 'result' ? this.carry.get(r.id) : undefined;
+      return {
+        name: this.d.name(r.id), color: this.d.color(r.id), family: w.family, level: w.level, kills: r.kills, deaths: r.deaths, me: r.id === this.d.me(),
+        blades: c?.blades.map((b) => ({ family: b.family, level: b.to, lost: b.from - b.to })), armor: c ? { level: c.armor[1], lost: c.armor[0] - c.armor[1] } : undefined,
+      };
     });
   }
 
@@ -142,6 +152,14 @@ export class NetFlow {
       this.d.arena.setRing(f.ring, ringRadius(s, this.rules.ring));
     }
     return { ...base, roundS, ringS, lives: me ? { left: me.lives, max: this.rules.lives } : null };
+  }
+
+  /** Fire-ring damage per second at (x, z) now; 0 when inside, before the ring, in the truce or outside the fight. */
+  painDps(x: number, z: number, now: number): number {
+    if (!this.fighting || now < this.f.truce) return 0;
+    const s = Math.max(0, (now - this.f.at) / 1000), r = ringRadius(s, this.rules.ring);
+    const c = FOUNDRY.ringCenters[this.f.ring % FOUNDRY.ringCenters.length];
+    return r > 0 && Math.hypot(x - c[0], z - c[1]) > r ? burnDps(s) : 0;
   }
 
   keyPick(i: number): boolean { return this.draft.keyPick(i); }

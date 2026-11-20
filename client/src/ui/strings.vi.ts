@@ -105,7 +105,7 @@ export const STR = {
     draft: 'Chọn di vật', reroll: 'Đổi', round: (n: number) => `Vòng ${n}`, fight: 'Đấu!', truce: 'Hưu chiến',
     won: (name: string) => `${name} thắng vòng`, draw: 'Hòa vòng', wins: 'Vòng', points: 'Điểm', back: 'Về sảnh',
     champion: (name: string) => `${name} vô địch`, unlocked: 'Mở khóa', none: 'Không có gì mới', eliminated: 'Hết mạng',
-    stacks: 'Tiếng tăm', moduleTag: 'Mô-đun giáp',
+    stacks: 'Tiếng tăm', moduleTag: 'Mô-đun giáp', dead: 'Bạn đã chết', armor: 'Giáp',
   },
   /** Relics (GDD §8): name + the one line that says what it does. */
   relic: {

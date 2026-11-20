@@ -3,7 +3,7 @@ import { FEEL } from '../core/feel';
 import type { Actions, Button } from './actions';
 import type { Controls } from './controls-settings';
 import type { LayoutStore } from './layout-store';
-import { CONTEXTUAL, CONTROL_IDS, type Circle, type ControlId } from './touch-layout';
+import { CONTEXTUAL, CONTROL_IDS, GHOST_HIDDEN, type Circle, type ControlId } from './touch-layout';
 import { clampKnob, type Disc } from './touch-math';
 import { TouchRims } from './touch-rims';
 import { PointerRouter } from './touch-router';
@@ -25,6 +25,8 @@ export class TouchControls {
   private rims: TouchRims;
   private discs: Record<ControlId, Circle>;
   private ctxShown = new Set<ControlId>();
+  /** Hidden by the game (a ghost cannot attack, guard, forge or swap). */
+  private away = false;
   private editing = false;
   private flash = new Map<ControlId, number>();
   private stickHeld = false;
@@ -60,6 +62,8 @@ export class TouchControls {
   /** Pictogram override / grayed state for a control (forge stance, held slot). */
   setIcon(id: ControlId, v: PictoVariant | null): void { this.view.icon(id, v); }
   setDim(id: ControlId, on: boolean): void { this.view.dim(id, on); }
+  /** Hide / show the action buttons (Đánh, Đỡ, Rèn, Đặt đe, Đổi) as a group; held fingers are dropped. */
+  setGhost(on: boolean): void { if (on === this.away) return; this.away = on; this.releaseAll(); this.refresh(); }
   setContext(id: 'forge' | 'anvil', on: boolean): void { if (on) this.ctxShown.add(id); else this.ctxShown.delete(id); this.refresh(); }
 
   /** Re-read the layout store (after the editor or a preset change). */
@@ -74,7 +78,7 @@ export class TouchControls {
 
   private refresh(): void {
     for (const id of CONTROL_IDS) {
-      const hidden = !this.editing && CONTEXTUAL.includes(id) && !this.ctxShown.has(id);
+      const hidden = !this.editing && ((CONTEXTUAL.includes(id) && !this.ctxShown.has(id)) || (this.away && GHOST_HIDDEN.includes(id)));
       this.view.els[id].classList.toggle('off', hidden);
     }
     this.drawStick(this.router.stickOrigin, 0, 0);

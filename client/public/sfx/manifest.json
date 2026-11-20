@@ -54,6 +54,12 @@
   "loop": false,
   "lufs": -22
  },
+ "death_crack": {
+  "n": 1,
+  "loop": false,
+  "lufs": -21,
+  "supplied": true
+ },
  "fire_inside": {
   "n": 1,
   "loop": true,
@@ -178,6 +184,12 @@
   "n": 1,
   "loop": false,
   "lufs": -15
+ },
+ "ring_hurt": {
+  "n": 1,
+  "loop": false,
+  "lufs": -17,
+  "supplied": true
  },
  "round_lose": {
   "n": 1,

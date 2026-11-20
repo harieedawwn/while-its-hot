@@ -18,7 +18,7 @@ export class Pickups {
 
   constructor(players: number, now: number, private rand: () => number) {
     const top = FOUNDRY.pedestal.top;
-    for (const [x, z] of pedestalSlots().slice(0, Math.min(FOUNDRY.pedestal.slots, players + 1))) this.add([x, top, z]);
+    for (const [x, z] of pedestalSlots().slice(0, Math.min(FOUNDRY.pedestal.slots, players + M.carry.blanksExtra))) this.add([x, top, z]);
     this.rackAt = now + M.rackEveryS * 1000;
   }
 

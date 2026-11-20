@@ -29,6 +29,8 @@ export class Combatant {
   deadT = 0;
   /** Online: hp, death and revive come from the server; CombatWorld never kills this one by itself. */
   netOwned = false;
+  /** Hồn (ghost, ROUND3 §2): stands and moves, cannot be hit or act; counts as not alive for every combat rule. */
+  ghost = false;
   private eyeV: V3 = [0, 0, 0];
 
   constructor(readonly id: number, readonly body: Player, weapon: WeaponDef, o: CombatantOpts = {}) {
@@ -41,7 +43,7 @@ export class Combatant {
 
   get weapon(): WeaponDef { return this.fighter.weapon; }
   get passives(): PassiveId[] { return passivesOf(this.weapon); }
-  get alive(): boolean { return !this.fighter.dead; }
+  get alive(): boolean { return !this.fighter.dead && !this.ghost; }
   get yaw(): number { return this.body.yaw; }
   get pitch(): number { return this.body.pitch; }
 
@@ -50,7 +52,7 @@ export class Combatant {
     const s = this.body.s;
     this.sinceSlide = s.sliding ? 0 : this.sinceSlide + dt;
     this.fighter.tick(dt, i);
-    s.speedMul = this.fighter.speedMul;
+    s.speedMul = this.fighter.speedMul * (this.ghost ? BALANCE.match.ghost.speedMul : 1);
     if (this.burnT > 0) { this.burnT -= dt; this.hp -= this.burnDps * dt; }
     if (this.fighter.dead) this.deadT += dt;
   }
@@ -71,11 +73,11 @@ export class Combatant {
     const s = this.body.s, f = this.fighter;
     return {
       x: s.pos.x, z: s.pos.z, yaw: this.yaw, parrying: f.parrying, blocking: f.blocking,
-      immune: s.iframe > 0 || f.dead || this.invuln, stamina: s.stamina, armorLevel: this.armor, blockArcDeg: this.blockArcDeg,
+      immune: s.iframe > 0 || f.dead || this.ghost || this.invuln, stamina: s.stamina, armorLevel: this.armor, blockArcDeg: this.blockArcDeg,
     };
   }
 
-  revive(): void { this.hp = BALANCE.combat.hp; this.burnT = 0; this.deadT = 0; this.fighter.revive(); }
+  revive(): void { this.ghost = false; this.hp = BALANCE.combat.hp; this.burnT = 0; this.deadT = 0; this.fighter.revive(); }
 }
 
 /** Fighter input from button states (local player) — kept here so dummies and players share the shape. */

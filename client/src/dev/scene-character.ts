@@ -44,6 +44,7 @@ const make: SceneFactory = async ({ pipeline, params, width, height }) => {
   const chars: { c: Character; pos: THREE.Vector3Tuple; yaw: number; seedT: number }[] = [];
   const add = (armor: number, mods: ModuleId[], x: number, yaw: number, col: string = color) =>
     chars.push({ c: new Character(lib, { armor, modules: mods, color: col }), pos: [x, 0, 0], yaw, seedT: x * 0.37 });
+  const ghostAt = params.get('ghost'); // `ghost=1`: the Hồn look on every second figure (or the only one)
 
   let cam: { pos: THREE.Vector3Tuple; look: THREE.Vector3Tuple; fov: number };
   if (clip) {
@@ -57,6 +58,7 @@ const make: SceneFactory = async ({ pipeline, params, width, height }) => {
     [0, 2, 4, 6, 8].forEach((lvl, i) => add(lvl, [], (i - 2) * 1.5, Math.PI + (i - 2) * -0.16, PLAYER_COLORS[i]));
     cam = { pos: [0, 1.45, 6.6], look: [0, 0.95, 0], fov: 36 };
   }
+  if (ghostAt) chars.forEach((ch, i) => { if (chars.length === 1 || i % 2 === 1) ch.c.setGhost(true); });
   const half = chars.length === 1 ? 2.6 : chars.length * 0.82 + 1;
   const floor = mesh(slab(half * 2 + 2, 0.4, chars.length === 1 ? 5.2 : 3, 1), lib.get('slag'), 'floor');
   floor.position.set(0, -0.2, 0);

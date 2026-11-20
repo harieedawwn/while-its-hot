@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { disposeTree } from '../../render/dispose';
 import type { ModuleId } from '@wih/shared';
+import { ghostMaterial } from '../../render/materials/ghost';
 import type { MaterialLib } from '../../render/materials/library';
 import { type AnimInput, Animator } from './animator';
 import { buildArmor } from './armor';
@@ -24,6 +25,8 @@ export class Character {
   private armor: SkinMesh[] = [];
   private color: THREE.ColorRepresentation;
   armorLevel = -1;
+  get ghost(): boolean { return this.ghosted; }
+  private ghosted = false;
   modules: readonly ModuleId[] = [];
 
   constructor(private lib: MaterialLib, o: CharacterOpts = {}) {
@@ -51,7 +54,18 @@ export class Character {
       this.armor.push(sm); this.root.add(sm.mesh);
     }
     this.armorLevel = level; this.modules = [...modules];
+    if (this.ghosted) this.skin(true);
     this.refresh();
+  }
+
+  /** Hồn: the body and armor are drawn pale and see-through (Bayer screen door); the held item is hidden. */
+  setGhost(on: boolean): void {
+    if (on === this.ghosted) return;
+    this.ghosted = on; this.skin(on); this.skeleton.hold.hand_r.visible = this.skeleton.hold.hand_l.visible = !on;
+  }
+  private skin(on: boolean): void {
+    this.body.mesh.material = on ? ghostMaterial() : this.lib.get('cloth');
+    for (const a of this.armor) a.mesh.material = on ? ghostMaterial() : this.lib.get('steel');
   }
 
   /** Advance the animation by dt and re-pose the meshes. */

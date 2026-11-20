@@ -4,7 +4,14 @@ import { stampedButton } from '../kit/controls';
 import { STR } from '../strings.vi';
 import { silhouette } from './silhouettes';
 
-export interface ScoreRow { name: string; color: string; family: Family | null; level: number; kills: number; deaths: number; me?: boolean }
+/** One carried blade on the result screen: level after the round's loss, and what was lost. */
+export interface ScoreBlade { family: Family | null; level: number; lost: number }
+export interface ScoreRow {
+  name: string; color: string; family: Family | null; level: number; kills: number; deaths: number; me?: boolean;
+  /** Result screen only: every carried blade and the armor with what the round took (ROUND3 §3). */
+  blades?: ScoreBlade[]; armor?: { level: number; lost: number };
+}
+const lost = (n: number): string => (n > 0 ? `<span class="loss">−${n}</span>` : '');
 
 /** Scoreboard overlay: a steel plate with one ledger row per player, sorted by kills. Hidden until `show`. */
 export class Scoreboard {
@@ -16,7 +23,8 @@ export class Scoreboard {
     r.style.border = 'none';
     r.appendChild(el('div', 'k-head')).appendChild(el('div', 'k-title', STR.score.title));
     const t = el('table', 'h-tab');
-    t.innerHTML = `<thead><tr><th>${STR.score.player}</th><th>${STR.score.weapon}</th><th class="n">${STR.hud.kills}</th><th class="n">${STR.hud.deaths}</th></tr></thead>`;
+    const gear = rows.some((r) => r.armor);
+    t.innerHTML = `<thead><tr><th>${STR.score.player}</th><th>${STR.score.weapon}</th>${gear ? `<th class="n">${STR.match.armor}</th>` : ''}<th class="n">${STR.hud.kills}</th><th class="n">${STR.hud.deaths}</th></tr></thead>`;
     const body = el('tbody');
     for (const p of [...rows].sort((a, b) => b.kills - a.kills || a.deaths - b.deaths)) {
       const tr = el('tr', p.me ? 'is-me' : '');
@@ -24,9 +32,12 @@ export class Scoreboard {
       const sw = el('span', 'sw'); sw.style.background = p.color;
       n.append(sw, document.createTextNode(p.name));
       const w = el('td');
-      w.insertAdjacentHTML('beforeend', silhouette(p.family));
-      w.append(document.createTextNode(STR.armory.level(p.level)));
-      tr.append(n, w, el('td', 'n', String(p.kills)), el('td', 'n', String(p.deaths)));
+      for (const b of p.blades ?? [{ family: p.family, level: p.level, lost: 0 }]) {
+        w.insertAdjacentHTML('beforeend', `<span class="bl">${silhouette(b.family)}${STR.armory.level(b.level)}${lost(b.lost)}</span>`);
+      }
+      tr.append(n, w);
+      if (gear) { const a = el('td', 'n'); if (p.armor) a.innerHTML = `${p.armor.level}${lost(p.armor.lost)}`; tr.append(a); }
+      tr.append(el('td', 'n', String(p.kills)), el('td', 'n', String(p.deaths)));
       body.appendChild(tr);
     }
     t.appendChild(body);

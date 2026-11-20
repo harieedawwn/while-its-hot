@@ -56,7 +56,7 @@ export class RemotePlayer {
     this.c.hp = st.hp; this.c.level = st.level; this.c.armor = st.armor;
     if (st.weapon !== this.weapon) this.setWeapon(st.weapon);
     if (st.armor !== this.ch.armorLevel) this.ch.setArmor(st.armor);
-    const dead = (st.flags & FLAG.dead) !== 0, parity = (st.flags & FLAG.swing) !== 0;
+    const dead = (st.flags & FLAG.dead) !== 0, ghost = (st.flags & FLAG.ghost) !== 0, parity = (st.flags & FLAG.swing) !== 0;
     if (dead) { if (!f.dead) f.kill(); }
     else {
       if (f.dead) this.c.revive();
@@ -65,6 +65,8 @@ export class RemotePlayer {
       }
     }
     this.parity = parity;
+    this.c.ghost = ghost;
+    if (ghost !== this.ch.ghost) this.ch.setGhost(ghost);
     if (f.phase !== this.phase) {
       if (f.phase === 'parry') bus.emit('combat:guard', { id: this.id, act: 'parry' });
       else if (f.phase === 'block') bus.emit('combat:guard', { id: this.id, act: 'block_on' });

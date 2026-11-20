@@ -22,7 +22,9 @@ export interface GameEvents {
   'combat:guard': { id: number; act: 'parry' | 'block_on' | 'block_off' | 'feint' };
   'combat:hit': { attacker: number; target: number; dmg: number; zone: Zone; kind: AttackKind; result: HitKind; x: number; y: number; z: number };
   'combat:parry': { parrier: number; attacker: number; x: number; y: number; z: number };
-  'combat:kill': { target: number; by: number };
+  'combat:kill': { target: number; by: number; x?: number; y?: number; z?: number };
+  /** One 0.5 s tick of fire-ring damage on combatant `id` (0 = us) at that spot. */
+  'ring:hurt': { id: number; x: number; y: number; z: number };
   /** Forging (forge/*). act: place/placed/lift = anvil; owner = combatant id. */
   'forge:anvil': { act: 'place' | 'placed' | 'lift'; x: number; y: number; z: number; owner: number };
   'forge:stance': { on: boolean; owner: number };

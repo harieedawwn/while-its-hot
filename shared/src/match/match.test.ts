@@ -61,17 +61,19 @@ describe('match authority: hits', () => {
     t.msg(1, atk(1, 1000), 1000);
     expect(t.msg(1, hit(1, 2, 1000 + W + 20), 1000 + W + 20)[0].m).toMatchObject({ why: 'immune' });
   });
-  it('a kill costs 2 levels, then the player respawns after 4 s', () => {
-    const m = setup(), v = m.players.get(2)!;
+  it('a kill costs no level; the player is dead, then a ghost, then solid again', () => {
+    const m = setup(), v = m.players.get(2)!, G = BALANCE.match.ghost, t0 = 1000 + W + 20;
     v.forge.blades[0].level = 5; v.forge.blades[0].best = 5; v.hp = 3;
     m.msg(1, atk(1, 1000), 1000);
-    const o = m.msg(1, hit(1, 2, 1000 + W + 20), 1000 + W + 20);
+    const o = m.msg(1, hit(1, 2, t0), t0);
     expect(kinds(o)).toEqual(['dmg', 'score', 'kill', 'fsync']);
-    expect(v.alive).toBe(false); expect(v.forge.blades[0].level).toBe(3); expect(m.players.get(1)!.kills).toBe(1);
-    expect(kinds(m.tick(2000))).not.toContain('spawn');
-    const sp = m.tick(1000 + W + 20 + BALANCE.match.respawnS * 1000);
-    expect(kinds(sp)).toContain('spawn');
-    expect(v.alive).toBe(true); expect(v.hp).toBe(BALANCE.combat.hp);
+    expect(v.alive).toBe(false); expect(v.forge.blades[0].level).toBe(5); expect(m.players.get(1)!.kills).toBe(1);
+    expect(kinds(m.tick(t0 + G.deadS * 1000 - 50))).not.toContain('ghost');
+    expect(kinds(m.tick(t0 + G.deadS * 1000 + 50))).toContain('ghost');
+    expect(v.ghost).toBe(true); expect(v.alive).toBe(false);
+    expect(kinds(m.tick(t0 + G.solidS * 1000 - 50))).not.toContain('spawn');
+    expect(kinds(m.tick(t0 + G.solidS * 1000 + 50))).toContain('spawn');
+    expect(v.alive).toBe(true); expect(v.ghost).toBe(false); expect(v.hp).toBe(BALANCE.combat.hp);
   });
 });
 

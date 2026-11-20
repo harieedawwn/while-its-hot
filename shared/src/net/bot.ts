@@ -38,7 +38,7 @@ export class NetBot {
   }
 
   onSnapshot(s: Snapshot): void {
-    for (const p of s.players) if (p.id !== this.id) this.others.set(p.id, { x: p.state.x, z: p.state.z, alive: (p.state.flags & FLAG.dead) === 0 });
+    for (const p of s.players) if (p.id !== this.id) this.others.set(p.id, { x: p.state.x, z: p.state.z, alive: (p.state.flags & (FLAG.dead | FLAG.ghost)) === 0 });
   }
 
   tick(dt: number, now: number): void {

@@ -21,6 +21,7 @@ export interface HitCtx { list: readonly MPlayer[]; truceUntil: number; harm: Ha
 /** A new swing. Ignored (claims for it will be stale) if it starts sooner than the previous swing allows. */
 export function recordSwing(a: MPlayer, m: AtkMsg): boolean {
   if (!a.alive) return false;
+  a.spawnUntil = 0;
   const prev = a.swings[a.swings.length - 1];
   if (prev && m.s <= prev.s) return false;
   if (prev && m.kind !== 'heavy') {
@@ -59,7 +60,7 @@ export function defenderView(t: MPlayer, m: HitMsg, now: number, truceUntil: num
     x: t.st.x, z: t.st.z, yaw: t.st.yaw,
     parrying: parryOk(t.parryAt, m.at, t.rtt, parryWindow(passivesOf(def), C.parry.windowS)),
     blocking: (t.st.flags & FLAG.blocking) !== 0,
-    immune: (t.stance && t.forge.immune) || now < truceUntil || now < t.ifUntil,
+    immune: (t.stance && t.forge.immune) || now < truceUntil || now < t.ifUntil || now < t.spawnUntil,
     stamina: t.st.stamina, armorLevel: t.forge.armor,
   };
 }

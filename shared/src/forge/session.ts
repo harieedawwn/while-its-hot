@@ -127,6 +127,23 @@ export class ForgeSession {
       : Math.max(0, this.heat - H.decayPerS * this.mods.decayMul * dt);
   }
 
+  /** A new round (cage): transient forging state resets, blades, armor and slot carry over. */
+  newRound(): void {
+    this.endFrenzy(this.time); this.heat = 0; this.frenzyMeter = 0; this.swapT = 0; this.target = 'blade'; this.afterVo = false;
+  }
+
+  /** End of round: carried blades lose `bl` levels, armor `al` (min 0). The form follows the level (best restarts from it); returns [from, to] per blade and armor. */
+  carryLoss(bl: number, al: number): { blades: [number, number][]; armor: [number, number] } {
+    const blades: [number, number][] = [];
+    this.blades.forEach((b, i) => {
+      if (i >= this.carried) return;
+      const from = b.level; b.level = Math.max(0, b.level - bl); b.best = b.level; blades.push([from, b.level]);
+    });
+    const a: [number, number] = [this.armor, Math.max(0, this.armor - al)];
+    this.armor = a[1];
+    return { blades, armor: a };
+  }
+
   /** Heat is knocked down when the smith is hit out of the stance. */
   onHitOut(): void { this.heat = Math.max(0, this.heat - F.heat.hitCost); }
 

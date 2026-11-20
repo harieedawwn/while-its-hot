@@ -29,6 +29,7 @@ export interface NetMatchDeps {
   /** Is the local smith in the forging stance (State flag). */
   forging(): boolean;
   died(): void;
+  ghosted(): void;
   spawned(p: Vec3, yaw: number): void;
 }
 
@@ -63,7 +64,7 @@ export class NetMatch {
     this.pickups = new NetPickups(d.scene, d.load);
     this.combat = new NetCombat({
       lf: d.lf, world: d.combat, remotes: this.remotes, hud: d.hud, me: () => this.me, send: (m) => this.send(m),
-      now: () => this.simMs, renderT: () => this.renderT(), name: (id) => this.name(id), died: d.died, spawned: d.spawned,
+      now: () => this.simMs, renderT: () => this.renderT(), name: (id) => this.name(id), died: d.died, ghosted: d.ghosted, spawned: d.spawned,
     });
     this.forge = new NetForge((m) => this.send(m), d.session, this.anvils, () => this.me);
     d.combat.resolver = this.combat;

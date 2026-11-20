@@ -79,7 +79,7 @@ export class ForgeController {
   }
 
   enter(): boolean {
-    if (this.inStance || !this.d.anvil.inReach(this.d.player.s.pos) || !this.d.lf.canAct) return false;
+    if (this.inStance || !this.d.anvil.inReach(this.d.player.s.pos) || !this.d.lf.canAct || !this.d.lf.c.alive) return false;
     this.inStance = true;
     this.d.link?.op({ k: 'stance', on: true });
     this.d.player.s.vel.set(0, this.d.player.s.vel.y, 0);
@@ -114,13 +114,13 @@ export class ForgeController {
 
     const presses = a.takeStamps('forge'), anvilPress = a.take('anvil'), swapPress = a.take('swap');
     if (anvilPress && !this.inStance) {
-      if (anvil.rule.canPlace) { if (lf.canAct) anvil.place(player.s.pos, player.yaw); }
-      else if (anvil.rule.canLift && anvil.dist(player.s.pos) <= F.anvil.useRadius * 1.5) anvil.lift();
+      if (anvil.rule.canPlace) { if (lf.canAct && lf.c.alive) anvil.place(player.s.pos, player.yaw); }
+      else if (lf.c.alive && anvil.rule.canLift && anvil.dist(player.s.pos) <= F.anvil.useRadius * 1.5) anvil.lift();
     }
     if (this.inStance) this.stanceTick(dt, a, presses, swapPress);
     else {
       if (presses.length) this.enter();
-      if (swapPress && !lf.c.fighter.attacking && session.swapSlot()) { this.d.link?.op({ k: 'swap' }); void this.syncWeapon(true); }
+      if (swapPress && lf.c.alive && !lf.c.fighter.attacking && session.swapSlot()) { this.d.link?.op({ k: 'swap' }); void this.syncWeapon(true); }
       session.tick(dt, false);
     }
     if (this.inStance) { lf.tickWith(dt, NO_FIGHT); player.tickWith(dt, { ...NO_INPUT, yaw: player.yaw }); }

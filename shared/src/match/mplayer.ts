@@ -18,8 +18,12 @@ export interface MPlayer {
   online: boolean;
   hp: number;
   alive: boolean;
-  /** Match ms at which a dead player stands up again. */
-  spawnAt: number;
+  /** Death timeline (match ms): the ghost starts at ghostAt, the player turns solid at spawnAt. `ghost` = in the Hồn phase (alive stays false: every combat rule rejects it). */
+  ghostAt: number; spawnAt: number; ghost: boolean;
+  /** Spawn protection after turning solid (match ms), broken by attacking. */
+  spawnUntil: number;
+  /** Seconds accumulated toward the next fire-ring tick. */
+  ringT: number;
   /** Latest State from the client (client-authoritative movement). */
   st: NetState;
   rtt: number;
@@ -55,7 +59,7 @@ export function newPlayer(id: number, p: Vec3, yaw: number, rand: RandFn): MPlay
   const forge = new ForgeSession(rand);
   forge.carried = 1;
   return {
-    id, online: true, hp: BALANCE.combat.hp, alive: true, spawnAt: 0, st: blankState(p, yaw), rtt: 0,
+    id, online: true, hp: BALANCE.combat.hp, alive: true, ghostAt: 0, spawnAt: 0, ghost: false, spawnUntil: 0, ringT: 0, st: blankState(p, yaw), rtt: 0,
     forge, stance: false, heating: false, swings: [], parryAt: -1e9,
     burnT: 0, burnDps: 0, burnBy: 0, anvil: null, dealt: 0, kills: 0,
     pts: 0, deaths: 0, wins: 0, rKills: 0, rDealt: 0, lives: BALANCE.match.lives,

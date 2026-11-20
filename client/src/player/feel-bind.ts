@@ -11,6 +11,7 @@ export function bindFeel(cam: FirstPersonCamera, vm: Viewmodel): () => void {
     bus.on('move:land', (e) => { if (slammed) { slammed = false; return; } vm.onLand(cam.onLand(e.speed)); }),
     bus.on('cam:trauma', (e) => cam.addTrauma(e.amount)),
     bus.on('cam:hitstop', (e) => cam.hitStop(e.ms)),
+    bus.on('ring:hurt', (e) => { if (e.id === 0) cam.hurt(); }),
   ];
   return () => offs.forEach((off) => off());
 }

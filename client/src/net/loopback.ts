@@ -17,6 +17,8 @@ export class Loopback {
   private client: SockLike | null = null;
 
   constructor(private o: LoopOpts) {}
+  /** The room's match (dev previews poke it). */
+  get authority(): MatchAuthority | null { return this.auth; }
 
   /** The socket RoomClient opens (any url). */
   socket = (): SockLike => {

@@ -53,6 +53,12 @@ export class FirstPersonCamera {
   private landGain = 1 / unitPeak(C.land.k, C.land.c);
   private slideFov = 0;
   private trauma = 0;
+  private hurtR = new Spring(C.hurt.k, C.hurt.c);
+  private hurtP = new Spring(C.hurt.k, C.hurt.c);
+  private hurtPeak = unitPeak(C.hurt.k, C.hurt.c);
+  private deadK = 0;
+  /** Dead: the eye sinks and the head tilts (first seconds after dying). */
+  dead = false;
   private slideSign = 1;
 
   constructor(aspect: number) {
@@ -75,6 +81,11 @@ export class FirstPersonCamera {
     this.land.kick(-C.land.maxDip * this.landGain);
     return C.land.maxDip;
   }
+  /** A ring tick: roll kick to a random side + a small pitch dip, scaled by the camera-shake setting. */
+  hurt(): void {
+    const k = this.shakeScale / this.hurtPeak, side = Math.random() < 0.5 ? -1 : 1;
+    this.hurtR.kick(side * C.hurt.roll * D2R * k); this.hurtP.kick(-C.hurt.pitch * D2R * k);
+  }
   addTrauma(x: number): void { this.trauma = Math.min(1, this.trauma + x); }
   /** Freeze local animation for ms (clamped to the LOOK §6 range). */
   hitStop(ms: number): void {
@@ -86,7 +97,8 @@ export class FirstPersonCamera {
     this.freezeS = Math.max(0, this.freezeS - dt);
     this.animT += adt;
 
-    this.eye = approach(this.eye, v.low ? C.lowEye : C.eye, C.eyeRate, adt);
+    this.deadK = approach(this.deadK, this.dead ? 1 : 0, C.dead.rate, adt);
+    this.eye = approach(this.eye, this.deadK > 0.01 ? C.eye + (C.dead.eye - C.eye) * this.deadK : v.low ? C.lowEye : C.eye, this.deadK > 0.01 ? C.dead.rate : C.eyeRate, adt);
     const dip = Math.max(-C.land.maxDip * 1.15, this.land.step(0, adt));
 
     // bob: vertical only, scaled by ground speed
@@ -124,7 +136,8 @@ export class FirstPersonCamera {
 
     this.camera.position.set(v.pos.x, v.pos.y + this.eye + dip + bob, v.pos.z);
     const maxP = C.maxPitch * D2R;
-    this.camera.rotation.set(Math.max(-maxP, Math.min(maxP, v.pitch + sx)), v.yaw + sy, roll + sz, 'YXZ');
+    const hr = this.hurtR.step(0, adt), hp = this.hurtP.step(0, adt);
+    this.camera.rotation.set(Math.max(-maxP, Math.min(maxP, v.pitch + sx + hp)), v.yaw + sy, roll + sz + hr + this.deadK * C.dead.roll * D2R, 'YXZ');
     this.camera.updateProjectionMatrix();
     this.camera.updateMatrixWorld();
   }

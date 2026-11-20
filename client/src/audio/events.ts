@@ -69,7 +69,13 @@ export function bindAudio(a: AudioEngine, localId = 0): AudioBinding {
     }),
     bus.on('combat:kill', (e) => {
       a.play('kill'); a.duck(-6, 0.6);
-      if (own(e.target)) { a.play('death'); a.muffle(true); buzz('heavy'); }
+      if (own(e.target)) { a.play('death_crack', { db: 3 }); a.muffle(true); buzz('heavy'); }
+      else a.play('death_crack', { pos: e.x === undefined ? undefined : { x: e.x, y: e.y ?? 0, z: e.z ?? 0 }, db: 4 });
+    }),
+    // fire-ring tick: ours is 2D with ±5% pitch, others are heard quietly in place
+    bus.on('ring:hurt', (e) => {
+      const pitch = 1 + (Math.random() - 0.5) * 0.1;
+      if (own(e.id)) { a.play('ring_hurt', { pitch }); buzz('medium'); } else a.play('ring_hurt', { pos: at(e), pitch, db: -9 });
     }),
 
     // forge

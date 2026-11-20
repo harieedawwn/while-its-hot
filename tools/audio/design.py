@@ -141,6 +141,7 @@ def main():
     manifest = json.load(open(mpath)) if os.path.exists(mpath) else {}
     for ev, r in recipes['events'].items():
         if want and ev not in want: continue
+        if manifest.get(ev, {}).get('supplied'): print(f'skip {ev} (supplied by the project owner)'); continue
         n = r.get('variants', 1); rng = np.random.default_rng(sum(map(ord, ev)))
         for k in range(n):
             ls = [(l.get('at', 0), build_layer(l, k, rng, r.get('pitch_jitter', 0.3))) for l in r['layers']]

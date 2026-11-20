@@ -35,6 +35,7 @@ def main():
     rows, fail = [], 0
     for ev in manifest:
         if want and ev not in want: continue
+        if manifest[ev].get('supplied'): continue  # user-supplied recordings are not judged
         target = recipes.get(ev, {}).get('expect', recipes.get(ev, {}).get('lufs', manifest[ev].get('lufs')))
         for k in range(manifest[ev]['n']):
             path = os.path.join(SFX, f'{ev}_{k}.ogg')

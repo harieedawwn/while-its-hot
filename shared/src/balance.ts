@@ -169,13 +169,17 @@ export const BALANCE = {
   },
   /** Match rules that phase 17 enforces on the server (GDD §3). Rounds/lives/scoring arrive in phase 18. */
   match: {
-    respawnS: 4, deathLevelLoss: 2, maxCarry: 2,
+    maxCarry: 2,
+    /** Death (ROUND3 §2): dead for deadS, then a Hồn (ghost) until solidS after the death; the ghost is invulnerable, ignores the ring and runs speedMul faster. Becoming solid outside the ring moves you landIn m inside it; spawnProtS of protection, broken by attacking. */
+    ghost: { deadS: 2.5, solidS: 6.5, speedMul: 1.15, landIn: 2, spawnProtS: 0.5 },
+    /** Carry-over (ROUND3 §3): at the end of round k every carried blade loses bladeLoss×k levels, armor armorLoss×k; the pedestal holds one blank per player with a free hand + blanksExtra. */
+    carry: { bladeLoss: 2, armorLoss: 1, blanksExtra: 1 },
     /** Blanks: one per player + 1 on the pedestal at the start; rackEach more on the side racks every rackEveryS. */
     rackEveryS: 40, rackEach: 2, maxLying: 11, pickupR: 1.6,
     /** Round flow (GDD §3, §8): cage countdown (relic draft), the fight clock, result beat, lives, first to winsToWin rounds. */
     cageS: 10, roundS: 180, resultS: 5, lives: 3, winsToWin: 3, endHoldS: 25,
-    /** Fire ring: appears at startS, closes to minR by closedS (fight clock). Outside: dps + step per everyS since startS; blade heat decays heatMul×. */
-    ring: { startS: 60, closedS: 170, maxR: 38, minR: 2.5, dps: 6, step: 2, everyS: 10, heatMul: 3 },
+    /** Fire ring: appears at startS, closes to minR by closedS (fight clock). Outside: dps + step per everyS since startS, dealt in a tick every tickS (dps × tickS); blade heat decays heatMul×. */
+    ring: { startS: 60, closedS: 170, maxR: 38, minR: 2.5, dps: 6, step: 2, everyS: 10, heatMul: 3, tickS: 0.5 },
     /** Draft: offers per player, rerolls for those below the round winner, kills lead that earns the second Tiếng tăm stack. */
     draft: { offers: 3, rerolls: 1, bigWin: 3, moduleOffers: 2 },
   },

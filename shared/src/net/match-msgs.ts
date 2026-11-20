@@ -50,6 +50,8 @@ export interface StrikeNet {
   pick: boolean; evolved: string | null; heat: number;
 }
 export type HitKindNet = Exclude<HitResult['r'], 'immune' | 'parried'>;
+/** Carried gear before → after the end-of-round loss. blades = filled slots in order. */
+export interface CarryNet { id: number; blades: { family: Family | null; from: number; to: number }[]; armor: [number, number] }
 export interface AnvilNet { id: number; p: Vec3; yaw: number }
 export interface PickupNet { id: number; p: Vec3 }
 export interface MatchPlayerNet { id: number; hp: number; alive: boolean; p: Vec3; yaw: number }
@@ -64,6 +66,12 @@ export type MatchServerMsg =
   | { t: 'kill'; tg: number; by: number }
   | { t: 'spawn'; id: number; p: Vec3; yaw: number; hp: number }
   | { t: 'knock'; kn: Vec3 }
+  /** The dead player became a Hồn (ghost): invulnerable, can move, cannot act. They turn solid with `spawn`. */
+  | { t: 'ghost'; id: number }
+  /** One 0.5 s tick of fire-ring damage on `id` (the HP itself arrives with the snapshot). */
+  | { t: 'rtick'; id: number }
+  /** End of a round: what every carried blade and armor lost (result screen). */
+  | { t: 'carry'; rows: CarryNet[] }
   /** A strike resolved (broadcast: everyone sees the sparks at that anvil). n = the owner's request number (auto = -1). */
   | { t: 'forged'; id: number; r: StrikeNet; n: number }
   | { t: 'fsync'; s: ForgeSync }

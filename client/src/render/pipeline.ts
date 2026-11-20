@@ -79,6 +79,13 @@ export class Pipeline {
   /** Nhập thần: warm stepped edge vignette 0..1 (0 = off, costs nothing). */
   setWarm(k: number): void { this.post.uniforms.uWarm.value = Math.max(0, Math.min(1, k)); }
 
+  /** Coloured stepped edge vignette 0..1 (fire-ring pain, ghost); `color` is sRGB hex, only read when given. */
+  setVignette(k: number, color?: string): void {
+    const u = this.post.uniforms;
+    u.uVig.value = Math.max(0, Math.min(1, k));
+    if (color) u.uVigColor.value.setHex(parseInt(color.slice(1), 16), THREE.LinearSRGBColorSpace);
+  }
+
   /** Transition / death grade (LOOK §9): desaturate (optionally keeping heat colors), stepped edge darkening, fade. */
   setGrade(g: { desat?: number; keepHot?: boolean; edge?: number; steps?: number; fade?: number; fadeColor?: string }): void {
     const u = this.post.uniforms;

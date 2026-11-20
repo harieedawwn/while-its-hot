@@ -56,13 +56,6 @@ export function forgeTick(p: MPlayer, dt: number, out: Out[], now = p.forge.time
   if (was !== s.frenzy) out.push({ to: p.id, m: { t: 'fsync', s: forgeSync(s, p.forgeOps) } });
 }
 
-/** Death: the held blade loses levels (never breaks; the form stays at its best). */
-export function deathLoss(p: MPlayer): void {
-  leaveStance(p);
-  const b = p.forge.blade;
-  b.level = Math.max(0, b.level - BALANCE.match.deathLevelLoss);
-}
-
 /** bua_nen: a Hỏng knocks everyone near the anvil back (no damage). */
 function wave(p: MPlayer, all: readonly MPlayer[], out: Out[]): void {
   const a = p.anvil!;
