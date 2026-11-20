@@ -20,7 +20,7 @@ describe('curves (ROUND3 §1)', () => {
   it('p(L) 0.75 at +0 falling linearly to 0.38 at +44; zone 0.22 → 0.10', () => {
     expect(pLen(0)).toBeCloseTo(0.75); expect(pLen(44)).toBeCloseTo(0.38); expect(pLen(22)).toBeCloseTo(0.565);
     expect(zoneFrac(0)).toBeCloseTo(0.22); expect(zoneFrac(44)).toBeCloseTo(0.10);
-    expect(BALANCE.weapons.maxLevel).toBe(45);
+    expect(BALANCE.weapons.maxLevel).toBe(51);
   });
   it('heat bands: forging = full zone, dull ×0.8, cold or burning ×0.6', () => {
     expect([0.1, 0.3, 0.5, 0.9, 0.95].map(heatBand)).toEqual(['cold', 'dull', 'forging', 'forging', 'burning']);
@@ -81,8 +81,8 @@ describe('strike outcomes', () => {
     s.zoneC = phaseAt(s.ring, T_HIT + 3); const c2 = s.zoneC; s.strike(T_HIT + 3); expect(s.zoneC).not.toBe(c2);
     expect(s.zoneK).toBe(1);
   });
-  it('max level 45 for blades and 10 for armor refuse a Lên', () => {
-    const s = session(() => 0.0, 45); expect(s.strike(hit(s, T_HIT)).refused).toBe(true); expect(s.blade.level).toBe(45);
+  it('max level 51 for blades and 10 for armor refuse a Lên', () => {
+    const s = session(() => 0.0, 51); expect(s.strike(hit(s, T_HIT)).refused).toBe(true); expect(s.blade.level).toBe(51);
     const a = session(() => 0.0); a.target = 'armor'; a.armor = 10; expect(a.strike(hit(a, T_HIT)).refused).toBe(true); expect(a.armor).toBe(10);
   });
   it('family cap (training) refuses a Lên over the unlocked level', () => {

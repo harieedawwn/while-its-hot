@@ -7,16 +7,16 @@ import { dmgScale, FAMILIES, familyForms, formFor, passivesOf, timeMulAt, traits
 const base: AttackShape = { dmg: 10, arcDeg: 90, lungeM: 2, staggerS: 0.5, ignoresBlock: false, breaksBlock: false };
 const W = BALANCE.weapons;
 
-describe('weapon data (ROSTER: 4 × 15 + phoi)', () => {
-  it('has 61 unique snake_case ids, no thương left', () => {
-    expect(WEAPONS).toHaveLength(61);
+describe('weapon data (ROSTER: 4 families, 15 rows to +45 plus extras above + phoi)', () => {
+  it('has 64 unique snake_case ids, no thương left', () => {
+    expect(WEAPONS).toHaveLength(64);
     expect(FAMILIES).toEqual(['kiem', 'bua', 'dao', 'tay']);
     expect(new Set(WEAPON_IDS).size).toBe(WEAPON_IDS.length);
     for (const id of WEAPON_IDS) expect(id).toMatch(/^[a-z][a-z0-9_]*$/);
     for (const id of ['giao_sat', 'thuong_thep', 'kich', 'dai_dao', 'tram_ma_dao']) expect(WEAPON_IDS).not.toContain(id);
   });
   it('a form every 3 levels from +3 to +45', () => {
-    for (const f of FAMILIES) expect(familyForms(f).map((w) => w.minLevel)).toEqual(Array.from({ length: 15 }, (_, i) => 3 + 3 * i));
+    for (const f of FAMILIES) expect(familyForms(f).map((w) => w.minLevel)).toEqual(Array.from({ length: familyForms(f).length }, (_, i) => 3 + 3 * i));
     expect(weaponById('phoi').family).toBeNull();
   });
   it('every listed passive is registered', () => {
@@ -36,10 +36,10 @@ describe('weapon data (ROSTER: 4 × 15 + phoi)', () => {
   it('family stats and traits (ROUND3 §4)', () => {
     expect(weaponById('kiem_thep').stats).toMatchObject({ reach: 2.3, light: 12, heavy: 30, comboHits: 3 });
     expect(weaponById('bua_de').stats).toMatchObject({ heavy: 40, light: 15, comboHits: 2 });
-    expect(weaponById('dao_gam').stats).toMatchObject({ light: 7, heavy: 18, comboHits: 4, reach: 1.6 });
+    expect(weaponById('dao_gam').stats).toMatchObject({ light: 8, heavy: 20, comboHits: 4, reach: 1.6 });
     expect(weaponById('gang_sat').stats).toMatchObject({ light: 6, heavy: 20, comboHits: 4, reach: 1.5 });
     expect(weaponById('phoi').stats).toMatchObject({ moveset: 'kiem', light: 9, heavy: 20 });
-    expect(traitsOf(weaponById('dao_gam'))).toMatchObject({ move: 1.2, airJumps: 1, slide: { speed: 1.25, len: 1.3, cd: 0.6 } });
+    expect(traitsOf(weaponById('dao_gam'))).toMatchObject({ move: 1.3, airJumps: 1, slide: { speed: 1.25, len: 1.3, cd: 0.6 } });
     expect(traitsOf(weaponById('gang_sat')).taken).toBe(1.1);
     expect(traitsOf(weaponById('bua_ren')).move).toBe(0.92);
     expect(traitsOf(weaponById('phoi'))).toMatchObject({ move: 1, airJumps: 0, taken: 1 });

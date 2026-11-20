@@ -25,15 +25,6 @@ describe('weapon-lab files', () => {
     }
   });
   it('files outside the roster are only the known strays', () => {
-    expect(labSkipped(roster).sort()).toMatchInlineSnapshot(`
-      [
-        "bua_cu_chuy",
-        "dao_bong_toi",
-        "kiem_tram_nguyet",
-        "phi_dao_loi_than",
-        "the_dao_pha_thu",
-        "thien_nghich_mau",
-      ]
-    `);
+    expect(labSkipped(roster).sort()).toEqual(['the_dao_pha_thu']);
   });
 });

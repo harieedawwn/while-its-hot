@@ -32,7 +32,10 @@ export const BALANCE = {
    * through shared/src/passives.ts. Damage = base × scale(family, level) × armor × passives.
    */
   weapons: {
-    maxLevel: 45,
+    /** Highest blade level (the 15 ROSTER rows end at +45; extra forms go on top). */
+    maxLevel: 51,
+    /** Forge odds/zone curves keep their old span (p0 at +0 → pEnd at +oddsSpan−1) so extra levels don't slow levelling. */
+    oddsSpan: 45,
     /** Level at which the blank becomes a family form (the 4-way pick). Forms change every formEvery levels. */
     familyPick: 3,
     formEvery: 3,
@@ -46,8 +49,8 @@ export const BALANCE = {
         move: 1, airJumps: 0, slide: { speed: 1, len: 1, cd: 1 }, taken: 1 },
       bua: { light: 15, comboHits: 2, comboS: 0.7, heavy: 40, heavyKind: 'overhead', reach: 2.0, dmgK: 0.02, dmgQ: 0.0012,
         speedUp: { k: 0.3, from: 12, to: 30 }, move: 0.92, airJumps: 0, slide: { speed: 1, len: 1, cd: 1 }, taken: 1 },
-      dao: { light: 7, comboHits: 4, comboS: 0.24, heavy: 18, heavyKind: 'lunge', reach: 1.6, dmgK: 0.035, dmgQ: 0,
-        move: 1.2, airJumps: 1, slide: { speed: 1.25, len: 1.3, cd: 0.6 }, taken: 1 },
+      dao: { light: 8, comboHits: 4, comboS: 0.24, heavy: 20, heavyKind: 'lunge', reach: 1.6, dmgK: 0.035, dmgQ: 0,
+        move: 1.3, airJumps: 1, slide: { speed: 1.25, len: 1.3, cd: 0.6 }, taken: 1 },
       tay: { light: 6, comboHits: 4, comboS: 0.26, heavy: 20, heavyKind: 'punch', reach: 1.5, dmgK: 0.03, dmgQ: 0,
         move: 1.12, airJumps: 0, slide: { speed: 1, len: 1, cd: 1 }, taken: 1.1 },
     },

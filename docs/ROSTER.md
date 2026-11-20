@@ -16,7 +16,7 @@ kiem | 9 | kiem_ban_rong | Kiếm bản rộng | lưỡi rộng, rãnh máu sâu
 kiem | 12 | truong_kiem | Trường kiếm | dài, chuôi hai tay, quả chuôi tròn | đòn 3 +20%; đỡ chuẩn +30 ms; đâm nặng xuyên đỡ | có
 kiem | 15 | kiem_toi_lua | Kiếm tôi lửa | thép đen, vân tôi đỏ cam dọc lưỡi | như trên + trúng đòn đốt 3/s trong 2 s | có
 kiem | 18 | kiem_rang_cua | Kiếm răng cưa | lưỡi răng cưa một bên, gáy dày có đinh tán | đốt 4/s; trúng đòn làm chậm 20% 1.5 s; đâm nặng xuyên đỡ | có
-kiem | 21 | kiem_song_nhan | Song nhận | hai lưỡi song song cách nhau 3 cm, nối bằng chốt đồng | đòn nặng phóng vệt chém bay 10 m (14, cd 3 s); đốt; chậm | cần
+kiem | 21 | kiem_tram_nguyet | Đại Đao Trảm Nguyệt | hai lưỡi song song cách nhau 3 cm, nối bằng chốt đồng | đòn nặng phóng vệt chém bay 10 m (14, cd 3 s); đốt; chậm | cần
 kiem | 24 | kiem_dong_xanh | Kiếm đồng xanh | đồng rỉ lục, hoa văn trống đồng khắc chìm, chuôi tròn | đỡ chuẩn tự phóng vệt chém trả (cd 2 s); vệt chém nặng 18; đốt | có
 kiem | 27 | kiem_xich | Kiếm xích | lưỡi chia 6 khúc nối xích, mở ra như roi | đòn nặng quật roi 6 m kéo mục tiêu về 3 m (cd 4 s); đòn nhẹ tầm +0.5 m; vệt chém | có
 kiem | 30 | kiem_hac_thach | Kiếm hắc thạch | đá núi lửa đen bóng, cạnh mẻ sắc, khe nứt cam như dung nham | mỗi đòn trúng để lại vết nứt dung nham 3 s (5/s); vệt chém bay đốt | có
@@ -31,7 +31,7 @@ bua | 9 | chuy_gai | Chùy gai | đầu tròn gai nhọn | phá đỡ; nặng ch
 bua | 12 | bua_chien | Búa chiến | một mặt phẳng, một mỏ nhọn, cán bọc da | phá đỡ; choáng; slam đáp đất 20 trong 3 m | có
 bua | 15 | bua_de | Búa đe | đầu là một cái đe nhỏ | như trên + đòn nặng hất tung kèm sóng đẩy | có
 bua | 18 | bua_piston | Búa piston | đầu trụ thép, ống piston lộ, đinh tán | đòn nặng nổ piston: sóng chấn 4 m, 18 (cd 3 s); phá đỡ; choáng; slam | có
-bua | 21 | bua_nam_cham | Búa nam châm | đầu chữ U sơn đỏ, hai cực xám | đòn nặng hút mọi người trong 6 m về trước mặt (cd 5 s); piston; slam | cần
+bua | 21 | bua_cu_chuy | Cự Chùy Trọng Lực | đầu chữ U sơn đỏ, hai cực xám | đòn nặng hút mọi người trong 6 m về trước mặt (cd 5 s); piston; slam | cần
 bua | 24 | bua_dung_nham | Búa dung nham | đá đen nứt, lõi cam chảy, đai thép cháy sém | đập đất để lại vũng dung nham r 2.5 m 4 s (8/s); slam để vũng to; hút | có
 bua | 27 | bua_chuong | Búa chuông | đầu là chuông đồng lớn nằm ngang, cán dài | đòn trúng: tiếng chuông làm địch lắc camera + chậm 30% 2 s; đòn nặng sóng âm r 5 m; dung nham | có
 bua | 30 | bua_cao_su | Búa cao su | đầu cao su vàng quá khổ, dây thừng quấn cán | đòn nặng bắn địch bay 15 m, nảy trên tường như bóng bàn; đòn nhẹ đẩy 4 m | có
@@ -70,3 +70,5 @@ tay | 36 | gang_khong_lo | Găng khổng lồ | găng to gấp 3, đinh tán to 
 tay | 39 | gang_trong_luc | Găng trọng lực | quả cầu đen lơ lửng trong lòng bàn tay, vành đồng | đòn nặng ném hố đen 2.5 s r 6 m (cd 8 s); đòn nhẹ hút nhẹ; bàn tay khổng lồ | có
 tay | 42 | gang_thien_thach | Găng thiên thạch | đá vũ trụ xanh đen, mảnh kim loại cắm vào | mỗi đòn 4 gọi thiên thạch nhỏ trên đầu mục tiêu (20); đòn nặng mưa 5 thiên thạch (cd 8 s) | có
 tay | 45 | gang_troi | Tay trời | găng đồng vàng khắc hoa văn mây, vòng kim loại sau cổ tay | đòn nặng: bàn tay khổng lồ từ trời ấn xuống r 7 m, 50 (cd 9 s); mọi đòn nhẹ đẩy 4 m; đánh trúng hồi máu | có
+
+Extra rows above +45 (maxLevel 51, forge odds keep the 45-level span via `BALANCE.weapons.oddsSpan`): kiem +48 thien_nghich_mau · dao +48 phi_dao_loi_than, +51 dao_bong_toi (all `có`). +21 kiem/bua rows were replaced by the lab's Trảm Nguyệt / Cự Chùy.

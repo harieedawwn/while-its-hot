@@ -18,7 +18,7 @@ const make = (w: string) => { const s = createMoveState([0, 0.5, 0]); s.traits =
 
 describe('family movement traits', () => {
   it('run speed follows the family multiplier', () => {
-    for (const [w, k] of [['kiem_tho', 1], ['bua_ren', 0.92], ['dao_gam', 1.2], ['gang_sat', 1.12]] as const) {
+    for (const [w, k] of [['kiem_tho', 1], ['bua_ren', 0.92], ['dao_gam', 1.3], ['gang_sat', 1.12]] as const) {
       const s = run(make(w), 0.6, () => ({ my: 1 }));
       expect(Math.hypot(s.vel.x, s.vel.z), w).toBeCloseTo(M.runSpeed * k, 3);
     }

@@ -40,7 +40,7 @@ export function heatZoneMul(h: number): number {
 export function curveLevel(level: number, target: ForgeTarget): number {
   return Math.max(0, target === 'armor' ? level * F.armor.levelMul : level);
 }
-const along = (a: number, b: number, level: number): number => a + (b - a) * Math.min(1, level / (W.maxLevel - 1));
+const along = (a: number, b: number, level: number): number => a + (b - a) * Math.min(1, level / (W.oddsSpan - 1));
 
 /** Chance that a Trúng is a Lên. */
 export function pLen(level: number, target: ForgeTarget = 'blade'): number { return along(F.p.p0, F.p.pEnd, curveLevel(level, target)); }
