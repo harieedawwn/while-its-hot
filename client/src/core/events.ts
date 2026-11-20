@@ -1,4 +1,4 @@
-import type { AttackKind, Family, Zone } from '@wih/shared';
+import type { AtomFx, AttackKind, Ent, EntKind, Family, StatusKind, Zone } from '@wih/shared';
 
 /** Hit results the bus carries (parries have their own event). */
 export type HitKind = 'hit' | 'blocked' | 'guardbreak' | 'pierced';
@@ -23,6 +23,12 @@ export interface GameEvents {
   'combat:hit': { attacker: number; target: number; dmg: number; zone: Zone; kind: AttackKind; result: HitKind; x: number; y: number; z: number };
   'combat:parry': { parrier: number; attacker: number; x: number; y: number; z: number };
   'combat:kill': { target: number; by: number; x?: number; y?: number; z?: number };
+  /** Form effects (phase 28). dmg: effect damage on target (no defense); status: a movement status landed on id;
+   *  atom: an instant moment (lightning, wave, bell…); ent: an effect entity appeared/ended (EffectView diffs them). */
+  'fx:dmg': { target: number; by: number; dmg: number; k: string; x: number; y: number; z: number };
+  'fx:status': { id: number; k: StatusKind; s: number; x: number; y: number; z: number };
+  'fx:atom': AtomFx;
+  'fx:ent': { on: boolean; k: EntKind; e: Ent };
   /** One 0.5 s tick of fire-ring damage on combatant `id` (0 = us) at that spot. */
   'ring:hurt': { id: number; x: number; y: number; z: number };
   /** Forging (forge/*). act: place/placed/lift = anvil; owner = combatant id. */

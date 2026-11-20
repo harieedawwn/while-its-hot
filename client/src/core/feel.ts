@@ -191,6 +191,16 @@ export const FEEL = {
     trail: { segments: 8, lifeS: 0.1, minSpeed: 3.5, alpha: 0.42 },
     /** Fire ring: card width/height (m), embers per second and their life, world tint inside (0..1). */
     ring: { cardW: 1.5, cardH: 3.6, rows: 2, embersPerS: 22, emberLife: [1.2, 2.4] as const, tint: 0.22 },
+    /**
+     * Form effects (phase 28, fx/effect-*.ts): flat colors (no glow; heat = heat-ramp step 0..1 for molten things),
+     * slash crescent size (m), meteor drop height, embers per second over lava, chain-lightning flash time (s).
+     */
+    effects: {
+      steel: '#c9ced2', ice: '#b8d4de', iceFloor: '#9fc0cc', sun: '#f2e6b8', lava: '#3a1810', bolt: '#e8eef2', hole: '#050407',
+      rimEclipse: '#c7a24a', rimStar: '#f4d9a0', rock: '#3b3734', anchor: '#5a4a3c', blade: '#d6dade', pin: '#2c2a33', wave: '#8a8178',
+      bell: '#b08a48', column: 0.74, slashBurn: 0.7, star: 0.9,
+      slash: { w: 1.7, arcDeg: 130, thick: 0.24 }, meteor: { dropH: 16 }, lavaEmbersPerS: 10, boltS: 0.26, whipS: 0.2,
+    },
   },
   /** Audio (AUDIO §1/§2/§5). Gains in dB relative to their bus; the mix snapshot is the starting point, adjust by listening notes. */
   audio: {

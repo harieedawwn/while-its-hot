@@ -7,6 +7,10 @@ import { FLAG, type NetState, type Snapshot } from '../net/codec';
 import type { ForgeOp, MatchClientMsg, MatchServerMsg, Vec3 } from '../net/match-msgs';
 import { rulesOf, type RoomSettings, type ServerMsg } from '../net/protocol';
 import { slamEffects } from '../passives';
+import type { Atom } from '../effects/atoms';
+import { EffectWorld } from '../effects/world';
+import { framesFor } from '../combat/frames';
+import { ServerSink } from './effect-sink';
 import { SAFE_RESPAWN } from '../world/arenas/foundry';
 import { knockFrom, serverEffects } from './effects';
 import { forgeOp, forgeTick, leaveStance } from './forge-auth';
@@ -33,6 +37,9 @@ export class MatchAuthority {
   private now = 0;
   private last = 0;
   private ctx: HitCtx;
+  /** Form effects (phase 28): projectiles, fields, statuses. */
+  readonly effects: EffectWorld;
+  private sink: ServerSink;
   /** Messages produced before the first tick (the first cage). */
   private pending: Out[] = [];
 
@@ -46,12 +53,28 @@ export class MatchAuthority {
     });
     this.pickups = new Pickups(ids.length, now, rand);
     const flow = this.flow = new RoundFlow(this.players, rulesOf(rules), rand, (t, d, by, out) => this.harm(t, d, by, out), (n, out) => this.fightStarts(n, out));
-    this.ctx = { list: [...this.players.values()], get truceUntil() { return flow.truceUntil(); }, harm: (t, d, by, out) => this.harm(t, d, by, out) };
+    this.sink = new ServerSink(this.players, (t, d, by, out) => this.harm(t, d, by, out), (p) => this.immune(p));
+    this.effects = new EffectWorld(this.sink);
+    this.ctx = { list: [...this.players.values()], get truceUntil() { return flow.truceUntil(); }, harm: (t, d, by, out) => this.harm(t, d, by, out), atom: (a, t, e, out) => this.atom(a, t, e, out) };
     flow.start(now, this.pending, skipCage);
+  }
+
+  /** Effects ignore whoever melee could not hurt now (truce, i-frames, spawn protection, Nhập thần). */
+  private immune(p: MPlayer): boolean {
+    return this.now < this.flow.truceUntil() || this.now < p.ifUntil || this.now < p.spawnUntil || (p.stance && p.forge.immune);
+  }
+  private eb(p: MPlayer) { return this.sink.bodies().find((b) => b.id === p.id) ?? null; }
+  /** A toolkit atom from a hit/parry/slam hook into the effect world. */
+  private atom(src: MPlayer, t: MPlayer, a: Atom, out: Out[]): void {
+    const s = this.eb(src);
+    if (!s) return;
+    this.sink.out = out;
+    this.effects.apply(s, src === t ? null : this.eb(t), a);
   }
 
   /** The fight opens: a fresh pedestal of blanks replaces whatever lay around. */
   private fightStarts(now: number, out: Out[]): void {
+    this.effects?.clear();
     const old = this.pickups.list.map((k) => k.id);
     this.pickups = new Pickups([...this.players.values()].filter((p) => p.forge.carried < M.maxCarry).length, now, this.rand);
     out.push({ to: 'all', m: { t: 'pickup', add: this.pickups.list.slice(), del: old, by: 0 } });
@@ -92,7 +115,13 @@ export class MatchAuthority {
     const p = this.players.get(id), out: Out[] = [];
     if (!p) return out;
     switch (m.t) {
-      case 'atk': recordSwing(p, m); break;
+      case 'atk':
+        if (recordSwing(p, m)) {
+          const b = this.eb(p), sw = p.swings[p.swings.length - 1];
+          this.sink.out = this.pending;
+          if (b) this.effects.swing(b, sw.kind, sw.combo, framesFor(p.forge.form, sw.kind, sw.combo).w);
+        }
+        break;
       case 'hit': { const t = this.players.get(m.tg); if (t) claimHit(this.ctx, p, t, m, now, out); break; }
       case 'parry': if (p.alive) p.parryAt = m.at; break;
       case 'slam': this.slam(p, out); break;
@@ -117,7 +146,7 @@ export class MatchAuthority {
       if (o === p || !o.alive || !o.online || flatDist(o, p) > BALANCE.move.slam.knockR) continue;
       out.push({ to: o.id, m: { t: 'knock', kn: knockFrom(p.st.x, p.st.z, o, C.slamKnock, C.slamLift) } });
     }
-    serverEffects(p, p, slamEffects(passivesOf(p.forge.form)), [0, 0, 0], this.ctx.list, this.ctx.harm, out);
+    serverEffects(p, p, slamEffects(passivesOf(p.forge.form)), [0, 0, 0], this.ctx.list, this.ctx.harm, out, this.ctx.atom);
   }
 
   private anvil(p: MPlayer, m: Extract<MatchClientMsg, { t: 'anvil' }>, out: Out[]): void {
@@ -158,6 +187,8 @@ export class MatchAuthority {
     this.pending = [];
     this.last = now;
     this.flow.tick(now, out);
+    this.sink.out = out;
+    if (this.flow.fighting) this.effects.tick(dt);
     for (const p of this.players.values()) {
       if (p.alive && p.burnT > 0) { p.burnT -= dt; this.harm(p, p.burnDps * dt, p.burnBy, out); }
       if (p.alive) forgeTick(p, dt, out, now / 1000);
@@ -181,6 +212,6 @@ export class MatchAuthority {
       if (p.stance) flags |= FLAG.forging;
       players.push({ id: p.id, state: { ...p.st, flags, weapon: Math.max(0, WEAPON_IDS.indexOf(f.form.id)), level: f.blade.level, armor: f.armor, hp: p.hp } });
     }
-    return { serverTime: Math.max(0, Math.round(now)) >>> 0, players };
+    return { serverTime: Math.max(0, Math.round(now)) >>> 0, players, ents: this.effects.ents() };
   }
 }

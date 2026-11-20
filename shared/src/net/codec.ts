@@ -1,4 +1,6 @@
-/** Binary State (client->server, 20 Hz) and Snapshot (server->client). Little-endian DataView. */
+import { ENT_KINDS, type Ent } from '../effects/atoms';
+
+/** Binary State (client->server, 20 Hz) and Snapshot (server->client, + effect entities). Little-endian DataView. */
 export interface NetState {
   x: number; y: number; z: number; vx: number; vy: number; vz: number;
   yaw: number; pitch: number; anim: number; animT: number; flags: number; weapon: number; level: number;
@@ -39,18 +41,47 @@ export function decodeState(b: ArrayBuffer): NetState | null {
   const dv = new DataView(b); return dv.getUint8(0) === MSG_STATE ? getState(dv, 1) : null;
 }
 export interface SnapEntry { id: number; state: NetState }
-export interface Snapshot { serverTime: number; players: SnapEntry[] }
+/** ents = live effect entities (phase 28), at most 255. */
+export interface Snapshot { serverTime: number; players: SnapEntry[]; ents?: Ent[] }
+const ENT_BYTES = 21;
+const cm = (v: number) => clampI16(v * 100);
+function putEnt(dv: DataView, o: number, e: Ent): void {
+  dv.setUint16(o, e.id, true); dv.setUint8(o + 2, Math.max(0, ENT_KINDS.indexOf(e.k))); dv.setUint8(o + 3, e.o);
+  dv.setInt16(o + 4, cm(e.x), true); dv.setInt16(o + 6, cm(e.y), true); dv.setInt16(o + 8, cm(e.z), true);
+  const yaw = Math.atan2(Math.sin(e.yaw), Math.cos(e.yaw));
+  dv.setInt16(o + 10, clampI16((yaw / Math.PI) * 32767), true);
+  dv.setUint16(o + 12, Math.min(65535, Math.round(e.age * 1000)), true);
+  dv.setUint8(o + 14, Math.max(0, Math.min(255, Math.round(e.r * 20))));
+  dv.setInt16(o + 15, cm(e.vx), true); dv.setInt16(o + 17, cm(e.vy), true); dv.setInt16(o + 19, cm(e.vz), true);
+}
+function getEnt(dv: DataView, o: number): Ent {
+  return {
+    id: dv.getUint16(o, true), k: ENT_KINDS[dv.getUint8(o + 2)] ?? 'slash', o: dv.getUint8(o + 3),
+    x: dv.getInt16(o + 4, true) / 100, y: dv.getInt16(o + 6, true) / 100, z: dv.getInt16(o + 8, true) / 100,
+    yaw: (dv.getInt16(o + 10, true) / 32767) * Math.PI, age: dv.getUint16(o + 12, true) / 1000, life: 0, r: dv.getUint8(o + 14) / 20,
+    vx: dv.getInt16(o + 15, true) / 100, vy: dv.getInt16(o + 17, true) / 100, vz: dv.getInt16(o + 19, true) / 100,
+  };
+}
 export function encodeSnapshot(s: Snapshot): ArrayBuffer {
-  const b = new ArrayBuffer(6 + s.players.length * (1 + STATE_BYTES)), dv = new DataView(b);
+  const ents = (s.ents ?? []).slice(0, 255), pEnd = 6 + s.players.length * (1 + STATE_BYTES);
+  const b = new ArrayBuffer(pEnd + (ents.length ? 1 + ents.length * ENT_BYTES : 0)), dv = new DataView(b);
   dv.setUint8(0, MSG_SNAPSHOT); dv.setUint32(1, s.serverTime >>> 0, true); dv.setUint8(5, s.players.length);
   s.players.forEach((p, i) => { const o = 6 + i * (1 + STATE_BYTES); dv.setUint8(o, p.id); putState(dv, o + 1, p.state); });
+  if (ents.length) { dv.setUint8(pEnd, ents.length); ents.forEach((e, i) => putEnt(dv, pEnd + 1 + i * ENT_BYTES, e)); }
   return b;
 }
 export function decodeSnapshot(b: ArrayBuffer): Snapshot | null {
   if (b.byteLength < 6) return null;
   const dv = new DataView(b); if (dv.getUint8(0) !== MSG_SNAPSHOT) return null;
-  const n = dv.getUint8(5); if (b.byteLength !== 6 + n * (1 + STATE_BYTES)) return null;
+  const n = dv.getUint8(5), pEnd = 6 + n * (1 + STATE_BYTES);
+  if (b.byteLength < pEnd) return null;
   const players: SnapEntry[] = [];
   for (let i = 0; i < n; i++) { const o = 6 + i * (1 + STATE_BYTES); players.push({ id: dv.getUint8(o), state: getState(dv, o + 1) }); }
-  return { serverTime: dv.getUint32(1, true), players };
+  const ents: Ent[] = [];
+  if (b.byteLength > pEnd) {
+    const m = dv.getUint8(pEnd);
+    if (b.byteLength !== pEnd + 1 + m * ENT_BYTES) return null;
+    for (let i = 0; i < m; i++) ents.push(getEnt(dv, pEnd + 1 + i * ENT_BYTES));
+  }
+  return { serverTime: dv.getUint32(1, true), players, ents };
 }

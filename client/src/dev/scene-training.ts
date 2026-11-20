@@ -121,6 +121,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   (window as unknown as { __yard: unknown }).__yard = stats;
   const offs = [
     bus.on('combat:hit', (e) => { if (e.attacker === lf.c.id && e.result !== 'blocked') { dps.add(simT, e.dmg); stats.hits++; } }),
+    bus.on('fx:dmg', (e) => { if (e.by === lf.c.id) dps.add(simT, e.dmg); }),
     bus.on('forge:strike', (e) => { if (e.refused) stats.refused++; }),
   ];
 
@@ -142,7 +143,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   };
   const reset = () => {
     player.s.pos.copy(ORIGIN); player.s.vel.set(0, 0, 0); player.yaw = YAW; player.pitch = 0; lf.c.revive();
-    forge.leave(); dummies.forEach((d) => d.respawn()); dps.reset();
+    forge.leave(); dummies.forEach((d) => d.respawn()); dps.reset(); world.effects.clear();
   };
   const dev = (e: KeyboardEvent) => { if (e.code === 'KeyR') reset(); };
   addEventListener('keydown', dev);

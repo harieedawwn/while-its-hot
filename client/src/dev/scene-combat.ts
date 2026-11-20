@@ -36,6 +36,8 @@ import { disposeTree } from '../render/dispose';
  * Params: `weapon=<id>` `level=0..20` `dw=<dummy weapon>` `modes=a,b,..` `tp=1` third person.
  * Frozen shots: `demo=light1..4|heavy|charge|slide|parry|riposte|block&t=<s>` replays a scripted
  * run to t (after a settle) and freezes; `cam` overrides the camera. R resets, `window.__combat` = counters.
+ * Form-effect bench (phase 28): `weapon=<form>&demo=heavy&t=0.86..1.5&modes=idle,idle,idle&cam=-18,1.67,-17,0,-0.2`
+ * (a heavy strikes at ~0.82 s; lights: `demo=light3`), `window.__effects` = the local EffectWorld.
  */
 const ORIGIN = new THREE.Vector3(-18, 0.05, -17);
 const YAW = 0;
@@ -92,7 +94,7 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   const fxl = new FxLayer({ scene, rig, pipeline, world: arena.world, combat: world, seed: params.seed, blood: params.get('blood') === '0' ? false : undefined });
   fxl.trail(() => lf.vm.weapon, () => lf.c.fighter.attacking, (m) => lf.vm.attach(m));
   for (let i = 0; i < modes.length; i++) {
-    const n = modes.length, pos = demo ? spot(demo.dist ?? 2.0, 0) : spot(n === 1 ? 2.6 : 4.4 - Math.abs(i - (n - 1) / 2) * 0.5, (i - (n - 1) / 2) * 1.8);
+    const n = modes.length, pos = demo && n === 1 ? spot(demo.dist ?? 2.0, 0) : spot(n === 1 ? 2.6 : 4.4 - Math.abs(i - (n - 1) / 2) * 0.5, (i - (n - 1) / 2) * 1.8);
     const dm = await loadWeapon(dw.id, ctx);
     const d = new Dummy(i + 1, arena.world, lib, dw, dm, pos, YAW + Math.PI, modes[i], PLAYER_COLORS[(i + 1) % PLAYER_COLORS.length]);
     world.add(d.c); dummies.push(d); scene.add(d.ch.root);
@@ -100,7 +102,8 @@ const make: SceneFactory = async ({ renderer, pipeline, params, width, height })
   }
 
   const stats = { hits: 0, parries: 0, blocks: 0, kills: 0, last: '', get me() { const f = lf.c.fighter; return `${f.phase} ${f.kind}${f.combo} #${f.swingId} t=${f.t.toFixed(3)} hp=${lf.c.hp}`; }, get dummies() { return dummies.map((d) => `${d.mode}:${d.c.fighter.phase}:${d.c.hp.toFixed(0)}`).join(' '); } };
-  (window as unknown as { __combat: unknown }).__combat = stats;
+  (window as unknown as { __combat: unknown; __effects: unknown }).__combat = stats;
+  (window as unknown as { __effects: unknown }).__effects = world.effects;
   const offs = [
     bus.on('combat:hit', (e) => { stats.hits++; if (e.result === 'blocked') stats.blocks++; stats.last = `${e.attacker}>${e.target} ${e.result} ${e.dmg.toFixed(1)} ${e.zone}`; }),
     bus.on('combat:parry', () => { stats.parries++; }),

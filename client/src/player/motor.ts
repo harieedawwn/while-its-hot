@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { BALANCE } from '@wih/shared';
+import { afflictSpeed, canJump, tickAfflict, wellPull } from './afflict';
 import type { Kinematics } from './kinematics';
 import { type JumpKind, wishDir, type MoveInput, type MoveState } from './move-state';
 
@@ -32,12 +33,15 @@ export function stepMove(s: MoveState, input: MoveInput, dt: number, kin: Kinema
   s.sinceSlam += dt;
   s.sinceWall += dt;
   s.clinging = false;
+  const af = s.af;
+  tickAfflict(af, dt);
+  const frozen = af.freezeT > 0;
 
   // slide on the ground while held; a fresh press in the air is a slam
   if (!input.slideHeld) s.slideLock = false;
   s.slideCd = Math.max(0, s.slideCd - dt);
   const tr = s.traits, slideMax = M.slide.maxS * tr.slide.len;
-  if (input.slideHeld && s.grounded && !s.sliding && !s.slideLock && s.slideCd <= 0) {
+  if (!frozen && input.slideHeld && s.grounded && !s.sliding && !s.slideLock && s.slideCd <= 0) {
     s.sliding = true; s.slideT = 0;
     const sp = Math.hypot(s.vel.x, s.vel.z);
     if (hasWish) s.slideDir.copy(wish).normalize();
@@ -53,7 +57,7 @@ export function stepMove(s: MoveState, input: MoveInput, dt: number, kin: Kinema
   if (s.sliding && s.slideT >= slideMax && kin.fits(s.pos, M.body.height)) { endSlide(s); s.slideLock = true; }
 
   // jump: ground (coyote, bounce, slide-jump) > wall jump; otherwise the press stays buffered
-  if (s.jumpBuf > 0) tryJump(s);
+  if (s.jumpBuf > 0 && canJump(af)) tryJump(s);
 
   // velocity per mode; gravity is split around the move (exact v²/2g apex at any tick rate)
   let fall = false, cling = false;
@@ -67,11 +71,11 @@ export function stepMove(s: MoveState, input: MoveInput, dt: number, kin: Kinema
     s.vel.x = s.slideDir.x * sp; s.vel.z = s.slideDir.z * sp;
     if (!s.grounded) { s.vel.y -= M.gravity * dt * 0.5; fall = true; }
   } else if (s.grounded) {
-    const sp = M.runSpeed * tr.move * s.speedMul;
-    approachH(s.vel, wish.x * sp, wish.z * sp, M.groundAccel * dt * (s.pushT > 0 ? PUSH_CONTROL : 1));
+    const sp = M.runSpeed * tr.move * s.speedMul * afflictSpeed(af);
+    approachH(s.vel, wish.x * sp, wish.z * sp, M.groundAccel * dt * (s.pushT > 0 ? PUSH_CONTROL : 1) * (af.slipT > 0 ? af.grip : 1));
   } else {
     // strong air control that never bleeds speed gained from slides
-    if (hasWish) {
+    if (hasWish && !frozen) {
       const cap = Math.max(M.runSpeed * tr.move, Math.hypot(s.vel.x, s.vel.z));
       approachH(s.vel, wish.x * cap, wish.z * cap, M.airAccel * dt * (s.pushT > 0 ? PUSH_CONTROL : 1));
     }
@@ -83,8 +87,16 @@ export function stepMove(s: MoveState, input: MoveInput, dt: number, kin: Kinema
   // posture: low while sliding, and until there is room to stand
   s.low = s.sliding || (s.low && !kin.fits(s.pos, M.body.height));
 
-  const vyBefore = s.vel.y, wasGrounded = s.grounded;
+  wellPull(s, dt);
+  const vyBefore = s.vel.y, wasGrounded = s.grounded, vx0 = s.vel.x, vz0 = s.vel.z;
   kin.move(s, dt);
+  // bua_cao_su: a body flying from a big knock bounces off walls like a ball
+  if (af.bounceT > 0 && s.sinceWall === 0 && vx0 * s.wallN.x + vz0 * s.wallN.z < -2) {
+    const d = vx0 * s.wallN.x + vz0 * s.wallN.z;
+    s.vel.x = (vx0 - 2 * d * s.wallN.x) * 0.85; s.vel.z = (vz0 - 2 * d * s.wallN.z) * 0.85;
+    s.vel.y = Math.max(s.vel.y, 3);
+    s.events.push({ k: 'bounce' });
+  }
   if (fall && !s.grounded) s.vel.y -= M.gravity * dt * 0.5;
   if (cling && !s.grounded && s.vel.y < -M.wall.clingFall) { s.vel.y = -M.wall.clingFall; s.clinging = true; }
 

@@ -64,7 +64,22 @@ export class NetCombat implements HitResolver {
       case 'ghost': if (m.id === this.d.me()) this.d.ghosted(); break;
       case 'rtick': this.ringTick(m.id); break;
       case 'heal': this.d.lf.c.hp = m.hp; break;
-      case 'knock': pushMove(this.d.lf.c.body.s, m.kn[0], m.kn[2], C.pushS, m.kn[1]); break;
+      case 'knock': {
+        const st = this.d.lf.c.body.s;
+        pushMove(st, m.kn[0], m.kn[2], m.ps ?? C.pushS, m.kn[1]);
+        if (m.b) st.af.bounceT = m.ps ?? 1;
+        break;
+      }
+      case 'status': this.d.world.byId(this.local(m.tg))?.status(m.k, m.s, m.v, m.p); break;
+      case 'atom': bus.emit('fx:atom', { ...m.a, o: this.local(m.a.o) }); break;
+      case 'edmg': {
+        const t = this.d.world.byId(this.local(m.tg));
+        if (!t) break;
+        if (t.netOwned || t.id === 0) t.hp = m.hp;
+        const p = t.body.s.pos;
+        bus.emit('fx:dmg', { target: t.id, by: this.local(m.by), dmg: m.dmg, k: m.k, x: p.x, y: p.y + 1.1, z: p.z });
+        break;
+      }
       default: break;
     }
   }

@@ -113,15 +113,11 @@ describe('passive hooks', () => {
   });
   it('lists the ids that are still no-ops (phase 28: kiem/bua, phase 29: dao/tay empty this list)', () => {
     expect(pendingPassives().sort()).toEqual([
-      'anchor_throw', 'backstab_bonus', 'bell_ring', 'bell_wave_heavy', 'black_hole_heavy', 'blade_storm', 'chain_lightning_heavy',
-      'chain_whip', 'combo4_knock', 'fire_column_heavy', 'fireball_heavy', 'flying_slash', 'flying_slash_burn', 'flying_slash_strong',
-      'freeze_combo3', 'freeze_combo4', 'giant_hand', 'gravity_pin', 'gravity_well_throw', 'heal_on_hit', 'heal_on_hit_2', 'heavy_push',
-      'heavy_push_far', 'hook_lunge', 'iceball_heavy', 'kill_full_heal', 'lava_crack', 'lava_pool_ground', 'light_pull', 'light_push',
-      'light_reach_plus', 'light_shockwave', 'magnet_pull_heavy', 'magnet_punch', 'meteor_combo4', 'meteor_heavy', 'meteor_rain',
-      'mountain_crack', 'orbit_blades', 'parry_blink', 'parry_slash', 'piston_blast', 'piston_charge', 'poison_on_hit', 'rift_dash',
-      'rocket_fist', 'rubber_launch', 'shadow_invis', 'sky_hand', 'slam_double', 'slam_lava_big', 'slash_all_lights', 'slash_ice_floor',
-      'slide_decoy', 'slide_fire_trail', 'slide_long', 'slow_on_hit', 'spark_on_hit', 'speed_stacks', 'star_black_hole', 'stone_wall',
-      'throw_burn', 'throw_knife', 'throw_poison', 'time_slow_heavy', 'triple_jump',
+      'backstab_bonus', 'blade_storm', 'combo4_knock', 'fireball_heavy', 'freeze_combo4', 'giant_hand', 'gravity_well_throw',
+      'heal_on_hit', 'heal_on_hit_2', 'heavy_push', 'heavy_push_far', 'hook_lunge', 'iceball_heavy', 'kill_full_heal',
+      'light_pull', 'magnet_punch', 'meteor_combo4', 'meteor_rain', 'parry_blink', 'piston_charge', 'poison_on_hit', 'rift_dash',
+      'rocket_fist', 'shadow_invis', 'sky_hand', 'slide_decoy', 'slide_fire_trail', 'slide_long', 'spark_on_hit', 'speed_stacks',
+      'stone_wall', 'throw_burn', 'throw_knife', 'throw_poison', 'time_slow_heavy', 'triple_jump',
     ]);
     // every id is used by at least one row
     const used = new Set(WEAPONS.flatMap((w) => w.passives));

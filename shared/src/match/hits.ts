@@ -4,7 +4,8 @@ import { attackShape, framesFor, totalS } from '../combat/frames';
 import { passivesOf, traitsOf } from '../data/weapons';
 import { FLAG } from '../net/codec';
 import type { MatchClientMsg, Vec3 } from '../net/match-msgs';
-import { hitEffects, parryEffects, parryWindow } from '../passives';
+import type { Atom } from '../effects/atoms';
+import { hitEffects, parryEffects, parryWindow, reachFor } from '../passives';
 import { knockFrom, serverEffects, type Harm } from './effects';
 import { flatDist, type MPlayer, type Out } from './mplayer';
 
@@ -16,7 +17,7 @@ const A = BALANCE.net.auth, C = BALANCE.combat;
 type AtkMsg = Extract<MatchClientMsg, { t: 'atk' }>;
 type HitMsg = Extract<MatchClientMsg, { t: 'hit' }>;
 
-export interface HitCtx { list: readonly MPlayer[]; truceUntil: number; harm: Harm }
+export interface HitCtx { list: readonly MPlayer[]; truceUntil: number; harm: Harm; atom?: (src: MPlayer, t: MPlayer, a: Atom, out: Out[]) => void }
 
 /** A new swing. Ignored (claims for it will be stale) if it starts sooner than the previous swing allows. */
 export function recordSwing(a: MPlayer, m: AtkMsg): boolean {
@@ -50,7 +51,7 @@ export function checkClaim(a: MPlayer, t: MPlayer, m: HitMsg, now: number): stri
   if (Math.abs(now - m.at) > A.maxAgeMs) return 'old';
   const f = framesFor(a.forge.form, sw.kind, sw.combo), dt = m.at - sw.at;
   if (dt < f.w * 1000 - A.earlyMs || dt > (f.w + f.a) * 1000 + A.lateMs) return 'timing';
-  if (flatDist(a, t) > a.forge.form.stats.reach + A.reachTol) return 'reach';
+  if (flatDist(a, t) > reachFor(passivesOf(a.forge.form), a.forge.form.stats.reach, sw.kind) + A.reachTol) return 'reach';
   return null;
 }
 
@@ -82,13 +83,13 @@ export function claimHit(ctx: HitCtx, a: MPlayer, t: MPlayer, m: HitMsg, now: nu
     out.push({ to: 'all', m: { t: 'parried', a: a.id, tg: t.id, st: res.attackerStaggerS, stam: res.parrierStamina + fx.parryStamina, p, s: m.s } });
     if (fx.parryHp > 0) out.push({ to: t.id, m: { t: 'heal', hp: t.hp } });
     const kn: Vec3 = [0, 0, 0];
-    serverEffects(t, a, parryEffects(passivesOf(t.forge.form)), kn, ctx.list, ctx.harm, out);
+    serverEffects(t, a, parryEffects(passivesOf(t.forge.form)), kn, ctx.list, ctx.harm, out, ctx.atom);
     return;
   }
   const frames = framesFor(def, sw.kind, sw.combo);
   const kn = knockFrom(a.st.x, a.st.z, t, res.r === 'blocked' ? frames.knock * C.block.knockMul : frames.knock);
   const fx: Out[] = [];
-  if (res.r !== 'blocked') serverEffects(a, t, hitEffects(passivesOf(def), { kind: sw.kind, combo: sw.combo, dist, reach: def.stats.reach }), kn, ctx.list, ctx.harm, fx);
+  if (res.r !== 'blocked') serverEffects(a, t, hitEffects(passivesOf(def), { kind: sw.kind, combo: sw.combo, dist, reach: def.stats.reach }), kn, ctx.list, ctx.harm, fx, ctx.atom);
   const dmg = res.dmg * a.fx.dmgMul;
   const hp = Math.max(0, t.hp - dmg);
   out.push({ to: 'all', m: { t: 'dmg', a: a.id, tg: t.id, dmg, r: res.r, zone: m.zone, kind: sw.kind, hp, sc: res.staminaCost, st: res.staggerS, kn, p, s: m.s } });

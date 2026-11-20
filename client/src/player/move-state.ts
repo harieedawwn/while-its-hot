@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { BALANCE, type FamilyTraits, NO_TRAITS } from '@wih/shared';
+import { type Afflict, newAfflict } from './afflict';
 
 /** One sim tick of intent. mx = strafe right, my = forward (stick or WASD, length ≤ 1). Edges are per tick. */
 export interface MoveInput {
@@ -15,7 +16,8 @@ export type MoveEvent =
   | { k: 'land'; speed: number }
   | { k: 'slide'; on: boolean }
   | { k: 'slamstart' }
-  | { k: 'slam'; pos: THREE.Vector3 };
+  | { k: 'slam'; pos: THREE.Vector3 }
+  | { k: 'bounce' };
 
 /** Full movement state of one player. `pos` is the feet (bottom of the capsule). */
 export interface MoveState {
@@ -45,6 +47,8 @@ export interface MoveState {
   speedMul: number; pushT: number;
   /** Held weapon family traits (ROUND3 §4): run/slide multipliers, extra air jumps; airJumps = used since landing. */
   traits: FamilyTraits; airJumps: number;
+  /** Form-effect statuses (slow, freeze, pin, ice, pull, bounce) — player/afflict.ts. */
+  af: Afflict;
   events: MoveEvent[];
 }
 
@@ -57,7 +61,7 @@ export function createMoveState(pos: THREE.Vector3Tuple = [0, 0, 0]): MoveState 
     sliding: false, slideT: 0, slideDir: new THREE.Vector3(0, 0, -1), slideCd: 0, slideLock: false,
     slamming: false, sinceSlam: 1e3,
     wallJumps: 0, sinceWall: 1e3, wallN: new THREE.Vector3(),
-    clinging: false, low: false, speedMul: 1, pushT: 0, traits: NO_TRAITS, airJumps: 0, events: [],
+    clinging: false, low: false, speedMul: 1, pushT: 0, traits: NO_TRAITS, airJumps: 0, af: newAfflict(), events: [],
   };
 }
 

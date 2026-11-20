@@ -67,6 +67,44 @@ export const BALANCE = {
     },
   },
   /**
+   * Form effects (ROSTER kiem/bua 18–45, phase 28): shared/src/effects/*. Every active atom has `cd` (s, per owner;
+   * `cdTarget` = per owner and target). r = radius m, s = seconds, dmg = raw damage (no block), push = m/s for pushS.
+   */
+  effects: {
+    slow: { mul: 0.8, s: 1.5 },
+    /** Flying slash: travels `speed` m/s for `range` m, hits bodies within r (horizontal) once each. */
+    slash: { speed: 24, range: 10, r: 0.9, dmg: 14, strongDmg: 18, cd: 3, allDmg: 7, allCd: 0.3, parryDmg: 14, parryCd: 2, iceEvery: 1.1 },
+    whip: { range: 6, to: 3, dmg: 10, cone: 0.4, cd: 4 },
+    reachPlus: 0.5,
+    lavaCrack: { r: 1.1, s: 3, dps: 5, cd: 0.4 },
+    freeze: { s: 0.8, cdTarget: 5 },
+    ice: { r: 1.2, s: 3, grip: 0.12 },
+    meteor: { delayS: 0.8, r: 3, dmg: 30, range: 16, up: 7, cd: 6 },
+    /** Orbiting blades: n blades at ring m around the owner; a body within reach takes dmg every everyS. */
+    orbit: { n: 3, ring: 1.15, reach: 2.5, dmg: 6, everyS: 0.5, spin: 4.5 },
+    /** Black holes pull bodies in r toward the center at pull m/s; one body is held at most capS per hole. */
+    eclipse: { s: 2, r: 5, ahead: 2.6, pull: 7, capS: 1.2, cd: 8 },
+    star: { s: 3, r: 8, ahead: 3, pull: 6, capS: 1.6, boom: 40, boomR: 4, boomPush: 10, cd: 10 },
+    column: { len: 15, w: 1.1, dmg: 35, burnDps: 4, burnS: 2, lifeS: 0.7, cd: 7 },
+    piston: { r: 4, dmg: 18, push: 7, cd: 3 },
+    magnet: { r: 6, to: 1.6, cd: 5 },
+    lavaPool: { r: 2.5, s: 4, dps: 8, ahead: 1.4, cd: 4, slamMul: 1.6 },
+    bell: { slow: 0.7, s: 2, shakeS: 0.6 },
+    bellWave: { r: 5, dmg: 10, push: 5, cd: 4 },
+    /** bua_cao_su: heavy hit flies the target ~15 m and it bounces off walls for bounceS. */
+    rubber: { push: 16, up: 5, bounceS: 1.4 },
+    lightPush: { push: 9 },
+    chain: { n: 3, r: 8, dmg: 15, cd: 4 },
+    /** Anchor: flies speed m/s up to range; a body hit is pulled to `to` m of you, else you are pulled to where it lands. */
+    anchor: { range: 14, speed: 30, r: 0.8, dmg: 12, to: 2, selfPush: 22, cd: 5 },
+    gravityPin: { r: 8, s: 2, cd: 6 },
+    slamDouble: { mul: 2 },
+    crack: { len: 14, speed: 22, w: 1.3, dmg: 30, up: 9, cd: 6 },
+    lightWave: { r: 2.5, push: 6 },
+    /** Hard caps: live effect entities per world, per owner. */
+    maxEnts: 48, maxPerOwner: 8,
+  },
+  /**
    * Forging (GDD §6, §7). Odds are points out of 100. Rows by level band; armor looks up level × armorRowMul.
    * Heat bands/shifts, ring timing and frenzy numbers all live here; relics only change them through
    * ForgeMods (shared/src/forge/odds.ts).

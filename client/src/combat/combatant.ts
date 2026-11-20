@@ -1,4 +1,6 @@
-import { BALANCE, bodyCapsules, type Capsule, type DefenderView, Fighter, type FighterInput, type PassiveId, passivesOf, traitsOf, type V3, type WeaponDef } from '@wih/shared';
+import { BALANCE, bodyCapsules, type Capsule, type DefenderView, Fighter, type FighterInput, NO_FIGHT, type PassiveId, passivesOf, type StatusKind, traitsOf, type V3, type WeaponDef } from '@wih/shared';
+import { bus } from '../core/events';
+import { afflict } from '../player/afflict';
 import { bodyHeight } from '../player/move-state';
 import type { Player } from '../player/player';
 
@@ -51,7 +53,7 @@ export class Combatant {
   tick(dt: number, i: FighterInput): void {
     const s = this.body.s;
     this.sinceSlide = s.sliding ? 0 : this.sinceSlide + dt;
-    this.fighter.tick(dt, i);
+    this.fighter.tick(dt, s.af.freezeT > 0 ? NO_FIGHT : i);
     s.traits = traitsOf(this.weapon);
     s.speedMul = this.fighter.speedMul * (this.ghost ? BALANCE.match.ghost.speedMul : 1);
     if (this.burnT > 0) { this.burnT -= dt; this.hp -= this.burnDps * dt; }
@@ -78,7 +80,14 @@ export class Combatant {
     };
   }
 
-  revive(): void { this.ghost = false; this.hp = BALANCE.combat.hp; this.burnT = 0; this.deadT = 0; this.fighter.revive(); }
+  /** A form-effect status on this body (offline sink or the server's `status`); everyone's presentation hears it. */
+  status(k: StatusKind, s: number, v: number, p?: readonly number[]): void {
+    afflict(this.body.s.af, k, s, v, p);
+    const q = this.body.s.pos;
+    bus.emit('fx:status', { id: this.id, k, s, x: q.x, y: q.y, z: q.z });
+  }
+
+  revive(): void { this.ghost = false; this.hp = BALANCE.combat.hp; this.burnT = 0; this.deadT = 0; Object.assign(this.body.s.af, { slowT: 0, freezeT: 0, pinT: 0, slipT: 0, wellT: 0, bounceT: 0 }); this.fighter.revive(); }
 }
 
 /** Fighter input from button states (local player) — kept here so dummies and players share the shape. */

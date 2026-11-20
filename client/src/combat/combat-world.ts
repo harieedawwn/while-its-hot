@@ -1,7 +1,8 @@
-import { attackShape, BALANCE, slamEffects, swingFrame, sweepHit } from '@wih/shared';
+import { attackShape, BALANCE, reachFor, slamEffects, swingFrame, sweepHit } from '@wih/shared';
 import { bus } from '../core/events';
 import { pushMove } from '../player/move-state';
 import type { Combatant } from './combatant';
+import { LocalEffects } from './local-effects';
 import { applyEffects, type HitResolver, knock, LocalResolver } from './resolver';
 
 /**
@@ -11,7 +12,9 @@ import { applyEffects, type HitResolver, knock, LocalResolver } from './resolver
  */
 export class CombatWorld {
   readonly list: Combatant[] = [];
-  resolver: HitResolver = new LocalResolver(this.list);
+  /** Form effects (phase 28): local EffectWorld offline, snapshot entities online. */
+  readonly effects = new LocalEffects(this.list);
+  resolver: HitResolver = new LocalResolver(this.list, this.effects);
   time = 0;
 
   add(c: Combatant): Combatant { this.list.push(c); return c; }
@@ -21,6 +24,7 @@ export class CombatWorld {
     this.time += dt;
     for (const c of this.list) this.events(c);
     for (const c of this.list) this.sweep(c);
+    this.effects.tick(dt);
     for (const c of this.list) {
       if (c.alive && c.hp <= 0 && !c.netOwned) { c.hp = 0; c.fighter.kill(); bus.emit('combat:kill', { target: c.id, by: -1 }); }
     }
@@ -33,7 +37,7 @@ export class CombatWorld {
       if (o === c || !o.alive || Math.hypot(o.body.s.pos.x - p.x, o.body.s.pos.z - p.z) > r) continue;
       knock(c, o, BALANCE.combat.slamKnock, BALANCE.combat.slamLift);
     }
-    applyEffects(c, c, slamEffects(c.passives), this.list);
+    applyEffects(c, c, slamEffects(c.passives), this.list, this.effects);
   }
 
   private events(c: Combatant): void {
@@ -44,6 +48,7 @@ export class CombatWorld {
           c.hitSet.clear(); c.hitSwing = e.id;
           const [x, y, z] = c.eye();
           bus.emit('combat:swing', { id: c.id, kind: e.kind, combo: e.combo, family: c.weapon.stats.moveset, x, y, z });
+          this.effects.swing(c, f.frames.w);
           break;
         }
         case 'lunge': {
@@ -64,7 +69,7 @@ export class CombatWorld {
   private sweep(c: Combatant): void {
     const sw = c.fighter.sweep;
     if (!sw || !c.alive) return;
-    const f = c.fighter, def = c.weapon, reach = def.stats.reach;
+    const f = c.fighter, def = c.weapon, reach = reachFor(c.passives, def.stats.reach, f.kind);
     const shape = attackShape(def, f.kind, f.combo);
     const frame = swingFrame(c.eye(), c.yaw, c.pitch);
     const p = c.body.s.pos;

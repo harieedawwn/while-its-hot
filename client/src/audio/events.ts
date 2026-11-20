@@ -2,6 +2,7 @@ import type { Family } from '@wih/shared';
 import { bus } from '../core/events';
 import { FEEL } from '../core/feel';
 import type { AudioEngine, Handle } from './engine';
+import { bindEffectAudio } from './events-effects';
 import { buzz } from './haptics';
 import type { Vec3 } from './spatial';
 
@@ -33,6 +34,7 @@ export function bindAudio(a: AudioEngine, localId = 0): AudioBinding {
   const charges = new Map<number, Handle | null>();
   let slamT = -1;
   const own = (id: number) => id === localId;
+  const offFx = bindEffectAudio(a, localId);
 
   const off = [
     // movement (local player only: remote movement arrives with netplay)
@@ -121,7 +123,7 @@ export function bindAudio(a: AudioEngine, localId = 0): AudioBinding {
       }
     },
     dispose() {
-      off.forEach((f) => f());
+      off.forEach((f) => f()); offFx();
       Object.keys(loops).forEach((k) => stop(k, 0.05));
       charges.forEach((h) => h?.stop(0.05));
       a.muffle(false);

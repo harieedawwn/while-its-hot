@@ -68,6 +68,7 @@ export class NetMatch {
     });
     this.forge = new NetForge((m) => this.send(m), d.session, this.anvils, () => this.me);
     d.combat.resolver = this.combat;
+    d.combat.effects.on = false;
     d.lf.c.netOwned = true;
     const h = d.room.h;
     d.room.h = {
@@ -110,6 +111,9 @@ export class NetMatch {
     if (!s) return;
     this.remotes.me = this.me;
     this.remotes.snapshot(s, this.now());
+    const fx = this.d.combat.effects, me = this.me;
+    fx.netEnts = (s.ents ?? []).map((e) => (e.o === me ? { ...e, o: 0 } : e));
+    fx.netAt = performance.now() / 1000;
     const mine = s.players.find((p) => p.id === this.me);
     if (mine && this.d.lf.c.alive) this.d.lf.c.hp = mine.state.hp;
   }

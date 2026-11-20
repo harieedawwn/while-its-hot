@@ -4,6 +4,7 @@ import type { Family } from '../data/weapons';
 import type { HitResult } from '../combat/damage';
 import type { ForgeTarget, Outcome, Timing } from '../forge/odds';
 import type { AttackKind } from '../passives';
+import type { AtomFx, AtomFxKind, EntKind, StatusKind } from '../effects/atoms';
 
 /**
  * Match messages (TECH §4), JSON, alongside the binary State/Snapshot. Times `at` are match milliseconds
@@ -65,7 +66,14 @@ export type MatchServerMsg =
   | { t: 'reject'; s: number; tg: number; why: string }
   | { t: 'kill'; tg: number; by: number }
   | { t: 'spawn'; id: number; p: Vec3; yaw: number; hp: number }
-  | { t: 'knock'; kn: Vec3 }
+  /** ps = push seconds (weak control; default pushS), b = bounce off walls meanwhile (bua_cao_su). */
+  | { t: 'knock'; kn: Vec3; ps?: number; b?: 1 }
+  /** Effect damage (phase 28 toolkit: slashes, meteors, waves; no defense): tg's hp after it. */
+  | { t: 'edmg'; tg: number; by: number; dmg: number; k: EntKind | AtomFxKind; hp: number }
+  /** A movement status on tg (its client applies it; everyone may show it): s seconds, v = slow mul / pull m/s, p = well center. */
+  | { t: 'status'; tg: number; k: StatusKind; s: number; v: number; p?: Vec3 }
+  /** An instant effect moment for sounds and sparks. */
+  | { t: 'atom'; a: AtomFx }
   /** The dead player became a Hồn (ghost): invulnerable, can move, cannot act. They turn solid with `spawn`. */
   | { t: 'ghost'; id: number }
   /** One 0.5 s tick of fire-ring damage on `id` (the HP itself arrives with the snapshot). */

@@ -1,4 +1,5 @@
 import { attackShape, BALANCE, type AttackKind, type HitEffect, hitEffects, parryEffects, resolveHit, type V3, type Zone } from '@wih/shared';
+import type { LocalEffects } from './local-effects';
 import { bus } from '../core/events';
 import { pushMove } from '../player/move-state';
 import type { Combatant } from './combatant';
@@ -17,7 +18,7 @@ export interface HitResolver { claim(c: HitClaim): void; }
 const C = BALANCE.combat;
 
 export class LocalResolver implements HitResolver {
-  constructor(private list: readonly Combatant[]) {}
+  constructor(private list: readonly Combatant[], private effects?: LocalEffects) {}
 
   claim(c: HitClaim): void {
     const a = this.list.find((o) => o.id === c.attacker), t = this.list.find((o) => o.id === c.target);
@@ -31,7 +32,7 @@ export class LocalResolver implements HitResolver {
       a.fighter.stagger(res.attackerStaggerS);
       t.fighter.parried();
       ts.stamina = Math.min(BALANCE.move.stamina.pips, ts.stamina + res.parrierStamina);
-      applyEffects(t, a, parryEffects(t.passives), this.list);
+      applyEffects(t, a, parryEffects(t.passives), this.list, this.effects);
       bus.emit('combat:parry', { parrier: t.id, attacker: a.id, x, y, z });
       return;
     }
@@ -42,7 +43,7 @@ export class LocalResolver implements HitResolver {
     // knockback away from the attacker; a clean block only rocks the defender
     const frames = a.fighter.frames;
     knock(a, t, res.r === 'blocked' ? frames.knock * C.block.knockMul : frames.knock);
-    if (res.r !== 'blocked') applyEffects(a, t, hitEffects(a.passives, { kind: c.kind, combo: c.combo, dist: c.dist, reach: a.weapon.stats.reach }), this.list);
+    if (res.r !== 'blocked') applyEffects(a, t, hitEffects(a.passives, { kind: c.kind, combo: c.combo, dist: c.dist, reach: a.weapon.stats.reach }), this.list, this.effects);
     bus.emit('combat:hit', { attacker: a.id, target: t.id, dmg: res.dmg, zone: c.zone, kind: c.kind, result: res.r, x, y, z });
     if (t.hp <= 0) { t.hp = 0; t.fighter.kill(); bus.emit('combat:kill', { target: t.id, by: a.id }); }
   }
@@ -57,8 +58,8 @@ export function knock(a: Combatant, t: Combatant, speed: number, vy = 0): void {
   pushMove(t.body.s, dx * speed, dz * speed, C.pushS, vy);
 }
 
-/** Passive hit effects (GDD §6): burn, launch, shockwave, pull, aoe. src = who owns the passive. */
-export function applyEffects(src: Combatant, t: Combatant, fx: HitEffect[], list: readonly Combatant[]): void {
+/** Passive hit effects (GDD §6): burn, launch, shockwave, pull, aoe inline; toolkit atoms go to `effects`. src = who owns the passive. */
+export function applyEffects(src: Combatant, t: Combatant, fx: HitEffect[], list: readonly Combatant[], effects?: LocalEffects): void {
   for (const e of fx) {
     switch (e.type) {
       case 'burn': t.burnT = e.durS; t.burnDps = e.dps; break;
@@ -77,6 +78,7 @@ export function applyEffects(src: Combatant, t: Combatant, fx: HitEffect[], list
           knock(t, o, e.type === 'shockwave' ? e.push : C.slamKnock);
         }
         break;
+      default: effects?.apply(src, t, e);
     }
   }
 }

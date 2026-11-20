@@ -1,9 +1,11 @@
-import type * as THREE from 'three';
+import * as THREE from 'three';
 import type { CombatWorld } from '../combat/combat-world';
 import type { ForgeStage } from '../forge/stage';
 import type { CollisionWorld } from '../physics/world';
 import type { LightRig } from '../render/lights';
 import type { Pipeline } from '../render/pipeline';
+import { bindEffectAtoms } from './effect-atoms';
+import { EffectView } from './effect-view';
 import { bindFx, ringFx } from './fx-bind';
 import { FxWorld } from './fx-world';
 import { WeaponTrail } from './trail';
@@ -22,6 +24,10 @@ export class FxLayer {
   readonly fx: FxWorld;
   private trails: WeaponTrail[] = [];
   private unbind: () => void;
+  /** Form-effect entities (phase 28) from combat.effects, and their instant moments. */
+  readonly effects: EffectView | null = null;
+  private atoms: ReturnType<typeof bindEffectAtoms> | null = null;
+  private cam = new THREE.Vector3();
 
   constructor(private o: FxLayerOpts) {
     this.fx = new FxWorld(o.rig, o.seed ?? 1);
@@ -30,6 +36,14 @@ export class FxLayer {
       fx: this.fx, world: o.world, stage: o.stage, blood: o.blood,
       posOf: (id) => o.combat?.byId(id)?.body.s.pos ?? null,
     });
+    const ray = new THREE.Vector3(), down = new THREE.Vector3(0, -1, 0);
+    const floorAt = (p: THREE.Vector3) => { const h = o.world?.raycast(ray.set(p.x, p.y + 0.05, p.z), down, 6); return h ? h.point.y : p.y - 0.5; };
+    const combat = o.combat;
+    if (combat) {
+      this.effects = new EffectView(o.rig, this.fx, () => combat.effects.ents(performance.now() / 1000), (id) => combat.byId(id)?.body.s.pos ?? null, floorAt);
+      o.scene.add(this.effects.root);
+    }
+    this.atoms = bindEffectAtoms(this.fx, floorAt, () => this.cam);
   }
 
   /** A ribbon behind a weapon; `parent` is where it lives (the world scene, or the viewmodel's eye group). */
@@ -41,10 +55,13 @@ export class FxLayer {
   }
 
   update(dt: number, camera: THREE.PerspectiveCamera): void {
+    this.cam.setFromMatrixPosition(camera.matrixWorld);
+    this.effects?.update(dt);
+    this.atoms?.update(dt);
     this.fx.update(dt, camera, this.o.pipeline.height);
     for (const t of this.trails) t.update(dt);
     if (this.o.ring) ringFx(this.fx, this.o.pipeline, this.o.ring, camera.position, dt);
   }
 
-  dispose(): void { this.unbind(); this.trails.forEach((t) => t.dispose()); this.fx.dispose(); if (this.o.ring) this.o.pipeline.setHeatTint(0); }
+  dispose(): void { this.unbind(); this.effects?.dispose(); this.atoms?.dispose(); this.trails.forEach((t) => t.dispose()); this.fx.dispose(); if (this.o.ring) this.o.pipeline.setHeatTint(0); }
 }
