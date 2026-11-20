@@ -287,7 +287,8 @@ function animate(now) {
     const fam = current.meta.family, p = (t % 1.6) / 1.6, wind = Math.min(1, p / 0.45), hit = ease(Math.max(0, Math.min(1, (p - 0.45) / 0.2)));
     pivot.position.set(0, 0.6, 0);
     if (fam === 'bua') pivot.rotation.set(-0.9 * wind + 2.6 * hit, 0, 0);
-    else if (fam === 'thuong') { pivot.rotation.set(Math.PI / 2, 0, 0); pivot.position.set(0, 0.8, -0.4 * wind + 1.1 * hit); }
+    else if (fam === 'dao') { pivot.rotation.set(0.3, 0, 0.9 * wind - 1.8 * hit); pivot.position.set(0, 0.6, 0.25 * hit); }   // short quick slash
+    else if (fam === 'tay') { pivot.rotation.set(Math.PI / 2, 0, 0); pivot.position.set(0, 0.6, -0.25 * wind + 0.7 * hit); } // fist punches along +Y -> forward
     else pivot.rotation.set(0.2, 0, 1.3 * wind - 2.6 * hit);
   }
   renderer.render(scene, cam);

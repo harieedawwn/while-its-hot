@@ -67,6 +67,7 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `shared/src/data/{armor,modules,colors}.ts` armor tiers, module defs, player colors · `dev/scene-character.ts` lineup / `clip=` player
 - `shared/src/data/weapons.ts` 4 families × 15 forms + phoi (ROSTER), formFor/passivesOf/traitsOf/dmgScale/timeMulAt · `shared/src/passives.ts` passive hook registry + folds, `pendingPassives()` no-op ids
 - `client/src/weapons/{wkit,shapes,palette,tassel,weapon,hold}.ts` one-mesh builder + atlas UVs/heatMask, blade loft/profile/wrap, colors, tassel, build/load(GLB)/setHeat/`modelFor` (borrowed model)/`mirrorLeft`, `gripInHand`/`holdWeapon` (TP hands) · `weapons/models/*.ts` own builders + index
+- `client/src/weapons/{lab-kit,lab-geo}.ts`, `models/lab.ts` weapon-lab `k` kit -> one-mesh bake (tri-budget detail ladder, tay axis remap), glob of `weapon-lab/weapons/*.js` by roster id · `weapons/lab.test.ts`
 - `client/src/dev/scene-weapons.ts` rack / `?weapon=&heat=` close-up · `tools/weapon-atlas.mjs` → `public/tex/weapon.png`
 - `shared/src/combat/{frames,fighter,damage,sweep}.ts` frame data + attack shapes, melee state machine, hit/defense rules, blade sweep vs hit capsules
 - `client/src/combat/{combatant,combat-world,resolver}.ts` body+fighter+hp, per-tick sweeps/events/lunges, HitClaim + LocalResolver + passive effects
