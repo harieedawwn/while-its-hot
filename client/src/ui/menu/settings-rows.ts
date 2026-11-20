@@ -31,6 +31,7 @@ function gfx(L: Ledger): void {
   const res = FEEL.render.resolutions;
   L.row(STR.gfx.resolution, segmented(STR.gfx.resolution, res.map((r) => ({ id: String(r), label: r === 0 ? STR.gfx.native : `${r}` })), String(game.resolution),
     (v) => setGame({ resolution: Number(v) })).root);
+  L.row(STR.gfx.brightness, rangeSlider(STR.gfx.brightness, 0, 100, 5, game.brightness, (x) => setGame({ brightness: x })).root);
   L.row(STR.gfx.quantize, segmented(STR.gfx.quantize, [{ id: 'off', label: STR.gfx.quantOff }, { id: 'light', label: STR.gfx.quantLight }, { id: 'strong', label: STR.gfx.quantStrong }] as const,
     game.quantize, (v) => setGame({ quantize: v })).root);
   L.row(STR.gfx.snap, toggle(STR.gfx.snap, game.snap, (v) => setGame({ snap: v })));
@@ -38,6 +39,7 @@ function gfx(L: Ledger): void {
     (v) => setGame({ fpsCap: Number(v) })).root);
   L.row(STR.gfx.blood, toggle(STR.gfx.blood, fxSettings.blood, (v) => setFxSettings({ blood: v })));
   L.row(STR.gfx.showFps, toggle(STR.gfx.showFps, game.showFps, (v) => setGame({ showFps: v })));
+  L.row(STR.gfx.fpsDetail, toggle(STR.gfx.fpsDetail, game.fpsDetail, (v) => setGame({ fpsDetail: v })));
   L.row(STR.settings.reduceMotion, toggle(STR.settings.reduceMotion, uiSettings.reduceMotion, (v) => setUiSettings({ reduceMotion: v })));
 }
 

@@ -112,6 +112,7 @@ Vietnamese UI. Low-res, vertex-lit, crunchy 3D in the spirit of ULTRAKILL's *wor
 - `client/src/combat/local-effects.ts` offline EffectWorld / snapshot ents · `player/afflict.ts` movement statuses (MoveState.af) · `fx/effect-{view,atoms,meshes,mat}.ts` ents → meshes, instant atoms, geometry, material · `audio/events-effects.ts`
 - `client/src/input/{gyro-math,gyro}.ts` gyro rates (yaw about gravity, pitch about screen x), One-Euro, dead band + sensor-rate binder · `tools/perf.mjs` throttled frame-time split / profile / alloc sampling
 - `client/src/net/net-ghost.ts` local dead/Hồn presentation + ring pain vignette · `render/materials/ghost.ts` Bayer pale ghost body (`Character.setGhost`) · `Pipeline.setVignette` (`uVig`), `FirstPersonCamera.hurt/dead`, `TouchControls.setGhost`
+- `client/src/render/{brightness,materials/skinned}.ts` Độ sáng params (+test), GPU skinning twin material (`skinning.gpu`, `?skin=cpu`) · `core/{perf,perf-probe,gpu-timer}.ts` frame stats + 30 s recorder + report, probes, disjoint-timer GPU ms · `ui/fps-badge.ts` FPS badge + detail block + Ghi 30 s panel
 
 ## Conventions
 - TypeScript strict, ES modules, npm workspaces: `client/`, `server/`, `shared/`.

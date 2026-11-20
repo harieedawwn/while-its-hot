@@ -6,11 +6,15 @@ import type { QuantizeMode } from '../render/pipeline';
 export interface GameSettings {
   resolution: number; quantize: QuantizeMode; snap: boolean; fpsCap: number; showFps: boolean;
   hfov: number; bob: boolean; shake: number;
+  /** Độ sáng 0..100. */
+  brightness: number;
+  /** Hiện FPS detail mode (báo cáo chi tiết). */
+  fpsDetail: boolean;
 }
 const R = FEEL.render;
 export const DEFAULT_GAME: GameSettings = {
   resolution: R.defaultResolution, quantize: R.defaultQuantize, snap: false, fpsCap: 60, showFps: false,
-  hfov: FEEL.camera.hfov, bob: true, shake: 1,
+  hfov: FEEL.camera.hfov, bob: true, shake: 1, brightness: R.brightness.default, fpsDetail: false,
 };
 const KEY = 'wih.game.v1';
 const clamp = (v: unknown, d: number, lo: number, hi: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d);
@@ -25,6 +29,7 @@ export function sanitizeGame(raw: unknown): GameSettings {
     resolution: clamp(r.resolution, d.resolution, 0, 1080), quantize: q, snap: bool(r.snap, d.snap), fpsCap: cap, showFps: bool(r.showFps, d.showFps),
     hfov: clamp(r.hfov, d.hfov, FEEL.camera.hfovMin, FEEL.camera.hfovMax),
     bob: bool(r.bob, d.bob), shake: clamp(r.shake, d.shake, 0, 1),
+    brightness: Math.round(clamp(r.brightness, d.brightness, 0, 100)), fpsDetail: bool(r.fpsDetail, d.fpsDetail),
   };
 }
 

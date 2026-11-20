@@ -20,6 +20,9 @@ export class Remotes {
   /** Newest server time seen (match ms). */
   latest = 0;
   snaps = 0;
+  /** Snapshots that arrived out of order or > 120 ms after the previous one (perf report). */
+  late = 0;
+  private lastArrive = 0;
   me = 0;
 
   constructor(private scene: THREE.Scene, private combat: CombatWorld, private world: CollisionWorld, private lib: MaterialLib,
@@ -28,6 +31,9 @@ export class Remotes {
   /** arrival = local match-time estimate when the snapshot came in. */
   snapshot(s: Snapshot, arrival: number): void {
     this.snaps++;
+    const now = performance.now();
+    if (s.serverTime <= this.latest || (this.lastArrive > 0 && now - this.lastArrive > 120)) this.late++;
+    this.lastArrive = now;
     this.jitter.add(s.serverTime, arrival);
     this.latest = Math.max(this.latest, s.serverTime);
     for (const p of s.players) {

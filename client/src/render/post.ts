@@ -23,6 +23,7 @@ uniform float uFade;     // 0..1
 uniform float uHeatTint; // 0..1: inside the fire ring the world leans toward the heat ramp
 uniform float uWarm;     // 0..1 Nhập thần: stepped, dithered warm edge vignette
 uniform vec3 uWarmColor; // sRGB
+uniform float uLift;    // Độ sáng: gamma lift exponent bonus (0 = off)
 uniform float uVig;     // 0..1 coloured edge vignette: red fire-ring pain, white ghost (stepped, dithered)
 uniform vec3 uVigColor; // sRGB
 uniform vec3 uHeatRamp[9];
@@ -46,6 +47,7 @@ void main() {
   c = mix(c, vec3(l), uDesat * (1.0 - uKeepHot * hot));
   if (uHeatTint > 0.0) c = mix(c, uHeatRamp[int(clamp(sqrt(l) * 9.0, 0.0, 8.0))], uHeatTint);
   c = toSRGB(c);
+  if (uLift > 0.0) c = mix(pow(c, vec3(1.0 / (1.0 + uLift))), c, hot);
   if (uLevels > 1.0) {
     float s = uLevels - 1.0;
     float d = (bayer4(gl_FragCoord.xy) - 0.5) * uDither;
@@ -86,6 +88,7 @@ export class PostPass {
     uHeatTint: { value: 0 },
     uWarm: { value: 0 },
     uWarmColor: { value: new THREE.Color(0.54, 0.165, 0.047) },
+    uLift: { value: 0 },
     uVig: { value: 0 },
     uVigColor: { value: new THREE.Color(0.54, 0.08, 0.06) },
     uHeatRamp: { value: HEAT_LINEAR },

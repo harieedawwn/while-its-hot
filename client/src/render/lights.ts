@@ -19,6 +19,7 @@ export class LightRig {
     uFogColor: { value: new THREE.Color('#000000') },
     uFog: { value: new THREE.Vector2(8, 30) },
     uSnap: { value: new THREE.Vector2(0, 0) },
+    uFloor: { value: 0 },
   };
   private scratch = new THREE.Vector3();
   private score = new Float32Array(64);

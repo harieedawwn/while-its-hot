@@ -4,6 +4,8 @@ export interface Params {
   nogate: boolean; touch: boolean; shot: boolean; q: string;
   /** Render quality overrides until the settings ledger exists: res=360|450|540|720|native, quant=off|light|strong, snap=1, adaptive=0. */
   res: number | null; quant: 'off' | 'light' | 'strong' | null; snap: boolean; adaptive: boolean;
+  /** bright=0..100 overrides the saved Độ sáng. */
+  bright: number | null;
   /** Any other param, raw. */
   get(name: string): string | null;
 }
@@ -20,6 +22,7 @@ export function readParams(search = location.search): Params {
     res: res === null ? null : res === 'native' ? 0 : Number(res) || null,
     quant: quant === 'off' || quant === 'light' || quant === 'strong' ? quant : null,
     snap: p.get('snap') === '1', adaptive: p.get('adaptive') !== '0',
+    bright: p.get('bright') === null || Number.isNaN(Number(p.get('bright'))) ? null : Number(p.get('bright')),
     get: (name) => p.get(name),
   };
 }

@@ -72,8 +72,8 @@ export class Character {
   }
   private skin(on: boolean): void {
     const m = this.ghosted ? ghostMaterial() : this.veiled ? veilMaterial(FEEL.fx.effects.veilAlpha) : null;
-    this.body.mesh.material = on && m ? m : this.lib.get('cloth');
-    for (const a of this.armor) a.mesh.material = on && m ? m : this.lib.get('steel');
+    this.body.setMaterial(on && m ? m : null);
+    for (const a of this.armor) a.setMaterial(on && m ? m : null);
   }
 
   /** Advance the animation by dt and re-pose the meshes. */

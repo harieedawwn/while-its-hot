@@ -31,6 +31,9 @@ export const FEEL = {
     ditherAmount: 1,
     /** "Rung đỉnh": vertex snap grid as a fraction of the internal resolution (0.5 = every 2 px). */
     snapGrid: 0.5,
+    /** "Độ sáng" 0..100 (0 = the original look). `floor` lifts the vertex-light ambient (linear, dark end only) and `gamma` is the post
+     *  lift exponent bonus (sRGB, bright areas and the heat ramp stay), both reached at 100. */
+    brightness: { default: 65, floor: 0.12, gamma: 0.85 },
     /** Max point lights per object (shader constant; keep in sync with psx-glsl.ts). */
     maxPointLights: 4,
   },

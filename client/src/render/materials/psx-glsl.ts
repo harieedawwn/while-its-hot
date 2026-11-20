@@ -11,7 +11,12 @@ uniform vec3 uDirColor;
 uniform vec4 uPL[4];   // xyz world position, w range (0 = unused)
 uniform vec3 uPLc[4];  // linear color × intensity
 uniform vec2 uSnap;    // vertex snap grid in clip pixels (0 = off)
+uniform float uFloor;  // Độ sáng: lifts the dark end of the vertex light
 attribute float heatMask;
+#ifdef SKINNED
+attribute float boneIdx;
+uniform mat4 uBones[BONES];
+#endif
 varying vec3 vLight;
 varying vec3 vColor;
 varying vec2 vUv;
@@ -19,8 +24,15 @@ varying float vFogDepth;
 varying float vHeatMask;
 
 void main() {
-  vec4 wp = modelMatrix * vec4(position, 1.0);
-  vec3 n = normalize(mat3(modelMatrix) * normal);
+  vec3 lp = position;
+  vec3 ln = normal;
+#ifdef SKINNED
+  mat4 B = uBones[int(boneIdx + 0.5)];
+  lp = (B * vec4(position, 1.0)).xyz;
+  ln = mat3(B) * normal;
+#endif
+  vec4 wp = modelMatrix * vec4(lp, 1.0);
+  vec3 n = normalize(mat3(modelMatrix) * ln);
   vec3 L = mix(uHemiGround, uHemiSky, n.y * 0.5 + 0.5);
   L += uDirColor * max(dot(n, uDirDir), 0.0);
   for (int i = 0; i < 4; i++) {
@@ -29,6 +41,7 @@ void main() {
     float a = clamp(1.0 - dist / max(uPL[i].w, 1e-3), 0.0, 1.0);
     L += uPLc[i] * (a * a) * max(dot(n, d / max(dist, 1e-4)), 0.0);
   }
+  L += uFloor * (vec3(1.0) - min(L, vec3(1.0)));
   vLight = L;
 #ifdef USE_COLOR
   vColor = color;

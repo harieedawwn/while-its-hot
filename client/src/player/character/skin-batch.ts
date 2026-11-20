@@ -3,6 +3,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import * as P from '../../render/geo/procgeo';
 import { boxUV } from '../../render/geo/uv';
 import { BONE_INDEX, type BoneName } from './skeleton';
+import { BONE_ATTR, skinnedOf, skinning } from '../../render/materials/skinned';
 
 type V3 = readonly [number, number, number];
 export interface AddOpts {
@@ -66,11 +67,17 @@ function mirrorX(g: THREE.BufferGeometry): void {
   }
 }
 
-/** The merged, dynamically skinned mesh of one surface. */
+/**
+ * The merged, skinned mesh of one surface. GPU path (default): the geometry stays in its rest pose, a `boneIdx` attribute picks one
+ * root-relative bone matrix per vertex in the vertex shader (`userData.bones`, read at draw time). CPU path (`?skin=cpu`): the same
+ * multiply per vertex in JS with a buffer upload per pose.
+ */
 export class SkinMesh {
   readonly mesh: THREE.Mesh;
-  private rest: Float32Array;
-  private restN: Float32Array;
+  /** The material this surface draws with normally (the skinned twin when on the GPU). */
+  private draw: THREE.Material;
+  private rest: Float32Array | null = null;
+  private restN: Float32Array | null = null;
   private col0: Float32Array;
   private pos: THREE.BufferAttribute;
   private nor: THREE.BufferAttribute;
@@ -78,19 +85,29 @@ export class SkinMesh {
   constructor(readonly geo: THREE.BufferGeometry, mat: THREE.Material, private bone: Uint8Array, private tag: Uint8Array) {
     this.pos = geo.getAttribute('position') as THREE.BufferAttribute;
     this.nor = geo.getAttribute('normal') as THREE.BufferAttribute;
-    this.rest = new Float32Array(this.pos.array);
-    this.restN = new Float32Array(this.nor.array);
     this.col0 = new Float32Array((geo.getAttribute('color') as THREE.BufferAttribute).array);
-    this.pos.setUsage(THREE.DynamicDrawUsage);
-    this.nor.setUsage(THREE.DynamicDrawUsage);
+    if (skinning.gpu) {
+      geo.setAttribute(BONE_ATTR, new THREE.BufferAttribute(Float32Array.from(bone), 1));
+      this.draw = skinnedOf(mat as THREE.ShaderMaterial);
+    } else {
+      this.rest = new Float32Array(this.pos.array);
+      this.restN = new Float32Array(this.nor.array);
+      this.pos.setUsage(THREE.DynamicDrawUsage);
+      this.nor.setUsage(THREE.DynamicDrawUsage);
+      this.draw = mat;
+    }
     // one fixed sphere around the whole standing/sliding/falling body: lights are picked from it
     geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0.95, 0), 1.35);
-    this.mesh = new THREE.Mesh(geo, mat);
+    this.mesh = new THREE.Mesh(geo, this.draw);
     this.mesh.frustumCulled = false;
   }
 
-  /** Re-pose every vertex with the root-relative bone matrices. */
+  /** Draw with `m` (ghost / veil), or back with the normal surface material when null. */
+  setMaterial(m: THREE.Material | null): void { this.mesh.material = m ?? this.draw; }
+
+  /** Re-pose with the root-relative bone matrices (GPU: just hand them to the draw; CPU: re-skin every vertex). */
   update(rel: THREE.Matrix4[]): void {
+    if (!this.rest || !this.restN) { this.mesh.userData.bones = rel; return; }
     const p = this.pos.array as Float32Array, nn = this.nor.array as Float32Array, r = this.rest, rn = this.restN, b = this.bone;
     for (let i = 0, n = b.length; i < n; i++) {
       const m = rel[b[i]].elements, j = i * 3;

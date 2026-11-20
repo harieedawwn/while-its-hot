@@ -143,3 +143,5 @@ export class AudioEngine {
 let engine: AudioEngine | null = null;
 /** The shared engine (created on first use; the AudioContext resumes on the first touch/click/key). */
 export function getAudio(): AudioEngine { return (engine ??= new AudioEngine()); }
+/** The engine only if something already made it (the perf report must not create an AudioContext). */
+export const peekAudio = (): AudioEngine | null => engine;

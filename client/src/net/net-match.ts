@@ -10,6 +10,7 @@ import type { Player } from '../player/player';
 import type { LightRig } from '../render/lights';
 import type { MaterialLib } from '../render/materials/library';
 import { STR } from '../ui/strings.vi';
+import { probe } from '../core/perf-probe';
 import type { Hud } from '../ui/hud/hud';
 import type { RoomClient } from './client';
 import { NetAnvils } from './net-anvils';
@@ -59,6 +60,7 @@ export class NetMatch {
 
   constructor(private d: NetMatchDeps) {
     const color = (id: number) => d.room.view?.players.find((p) => p.id === id)?.color ?? id;
+    probe.net = () => ({ rtt: this.rtt, jitter: this.remotes.jitter.jitter, snaps: this.remotes.snaps, late: this.remotes.late });
     this.remotes = new Remotes(d.scene, d.combat, d.collision, d.lib, d.load, color);
     this.anvils = new NetAnvils(d.scene, d.lib, d.rig, d.collision, color);
     this.pickups = new NetPickups(d.scene, d.load);
@@ -158,5 +160,5 @@ export class NetMatch {
     this.anvils.animate();
   }
 
-  dispose(): void { this.offs.forEach((o) => o()); this.remotes.dispose(); this.anvils.dispose(); this.pickups.dispose(); }
+  dispose(): void { probe.net = null; this.offs.forEach((o) => o()); this.remotes.dispose(); this.anvils.dispose(); this.pickups.dispose(); }
 }

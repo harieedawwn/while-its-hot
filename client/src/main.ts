@@ -1,5 +1,8 @@
 import { game, onGameSettings } from './core/game-settings';
 import { FpsBadge } from './ui/fps-badge';
+import { GpuTimer } from './core/gpu-timer';
+import { probe } from './core/perf-probe';
+import { skinning } from './render/materials/skinned';
 import * as THREE from 'three';
 import { bus } from './core/events';
 import { FEEL } from './core/feel';
@@ -26,6 +29,7 @@ async function boot(): Promise<void> {
   const params = readParams(nativeSearch());
   installGate(document.getElementById('gate')!, params.nogate);
 
+  skinning.gpu = params.get('skin') !== 'cpu';
   const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
   renderer.info.autoReset = false; // world + post are two render() calls; __stats counts the whole frame
   const host = document.getElementById('app')!;
@@ -39,8 +43,15 @@ async function boot(): Promise<void> {
     if (params.res === null) pipeline.setResolution(g.resolution);
     if (params.quant === null) pipeline.setQuantize(g.quantize);
     if (!params.snap) pipeline.setSnap(g.snap);
+    if (params.bright === null) pipeline.setBrightness(g.brightness);
   });
+  pipeline.setBrightness(params.bright ?? game.brightness);
   const fps = new FpsBadge();
+  const gpu = new GpuTimer(renderer.getContext() as WebGL2RenderingContext);
+  const dbg = renderer.getContext().getExtension('WEBGL_debug_renderer_info');
+  const gpuName = dbg ? String(renderer.getContext().getParameter(dbg.UNMASKED_RENDERER_WEBGL)) : 'unknown';
+  probe.gpuMs = () => gpu.ms;
+  probe.gfx = () => ({ width: pipeline.width, height: pipeline.height, resolution: pipeline.q.resolution, quantize: pipeline.q.quantize, snap: pipeline.q.snap, brightness: game.brightness, gpu: gpuName, scene: app.params.scene });
   const app = new Director(renderer, pipeline, host, nativeSearch());
   window.__app = app;
   if (params.shot) { window.__THREE = THREE; window.__progNames = () => (renderer.info.programs ?? []).map((p) => p.name).join(','); }
@@ -64,7 +75,7 @@ async function boot(): Promise<void> {
     const cap = game.fpsCap;
     if (cap > 0 && raw < 1000 / cap - 2) return;
     last = now;
-    fps.tick(raw);
+    fps.tick(raw, window.__stats);
     const scene = app.scene;
     if (paused || !scene) return;
     const frozen = app.params.t !== null;
@@ -77,7 +88,9 @@ async function boot(): Promise<void> {
     } else scene.update(0, time);
     const t1 = performance.now();
     renderer.info.reset();
+    gpu.begin();
     scene.render(frozen ? 1 : acc / FEEL.simStep);
+    gpu.end();
     const info = renderer.info;
     window.__stats = { calls: info.render.calls, tris: info.render.triangles, programs: info.programs?.length ?? 0, frameMs: performance.now() - t0, updMs: t1 - t0, renMs: performance.now() - t1, geos: info.memory.geometries, textures: info.memory.textures };
     wipe.afterRender(renderer.domElement);

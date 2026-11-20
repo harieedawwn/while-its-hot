@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { FEEL } from '../core/feel';
 import type { LightRig } from './lights';
 import { PostPass } from './post';
+import { brightnessParams } from './brightness';
 import { ghostMaterial, veilMaterial } from './materials/ghost';
 
 export type QuantizeMode = keyof typeof FEEL.render.quantize;
@@ -56,7 +57,7 @@ export class Pipeline {
   }
 
   /** Materials made from this rig get the snap grid of this pipeline. */
-  bindRig(rig: LightRig): void { this.rigs.add(rig); this.applySnap(); }
+  bindRig(rig: LightRig): void { this.rigs.add(rig); this.applySnap(); this.applyBright(); }
 
   resize(cssW: number, cssH: number): void {
     this.css.w = Math.max(1, cssW); this.css.h = Math.max(1, cssH);
@@ -78,6 +79,14 @@ export class Pipeline {
     this.post.uniforms.uDither.value = FEEL.render.ditherAmount;
   }
   setSnap(on: boolean): void { this.q.snap = on; this.applySnap(); }
+  /** "Độ sáng" 0..100: dark-end lift in the vertex light of every bound rig + a gamma lift in post. */
+  setBrightness(b: number): void { this.bright = b; this.applyBright(); }
+  private bright: number = FEEL.render.brightness.default;
+  private applyBright(): void {
+    const p = brightnessParams(this.bright);
+    this.post.uniforms.uLift.value = p.gamma;
+    for (const r of this.rigs) r.shared.uFloor.value = p.floor;
+  }
 
   private applySnap(): void {
     const k = this.q.snap ? FEEL.render.snapGrid : 0;

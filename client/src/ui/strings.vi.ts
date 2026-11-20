@@ -47,6 +47,7 @@ export const STR = {
     resolution: 'Độ phân giải điểm ảnh', native: 'Gốc',
     quantize: 'Nén màu', quantOff: 'Tắt', quantLight: 'Nhẹ', quantStrong: 'Mạnh',
     snap: 'Rung đỉnh', fpsCap: 'Giới hạn FPS', showFps: 'Hiện FPS', uncapped: 'Tối đa',
+    brightness: 'Độ sáng', fpsDetail: 'FPS chi tiết',
     /** VFX setting (phase 10): hit puffs and floor marks; off = sparks only. */
     blood: 'Máu',
   },
@@ -125,7 +126,7 @@ export const STR = {
     modes: { idle: 'Đứng yên', block: 'Đỡ đòn', counter: 'Phản đòn', move: 'Di chuyển' },
     lastHit: 'Đòn cuối', dps: 'DPS', armor: 'Giáp', rack: 'Vũ khí', dummies: 'Người gỗ',
   },
-  hud: { fps: 'FPS', lives: 'Mạng', ring: 'Vòng lửa', kills: 'Hạ', deaths: 'Gục', level: 'Cấp', you: 'Bạn' },
+  hud: { fps: 'FPS', perfRec: 'Ghi 30 s', perfRecording: 'Đang ghi', perfCopy: 'Chép', perfClose: 'Đóng', perfCopied: 'Đã chép báo cáo', perfCopyFail: 'Không chép được: chụp màn hình', perfTap: 'Bấm Chép để lưu báo cáo', lives: 'Mạng', ring: 'Vòng lửa', kills: 'Hạ', deaths: 'Gục', level: 'Cấp', you: 'Bạn' },
   pause: { title: 'Tạm dừng', resume: 'Tiếp tục', settings: 'Cài đặt', leave: 'Thoát' },
   score: { title: 'Bảng điểm', player: 'Người chơi', weapon: 'Vũ khí' },
   /** Touch layout editor (Điều khiển → Chỉnh bố cục). Game buttons carry pictograms only, never text. */
